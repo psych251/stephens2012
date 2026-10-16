@@ -4,8 +4,8 @@
  * Letters: transcribed word for word from the original materials (see
  * materials/welcome-letters-draft.md), with the president updated to Jonathan Levin.
  * Shown on one page. The president's photo is stimuli/president.webp (provided by the student;
- * confirm usage rights before real data collection). Student photos are grey labelled
- * placeholders until approved images exist;
+ * confirm usage rights before real data collection). Student photos (stimuli/photos/) are
+ * cropped from page 1 of the original materials, three per condition;
  * the president's name is typed, not a reproduced signature.
  *
  * Anagrams: the backup set in materials/anagrams-backup.csv (main items only), built by
@@ -14,10 +14,11 @@
 window.STIMULI = (function () {
   // One page, laid out like the original two-page letter: header (with the president's photo
   // box), the four themes, a strip of student photos, then the letter in two columns.
-  // `photos` describes what the original's photo strip showed in this condition.
-  function onePage(themes, paragraphs, photos, showPlaceholders, presidentPhoto) {
-    const box = (label, cls) => showPlaceholders
-      ? `<div class="photo-placeholder ${cls}"><span>${label}</span></div>` : "";
+  // `photos` are the student photos cropped from page 1 of the original materials for this
+  // condition (solo students vs groups), with their pixel sizes so the strip keeps the
+  // original proportions: each photo grows in proportion to its width/height.
+  function onePage(themes, paragraphs, photos, showPhotos, presidentPhoto) {
+    const box = (label, cls) => `<div class="photo-placeholder ${cls}"><span>${label}</span></div>`;
     return `
       <div class="letter">
         <div class="letter-header">
@@ -34,7 +35,8 @@ window.STIMULI = (function () {
           <ul class="letter-themes">
             ${themes.map((t) => `<li>${t}</li>`).join("")}
           </ul>
-          ${showPlaceholders ? `<div class="photo-strip">${photos.map((ph) => box(ph, "photo-strip-item")).join("")}</div>` : ""}
+          ${showPhotos ? `<div class="photo-strip">${photos.map((ph) =>
+            `<img class="photo-strip-item" src="${ph.src}" alt="" style="flex: ${(ph.w / ph.h).toFixed(3)}">`).join("")}</div>` : ""}
           <div class="letter-text">
             ${paragraphs.map((p) => `<p>${p}</p>`).join("")}
             <p class="letter-sign">Jonathan Levin<br>President</p>
@@ -45,7 +47,11 @@ window.STIMULI = (function () {
 
   const letters = {
     independent: {
-      photos: ["Photo: a student on their own", "Photo: a student working alone", "Photo: a student studying alone"],
+      photos: [
+        { src: "stimuli/photos/independent-1.jpg", w: 267, h: 506 },
+        { src: "stimuli/photos/independent-2.jpg", w: 260, h: 506 },
+        { src: "stimuli/photos/independent-3.jpg", w: 663, h: 506 },
+      ],
       themes: [
         "Learn by exploring your personal interests",
         "Express your ideas and opinions",
@@ -64,7 +70,11 @@ window.STIMULI = (function () {
       ],
     },
     interdependent: {
-      photos: ["Photo: students together", "Photo: a group of students", "Photo: students working together"],
+      photos: [
+        { src: "stimuli/photos/interdependent-1.jpg", w: 239, h: 312 },
+        { src: "stimuli/photos/interdependent-2.jpg", w: 370, h: 312 },
+        { src: "stimuli/photos/interdependent-3.jpg", w: 630, h: 312 },
+      ],
       themes: [
         "Learn by being part of a community",
         "Connect with fellow students and faculty",
@@ -93,9 +103,9 @@ window.STIMULI = (function () {
     ["tulip", "ITPLU", 98], ["knife", "IENKF", 112], ["album", "LMUBA", 120], ["apron", "RNPAO", 149],
   ].map(([solution, anagram, br]) => ({ item_id: solution, solution, anagram, gilhooly_br: br }));
 
-  const letterHtml = (condition, showPlaceholders, presidentPhoto) => {
+  const letterHtml = (condition, showPhotos, presidentPhoto) => {
     const L = letters[condition];
-    return onePage(L.themes, L.paragraphs, L.photos, showPlaceholders, presidentPhoto);
+    return onePage(L.themes, L.paragraphs, L.photos, showPhotos, presidentPhoto);
   };
 
   return { letters, letterHtml, anagrams };
