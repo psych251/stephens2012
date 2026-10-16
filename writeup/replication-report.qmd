@@ -66,17 +66,6 @@ experiment_id_phase2 <- "stephens2012-phase2"
 # statistics table, and the side-by-side figures. Replace these with your original study's
 # values, and say in a comment exactly where in the paper each one comes from.
 #
-# Tversky & Kahneman (1981), Problem 1 (gain frame, N = 152): 72% chose the certain program,
-# 28% the risky one. Problem 2 (loss frame, N = 155): 22% certain, 78% risky. The paper
-# reports percentages, so the counts below are reconstructed from them.
-original <- tibble(
-  condition = c("gain", "loss"),
-  n         = c(152, 155),
-  risky     = round(c(0.28 * 152, 0.78 * 155))
-)
-original_p_gain <- original$risky[original$condition == "gain"] / original$n[original$condition == "gain"]
-original_p_loss <- original$risky[original$condition == "loss"] / original$n[original$condition == "loss"]
-#
 # Stephens et al. (2012) — Study 3
 # Design: 2 (social class: first-generation vs. continuing-generation) x 2 (condition: independent
 # vs. interdependent welcome letter) between-subjects ANCOVA on the number of anagrams solved
@@ -109,6 +98,18 @@ original <- tibble(
 )
 
 original_r_cov <- NA
+
+# The key estimate on the anagram scale, the "difference of differences": how many more
+# anagrams first-gen students solved relative to continuing-gen students with the
+# interdependent letter than with the independent letter. From the Figure 2 means:
+# (8.8 - 8.3) - (6.9 - 9.2) = 2.8. Its SE combines the four (visually estimated) cell SEs,
+# so the interval built from it is approximate.
+fg_inter <- original$mean[original$social_class == "first-gen" & original$condition == "interdependent"]
+cg_inter <- original$mean[original$social_class == "continuing-gen" & original$condition == "interdependent"]
+fg_ind   <- original$mean[original$social_class == "first-gen" & original$condition == "independent"]
+cg_ind   <- original$mean[original$social_class == "continuing-gen" & original$condition == "independent"]
+original_dod    <- (fg_inter - cg_inter) - (fg_ind - cg_ind)
+original_dod_se <- sqrt(sum(original$se^2))
 ```
 
 ::: {.callout-note appearance="simple" icon="false"}
@@ -159,78 +160,171 @@ caption.
 #| label: analysis-functions
 #| code-summary: "Show the analysis code (shared by Phase 1 and Phase 2)"
 
-# Load one phase's exported data and apply the exclusion rule. Returns NULL if that phase
+# ---- Exclusion rules: EDIT to match your preregistration ---------------------------------
+# Always applied, in this order (they define who can be analysed at all): consented,
+# first-year (the inclusion criterion), reached the debrief, social class classifiable from
+# the parental-education answers, and both covariates reported (the ANCOVA needs them).
+# Optional rules: TRUE removes those participants; FALSE only reports the flag (see the
+# screening table under Exploratory analyses).
+exclude_if <- list(
+  outside_help   = FALSE,  # answered "Yes" to using outside help on the anagrams
+  seen_before    = FALSE,  # had taken part before or seen the welcome letter before
+  not_us_citizen = FALSE   # not a U.S. citizen or permanent resident (Study 2's rule, p. 1186)
+)
+
+first_year <- "First-year (frosh)"
+
+# One answer from a SurveyJS response (a JSON string). NA when skipped or "Prefer not to say"
+# (which SurveyJS stores as "none"). Multi-select answers are joined with ";".
+answer <- function(json, key) {
+  map_chr(json, function(j) {
+    if (is.na(j) || j == "") return(NA_character_)
+    v <- fromJSON(j, simplifyVector = TRUE)[[key]]
+    if (is.null(v) || length(v) == 0 || identical(v, "none")) NA_character_ else paste(v, collapse = ";")
+  })
+}
+declined <- function(json, key) str_detect(coalesce(answer(json, key), ""), "decline")
+
+# Load one phase's exported data and apply the exclusion rules. Returns NULL if that phase
 # has not been exported yet, which is how every section below knows to skip itself.
 read_phase <- function(id) {
   dir <- file.path("..", "data", "raw", id)
   if (!all(file.exists(file.path(dir, c("participants.csv", "trials.csv"))))) return(NULL)
-  participants <- read_csv(file.path(dir, "participants.csv"), show_col_types = FALSE)
-  trials       <- read_csv(file.path(dir, "trials.csv"), show_col_types = FALSE)
+  participants <- read_csv(file.path(dir, "participants.csv"), show_col_types = FALSE, guess_max = 1e5)
+  trials       <- read_csv(file.path(dir, "trials.csv"), show_col_types = FALSE, guess_max = 1e5)
   errors_path  <- file.path(dir, "errors.csv")
   errors <- if (file.exists(errors_path)) read_csv(errors_path, show_col_types = FALSE) else tibble()
 
-  complete <- participants |> filter(completed)
+  # Participant-level fields saved by the experiment. A column is missing from exports made
+  # before the field existed (e.g. `eligible` before the first-year screen was added).
+  for (col in c("condition", "class_year", "eligible", "first_gen", "race_white_only",
+                "us_citizen", "outside_help", "seen_before", "anagrams_solved",
+                "letter_time_ms", "letter_max_scroll", "anagram_focus_losses")) {
+    if (!col %in% names(participants)) participants[[col]] <- NA
+  }
+  reached <- function(task_name) unique(trials$participant_id[trials$task == task_name])
+  consented <- trials |> filter(task == "consent", as.logical(consented)) |> pull(participant_id)
 
-  # Exclusion rule: replace with the rule you preregistered. Here: at least 6 of 8
-  # lexical-decision trials correct, and at least one speeded response at all (a session in
-  # which every speeded trial timed out is what a device without a keyboard produces).
-  ld <- trials |>
-    filter(task == "anagram") |>
-    group_by(participant_id) |>
-    summarise(ld_acc           = mean(as.logical(correct), na.rm = TRUE),
-              ld_all_timed_out = all(as.logical(timed_out)),
-              .groups = "drop")
-  checked <- complete |> left_join(ld, by = "participant_id")
-  keep <- checked |> filter(!is.na(ld_acc), !ld_all_timed_out, ld_acc >= 0.75)
+  demo <- trials |>
+    filter(task == "demographics") |>
+    transmute(participant_id,
+              hs_gpa = if_else(declined(response, "hs_gpa_decline"), NA_real_,
+                               suppressWarnings(as.numeric(answer(response, "hs_gpa")))),
+              hs_gpa_scale = answer(response, "hs_gpa_scale"),
+              age = if_else(declined(response, "age_decline"), NA_real_,
+                            suppressWarnings(as.numeric(answer(response, "age")))),
+              gender = answer(response, "gender"),
+              sex = answer(response, "sex"),
+              race = answer(response, "race"),
+              household_income = suppressWarnings(as.numeric(answer(response, "household_income")))) |>
+    distinct(participant_id, .keep_all = TRUE)
 
-  list(participants = participants, trials = trials, errors = errors,
-       complete = complete, keep = keep,
-       n_no_response = sum(checked$ld_all_timed_out %in% TRUE))
+  d <- participants |>
+    left_join(demo, by = "participant_id") |>
+    mutate(eligible        = coalesce(as.logical(eligible), class_year == first_year),
+           first_gen       = as.logical(first_gen),
+           social_class    = factor(if_else(first_gen, "first-gen", "continuing-gen"),
+                                    levels = c("first-gen", "continuing-gen")),
+           condition       = factor(condition, levels = c("independent", "interdependent")),
+           race_white      = as.numeric(as.logical(race_white_only)),
+           anagrams_solved = as.numeric(anagrams_solved))
+
+  rules <- list(
+    "Started"                          = rep(TRUE, nrow(d)),
+    "Consented"                        = d$participant_id %in% consented,
+    "First-year (inclusion criterion)" = d$eligible %in% TRUE,
+    "Completed the study"              = d$participant_id %in% reached("debrief"),
+    "Social class classifiable"        = !is.na(d$first_gen),
+    "Covariates reported (race, GPA)"  = !is.na(d$race_white) & !is.na(d$hs_gpa)
+  )
+  if (isTRUE(exclude_if$outside_help))   rules[["No outside help"]] <- !(d$outside_help %in% "Yes")
+  if (isTRUE(exclude_if$seen_before))    rules[["Not seen before"]] <- !(d$seen_before %in% "Yes")
+  if (isTRUE(exclude_if$not_us_citizen)) rules[["U.S. citizen or permanent resident"]] <- !(d$us_citizen %in% "No")
+  # Each step keeps the participants who pass it and every earlier step.
+  passed <- setNames(accumulate(rules, `&`), names(rules))
+
+  list(participants = participants, trials = trials, errors = errors, d = d,
+       rules = rules, passed = passed, keep = d[passed[[length(passed)]], ])
 }
 
-# The key comparison's raw counts: how many analysed participants chose the risky program
-# in each frame.
-risky_counts <- function(d) {
-  d$trials |>
-    filter(task == "framing", participant_id %in% d$keep$participant_id) |>
-    group_by(condition) |>
-    summarise(risky = sum(choice == "risky"), n = n(), .groups = "drop")
+covariates_with_variance <- function(dd) {
+  c("race_white", "hs_gpa")[map_lgl(c("race_white", "hs_gpa"), ~ n_distinct(dd[[.x]]) > 1)]
 }
 
-# The key statistic: difference in the proportion choosing the risky program (loss minus
-# gain) with a 95% CI, and the uncorrected chi-square, which is the same test. NULL until
-# both frames have at least one analysed participant.
-diff_ci <- function(counts) {
-  loss <- counts[counts$condition == "loss", ]
-  gain <- counts[counts$condition == "gain", ]
-  if (nrow(loss) == 0 || nrow(gain) == 0) return(NULL)
-  pt <- prop.test(c(loss$risky, gain$risky), c(loss$n, gain$n), correct = FALSE)
-  tibble(N = loss$n + gain$n,
-         estimate = unname(pt$estimate[1] - pt$estimate[2]),
-         ci_low = pt$conf.int[1], ci_high = pt$conf.int[2],
-         statistic = unname(pt$statistic), p = pt$p.value)
+# The key analysis: 2 (social class) x 2 (letter) between-subjects ANCOVA on anagrams solved,
+# covariates race (White vs not) and high school GPA, Type III tests (as in SPSS, the usual
+# software for an ANCOVA reported this way). Both factors are coded -1/2 and +1/2, so the
+# interaction coefficient is the difference of differences on the anagram scale:
+#   (first-gen minus continuing-gen, interdependent) - (first-gen minus continuing-gen, independent)
+# Returns NULL until every cell has at least 2 participants. A covariate with no variation
+# (possible in a tiny pilot) is left out, and `covariates` records which were used.
+fit_ancova <- function(keep) {
+  if (is.null(keep) || nrow(keep) == 0) return(NULL)
+  cells <- count(keep, social_class, condition, .drop = FALSE)
+  if (nrow(cells) < 4 || any(cells$n < 2)) return(NULL)
+  dd <- keep |> mutate(class_c = if_else(social_class == "first-gen", 0.5, -0.5),
+                       cond_c  = if_else(condition == "interdependent", 0.5, -0.5))
+  covs <- covariates_with_variance(dd)
+  m <- lm(reformulate(c("class_c * cond_c", covs), response = "anagrams_solved"), data = dd)
+  if (df.residual(m) < 1) return(NULL)
+  a <- car::Anova(m, type = 3)
+  term <- "class_c:cond_c"
+  grid <- expand_grid(social_class = factor(levels(keep$social_class), levels = levels(keep$social_class)),
+                      condition    = factor(levels(keep$condition), levels = levels(keep$condition))) |>
+    mutate(class_c = if_else(social_class == "first-gen", 0.5, -0.5),
+           cond_c  = if_else(condition == "interdependent", 0.5, -0.5),
+           race_white = mean(dd$race_white), hs_gpa = mean(dd$hs_gpa))
+  pr <- predict(m, newdata = grid, se.fit = TRUE)  # adjusted (estimated marginal) means
+  list(model = m, anova = a, covariates = covs, N = nrow(dd), cells = cells,
+       F = a[term, "F value"], df1 = 1, df2 = a["Residuals", "Df"], p = a[term, "Pr(>F)"],
+       eta_p2 = a[term, "F value"] / (a[term, "F value"] + a["Residuals", "Df"]),
+       estimate = unname(coef(m)[term]),
+       ci_low = confint(m)[term, 1], ci_high = confint(m)[term, 2],
+       sigma = sigma(m),
+       means = grid |> transmute(social_class, condition, mean = pr$fit, se = pr$se.fit))
 }
 
-# Side-by-side figure: any number of studies on the same axes, in the order given.
-prop_ci <- function(x, n) {
-  ci <- prop.test(x, n, correct = FALSE)$conf.int
-  tibble(p = x / n, low = ci[1], high = ci[2])
+# Follow-up tests reported in the original (p. 1190): the social class gap within each
+# letter, and the letter effect within each social class, each an ANCOVA with the covariates.
+simple_effects <- function(keep) {
+  run <- function(sub, term, label) {
+    sub <- droplevels(sub)
+    if (nrow(sub) < 4 || n_distinct(sub[[term]]) < 2) return(NULL)
+    m <- lm(reformulate(c(term, covariates_with_variance(sub)), response = "anagrams_solved"), data = sub)
+    if (df.residual(m) < 1) return(NULL)
+    a <- car::Anova(m, type = 3)
+    tibble(Test = label, `F` = a[term, "F value"], df = sprintf("(1, %d)", a["Residuals", "Df"]),
+           p = a[term, "Pr(>F)"])
+  }
+  bind_rows(
+    map(levels(keep$condition), ~ run(filter(keep, condition == .x), "social_class",
+                                      paste0("Social class gap, ", .x, " letter"))),
+    map(levels(keep$social_class), ~ run(filter(keep, social_class == .x), "condition",
+                                         paste0("Letter effect, ", .x, " students")))
+  )
 }
+
+# Side-by-side figure: adjusted mean anagrams solved (+/- 1 SE, the original Figure 2's error
+# bars) by social class and letter, one panel per study, same axes and colours as the original.
 comparison_plot <- function(...) {
   studies <- list(...)
-  studies <- studies[!map_lgl(studies, ~ is.null(.x) || nrow(.x) == 0)]
+  studies <- studies[!map_lgl(studies, is.null)]
   df <- imap_dfr(studies, ~ mutate(.x, Study = .y)) |>
-    rowwise() |> mutate(prop_ci(risky, n)) |> ungroup() |>
-    mutate(Study = factor(Study, levels = names(studies)), label = sprintf("n = %d", n))
-  fills <- setNames(c("grey55", "#1E6E76", "#B8792A")[seq_along(studies)], names(studies))
+    mutate(Study = factor(Study, levels = names(studies)),
+           social_class = factor(social_class, levels = c("first-gen", "continuing-gen"),
+                                 labels = c("First-generation", "Continuing-generation")),
+           condition = factor(condition, levels = c("independent", "interdependent"),
+                              labels = c("Independent\nmessage", "Interdependent\nmessage")))
   dodge <- position_dodge(width = 0.8)
-  ggplot(df, aes(x = condition, y = p, fill = Study)) +
+  ggplot(df, aes(x = condition, y = mean, fill = social_class)) +
     geom_col(position = dodge, width = 0.75) +
-    geom_errorbar(aes(ymin = low, ymax = high), position = dodge, width = 0.2) +
-    geom_text(aes(y = 0.02, label = label), position = dodge, vjust = 0, size = 3, colour = "white") +
-    scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
-    scale_fill_manual(values = fills) +
-    labs(x = "Frame", y = "Chose the risky program", fill = NULL) +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = dodge, width = 0.2) +
+    geom_text(aes(y = 0.5, label = sprintf("%.1f", mean)), position = dodge, vjust = 0, size = 3) +
+    facet_wrap(~ Study, nrow = 1) +
+    scale_y_continuous(breaks = seq(0, 20, 4)) +
+    coord_cartesian(ylim = c(0, 20)) +
+    scale_fill_manual(values = c("First-generation" = "grey80", "Continuing-generation" = "grey50")) +
+    labs(x = NULL, y = "Anagrams solved (of 20)", fill = NULL) +
     theme_minimal(base_size = 12) +
     theme(legend.position = "top")
 }
@@ -239,8 +333,8 @@ phase1 <- read_phase(experiment_id)
 phase2 <- read_phase(experiment_id_phase2)
 have_data   <- !is.null(phase1)
 have_phase2 <- !is.null(phase2)
-
-
+res1 <- if (have_data) fit_ancova(phase1$keep)
+res2 <- if (have_phase2) fit_ancova(phase2$keep)
 ```
 
 ```{r}
@@ -248,22 +342,26 @@ have_phase2 <- !is.null(phase2)
 #| echo: false
 fmt_row <- function(study, r) {
   if (is.null(r)) {
-    return(tibble(Study = study, N = "", `Effect (loss − gain)` = "not yet collected",
-                  `95% CI` = "", `χ²(1)` = "", p = ""))
+    return(tibble(Study = study, N = "", `Interaction F` = "not enough data yet", `Partial η²` = "",
+                  `Difference of differences [95% CI]` = "", p = ""))
   }
   tibble(Study = study, N = as.character(r$N),
-         `Effect (loss − gain)` = sprintf("%.0f points", 100 * r$estimate),
-         `95% CI` = sprintf("[%.0f, %.0f]", 100 * r$ci_low, 100 * r$ci_high),
-         `χ²(1)` = sprintf("%.2f", r$statistic),
+         `Interaction F` = sprintf("F(%d, %d) = %.2f", r$df1, r$df2, r$F),
+         `Partial η²` = sprintf("%.3f", r$eta_p2),
+         `Difference of differences [95% CI]` = sprintf("%.1f [%.1f, %.1f]", r$estimate, r$ci_low, r$ci_high),
          p = format.pval(r$p, digits = 2, eps = 0.001))
 }
+original_row <- list(N = original_N, df1 = original_df1, df2 = original_df2, F = original_F,
+                     eta_p2 = original_eta_p2, estimate = original_dod, p = original_p,
+                     ci_low = original_dod - 1.96 * original_dod_se,
+                     ci_high = original_dod + 1.96 * original_dod_se)
 bind_rows(
-  fmt_row("Original", diff_ci(original)),
-  fmt_row("Phase 1: replication", if (have_data) diff_ci(risky_counts(phase1))),
-  fmt_row("Phase 2: extension", if (have_phase2) diff_ci(risky_counts(phase2)))
+  fmt_row("Original", original_row),
+  fmt_row("Phase 1: replication", res1),
+  fmt_row("Phase 2: extension", res2)
 ) |>
-  knitr::kable(align = "lrlllr",
-               caption = "Key comparison: social class x condition interaction on anagrams solved")
+  knitr::kable(align = "lrlrlr",
+               caption = "Key comparison: Social Class × Condition interaction on anagrams solved (ANCOVA with race and high school GPA as covariates). Difference of differences: how many more anagrams first-generation students solved relative to continuing-generation students with the interdependent letter than with the independent letter. The original's interval is approximate, because its SEs were read off Figure 2.")
 ```
 
 # Phase 1: Replication
@@ -364,39 +462,30 @@ used, and what the course's participant budget allowed.
 
 ```{r}
 #| label: power
-power_rows <- map_dfr(c(0.80, 0.90, 0.95), function(pw) {
-  n <- power.prop.test(p1 = original_p_gain, p2 = original_p_loss,
-                       power = pw, sig.level = 0.05)$n
-  tibble(power = scales::percent(pw), n_per_group = ceiling(n), n_total = 2 * ceiling(n))
-})
-
-original_effect <- original_p_loss - original_p_gain
-two_and_half <- ceiling(2.5 * original$n)
-
-knitr::kable(power_rows, col.names = c("Power", "N per frame", "N total"),
-             caption = sprintf(
-               "Sample needed to detect the original effect (risky choice: %.0f%% gain vs %.0f%% loss, a difference of %.0f points), two-sided alpha = .05.",
-               100 * original_p_gain, 100 * original_p_loss, 100 * original_effect))
-# total N = v + 4 cells + 2 covariates.
-
 n_cells      <- 4
 n_covariates <- 2
-power_rows <- map_dfr(c(0.80, 0.90, 0.95), function(pw) {
-  v <- pwr::pwr.f2.test(u = original_df1, f2 = original_f^2,
-                        sig.level = 0.05, power = pw)$v
-  n_total <- ceiling(v) + n_cells + n_covariates
-  tibble(power      = scales::percent(pw),
-         n_total    = n_total,
-         n_per_cell = ceiling(n_total / n_cells))
-})
+planned_first_gen_share <- 0.20  # EDIT: expected share of first-generation students in your sample
 
+# With unequal groups the interaction is estimated less precisely than with four equal cells.
+# Its variance is proportional to the sum of 1/n over the cells, so with a share q of
+# first-gen students (and the letter split 50/50) the required N grows by this factor:
+imbalance <- function(q) (1 / q + 1 / (1 - q)) / 4
+
+power_rows <- map_dfr(c(0.80, 0.90, 0.95), function(pw) {
+  v <- pwr::pwr.f2.test(u = original_df1, f2 = original_f^2, sig.level = 0.05, power = pw)$v
+  n_equal <- ceiling(v) + n_cells + n_covariates   # total N = v + 4 cells + 2 covariates
+  tibble(power = scales::percent(pw), n_equal = n_equal,
+         n_unequal = ceiling(n_equal * imbalance(planned_first_gen_share)))
+})
 two_and_half <- ceiling(2.5 * original_N)
 
-knitr::kable(power_rows, col.names = c("Power", "N total", "N per cell (approx.)"),
+knitr::kable(power_rows,
+             col.names = c("Power", "N total, four equal cells",
+                           sprintf("N total, %.0f%% first-gen (approx.)", 100 * planned_first_gen_share)),
              caption = sprintf(
-               "Sample needed to detect the original Social Class x Condition interaction (F(1, %d) = %.1f, partial eta-squared = %.3f, Cohen's f = %.2f) in a 2 x 2 ANCOVA with %d covariates, alpha = .05.",
-               original_df2, original_F, original_eta_p2, original_f, n_covariates))
-
+               "Sample needed to detect the original Social Class × Condition interaction (F(1, %d) = %.1f, partial η² = %.3f, Cohen's f = %.2f) in a 2 × 2 ANCOVA with %d covariates, two-sided α = .05. The right-hand column scales the equal-cell N by %.2f for unequal groups. 2.5 times the original sample is %d.",
+               original_df2, original_F, original_eta_p2, original_f, n_covariates,
+               imbalance(planned_first_gen_share), two_and_half))
 ```
 
 For comparison, 2.5 times the original sample would be
@@ -519,29 +608,23 @@ if (!have_data) {
 #| eval: !expr have_data
 # Loaded and excluded by read_phase(), under Key statistics, so Phase 1 and Phase 2 share one
 # exclusion rule.
-participants  <- phase1$participants
-trials        <- phase1$trials
-errors        <- phase1$errors
-complete      <- phase1$complete
-keep          <- phase1$keep
-n_no_response <- phase1$n_no_response
+participants <- phase1$participants
+trials       <- phase1$trials
+errors       <- phase1$errors
+d            <- phase1$d
+keep         <- phase1$keep
 ```
 
 ```{r}
 #| label: funnel
 #| eval: !expr have_data
-funnel_levels <- c("Started", "Completed", "Passed exclusion criteria")
-bind_rows(
-  participants |> mutate(step = "Started"),
-  complete     |> mutate(step = "Completed"),
-  keep         |> mutate(step = "Passed exclusion criteria")
-) |>
-  mutate(step = factor(step, levels = funnel_levels)) |>
-  count(step, condition, .drop = FALSE) |>
+steps <- names(phase1$passed)
+map2_dfr(phase1$passed, steps, ~ d[.x, ] |> count(condition, .drop = FALSE) |> mutate(Step = .y)) |>
   pivot_wider(names_from = condition, values_from = n, values_fill = 0) |>
-  mutate(Total = rowSums(across(-step))) |>
-  rename(Step = step) |>
-  knitr::kable(caption = "Participants at each step, by frame. Differences between frames in attrition or exclusion are a threat to validity and should be discussed.")
+  mutate(Total = rowSums(across(-Step)), Step = factor(Step, levels = steps)) |>
+  arrange(Step) |>
+  relocate(Step) |>
+  knitr::kable(caption = "Participants remaining after each step, by letter condition; steps apply in order. Differences between conditions in attrition or exclusion are a threat to validity and should be discussed.")
 ```
 
 ```{r}
@@ -549,12 +632,8 @@ bind_rows(
 #| eval: !expr have_data
 #| echo: false
 #| results: asis
-cat(sprintf("Of %d participants who started, %d completed the study and %d met the exclusion criteria.",
-            nrow(participants), nrow(complete), nrow(keep)))
-if (n_no_response > 0) {
-  cat(sprintf(" %d completed session(s) contained no response to any speeded trial and were excluded on that basis.",
-              n_no_response))
-}
+cat(sprintf("Of %d participants who started, %d completed the study and %d remain for analysis.",
+            nrow(d), sum(phase1$passed[["Completed the study"]]), nrow(keep)))
 if (nrow(keep) == 0) cat(" No participants remain for analysis yet, so the results below are empty.")
 cat("\n")
 ```
@@ -562,21 +641,30 @@ cat("\n")
 ```{r}
 #| label: demographics
 #| eval: !expr have_data
-demo <- trials |>
-  filter(task == "demographics", participant_id %in% keep$participant_id) |>
-  mutate(resp = map(response, ~ fromJSON(.x))) |>
-  transmute(
-    participant_id,
-    age    = map_dbl(resp, ~ as.numeric(.x$age %||% NA)),
-    gender = map_chr(resp, ~ as.character(.x$gender %||% NA))
-  )
+if (nrow(keep) > 0) {
+  keep |>
+    group_by(`Social class` = social_class) |>
+    summarise(N = n(),
+              `Mean age` = round(mean(age, na.rm = TRUE), 1),
+              `% women` = round(100 * mean(gender %in% "Woman")),
+              `% White only` = round(100 * mean(race_white, na.rm = TRUE)),
+              `Mean HS GPA` = round(mean(hs_gpa, na.rm = TRUE), 2),
+              `Mean income (1–8)` = round(mean(household_income, na.rm = TRUE), 1),
+              .groups = "drop") |>
+    mutate(across(where(is.numeric), ~ replace(.x, is.nan(.x), NA))) |>
+    knitr::kable(caption = "Analysed sample by social class. Income uses the original's 8-point scale (p. 1190), on which the original's first-generation students averaged 4.7 and continuing-generation students 6.6.")
+} else {
+  message("No participants remain for analysis yet.")
+}
+```
 
-if (nrow(demo) > 0) {
-  demo |>
-    summarise(N = n(), `Mean age` = round(mean(age, na.rm = TRUE), 1),
-              `SD age` = round(sd(age, na.rm = TRUE), 1),
-              `Age not given` = sum(is.na(age))) |>
-    knitr::kable(caption = "Age of the analysed sample.")
+```{r}
+#| label: cell-sizes
+#| eval: !expr have_data
+if (nrow(keep) > 0) {
+  count(keep, `Social class` = social_class, condition, .drop = FALSE) |>
+    pivot_wider(names_from = condition, values_from = n, values_fill = 0) |>
+    knitr::kable(caption = "Cell sizes in the analysed sample (the original did not report its cell sizes).")
 }
 ```
 
@@ -607,21 +695,30 @@ analysis code"). Describe anything you did to the data beyond that.
 ```{r}
 #| label: confirmatory
 #| eval: !expr have_data
-framing <- trials |>
-  filter(task == "framing", participant_id %in% keep$participant_id) |>
-  select(participant_id, condition, choice)
-risky <- risky_counts(phase1)
-tab <- table(Frame = framing$condition, Choice = framing$choice)
-
-if (all(dim(tab) == c(2, 2))) {
-  # No continuity correction, so this test and the effect-size interval below agree: the
-  # uncorrected 2 x 2 chi-square is the same test as the two-proportion comparison.
-  print(tab)
-  print(chisq.test(tab, correct = FALSE))
+if (!is.null(res1)) {
+  if (length(res1$covariates) < 2) {
+    message("Covariate(s) left out because they do not vary in this sample: ",
+            paste(setdiff(c("race_white", "hs_gpa"), res1$covariates), collapse = ", "))
+  }
+  res1$anova |>
+    as.data.frame() |>
+    rownames_to_column("Term") |>
+    mutate(Term = recode(Term, `(Intercept)` = "Intercept", class_c = "Social class",
+                         cond_c = "Letter condition", race_white = "Race (White only vs not)",
+                         hs_gpa = "High school GPA", `class_c:cond_c` = "Social class × Letter")) |>
+    knitr::kable(digits = 3, caption = "Type III ANCOVA on anagrams solved. The Social class × Letter row is the key test.")
 } else {
-  message("Chi-square not run: the frame-by-choice table is ", paste(dim(tab), collapse = " x "),
-          ". It needs both frames and both choices; with ", nrow(framing),
-          " participant(s) in the analysis set this is expected.")
+  message("ANCOVA not run yet: it needs at least 2 analysed participants in each of the four ",
+          "social class × letter cells (currently ", nrow(keep), " analysed in total).")
+}
+```
+
+```{r}
+#| label: confirmatory-followup
+#| eval: !expr have_data
+fu <- if (!is.null(res1)) simple_effects(keep)
+if (!is.null(fu) && nrow(fu) > 0) {
+  fu |> knitr::kable(digits = 3, caption = "Follow-up tests reported in the original (p. 1190), each an ANCOVA with the same covariates. Original: social class gap F(1, 38) = 6.1 with the independent letter and F(1, 42) = 0.1 with the interdependent letter; letter effect F(1, 38) = 4.2 for first-generation and F(1, 42) = 0.8 for continuing-generation students.")
 }
 ```
 
@@ -642,18 +739,17 @@ effect, are both informative and should be reported as such
 ```{r}
 #| label: comparison
 #| eval: !expr have_data
-orig <- diff_ci(original)
-rep  <- diff_ci(risky)
-
-if (!is.null(rep)) {
-  bind_rows(orig |> mutate(Study = "Original"), rep |> mutate(Study = "Phase 1: replication")) |>
-    transmute(Study, N,
-              `Difference (loss − gain)` = sprintf("%.0f points", 100 * estimate),
-              `95% CI` = sprintf("[%.0f, %.0f]", 100 * ci_low, 100 * ci_high),
-              p = format.pval(p, digits = 2, eps = 0.001)) |>
-    knitr::kable(caption = "Effect size: difference in the percentage choosing the risky program.")
+if (!is.null(res1)) {
+  tibble(Study = c("Original", "Phase 1: replication"),
+         N = c(original_N, res1$N),
+         `Partial η²` = c(original_eta_p2, res1$eta_p2),
+         `Difference of differences` = c(original_dod, res1$estimate),
+         `95% CI` = c(sprintf("[%.1f, %.1f] (approx.)", original_dod - 1.96 * original_dod_se,
+                              original_dod + 1.96 * original_dod_se),
+                      sprintf("[%.1f, %.1f]", res1$ci_low, res1$ci_high))) |>
+    knitr::kable(digits = 3, caption = "Effect size: the Social Class × Condition interaction as a difference of differences in anagrams solved, and as partial η².")
 } else {
-  message("Replication effect size not computed yet: need at least one analysed participant in each frame.")
+  message("Replication effect size not computed yet: the ANCOVA needs at least 2 analysed participants per cell.")
 }
 ```
 
@@ -662,14 +758,14 @@ if (!is.null(rep)) {
 #| eval: !expr have_data
 #| echo: false
 #| results: asis
-if (!is.null(rep)) {
-  excludes_zero <- rep$ci_low > 0 | rep$ci_high < 0
-  includes_orig <- orig$estimate >= rep$ci_low & orig$estimate <= rep$ci_high
+if (!is.null(res1)) {
+  excludes_zero <- res1$ci_low > 0 | res1$ci_high < 0
+  includes_orig <- original_dod >= res1$ci_low & original_dod <= res1$ci_high
   cat(sprintf(
-    "The replication's 95%% interval %s zero and %s the original estimate of %.0f points. ",
+    "The replication's 95%% interval %s zero and %s the original estimate of %.1f anagrams. ",
     if (excludes_zero) "excludes" else "includes",
     if (includes_orig) "includes" else "does not include",
-    100 * orig$estimate))
+    original_dod))
   cat("These two facts are the starting point for the summary in the Discussion, not the conclusion.\n")
 }
 ```
@@ -716,10 +812,10 @@ reported no variability, say so rather than leaving it out silently.
 ```{r}
 #| label: fig-comparison
 #| eval: !expr have_data
-#| fig-cap: "Percentage choosing the risky program in each frame, original study and Phase 1 replication. Error bars are 95% confidence intervals."
-#| fig-width: 7
+#| fig-cap: "Anagrams solved by social class and welcome letter. Original: adjusted means from Stephens et al. (2012), Figure 2, with error bars of ±1 SE read off the figure. Phase 1: adjusted means from the ANCOVA (covariates at their sample means), ±1 SE. The Phase 1 panel appears once every cell has at least 2 analysed participants."
+#| fig-width: 8
 #| fig-height: 4
-comparison_plot(Original = original, `Phase 1: replication` = risky)
+comparison_plot(Original = original, `Phase 1: replication` = if (!is.null(res1)) res1$means)
 ```
 
 ### Exploratory analyses
@@ -733,20 +829,83 @@ them.
 :::
 
 ```{r}
-#| label: exploratory-rt
+#| label: manipulation-check
 #| eval: !expr have_data
-ld <- trials |>
-  filter(task == "lexical_decision", participant_id %in% keep$participant_id) |>
-  mutate(correct = as.logical(correct), is_word = as.logical(is_word), rt = as.numeric(rt)) |>
-  filter(correct, !is.na(rt))
-
-if (nrow(ld) > 0) {
-  ld |>
-    group_by(`Real word` = is_word) |>
-    summarise(`Mean RT (ms)` = round(mean(rt)), `SD (ms)` = round(sd(rt)), Trials = n(), .groups = "drop") |>
-    knitr::kable(caption = "Exploratory: lexical-decision response times, correct trials only.")
+# Manipulation check (p. 1190): two 1-7 ratings, compared between letters with Student's t tests
+# as in the original. "Prefer not to say" is missing here.
+mc <- trials |>
+  filter(task == "manipulation_check", participant_id %in% keep$participant_id) |>
+  select(participant_id, any_of(c("mc_individually_motivated", "mc_work_together"))) |>
+  left_join(select(keep, participant_id, condition), by = "participant_id")
+mc_test <- function(item, label, original_text) {
+  if (!item %in% names(mc)) return(NULL)
+  x <- mc |> filter(!is.na(.data[[item]]))
+  g <- split(x[[item]], x$condition)
+  ok <- length(g) == 2 && all(lengths(g) >= 2)
+  tt <- if (ok) t.test(g$independent, g$interdependent, var.equal = TRUE)
+  ms <- function(v) if (length(v) == 0) "—" else if (length(v) == 1) sprintf("%.1f, n = 1", v) else
+    sprintf("%.1f (%.1f), n = %d", mean(v), sd(v), length(v))
+  tibble(Item = label,
+         Independent = ms(g$independent),
+         Interdependent = ms(g$interdependent),
+         t = if (ok) sprintf("t(%d) = %.2f, p = %.3f", tt$parameter, tt$statistic, tt$p.value) else "not enough data",
+         Original = original_text)
+}
+tab_mc <- bind_rows(
+  mc_test("mc_individually_motivated", "Be individually motivated", "6.6 (0.6) vs 6.1 (0.9), t(86) = 3.2"),
+  mc_test("mc_work_together", "Work together with other students", "5.6 (1.3) vs 6.1 (0.8), t(86) = −2.2")
+)
+if (nrow(mc) > 0 && nrow(tab_mc) > 0) {
+  knitr::kable(tab_mc, caption = "Manipulation check: mean (SD) agreement, 1–7, that the university expects each, by letter.")
 } else {
-  message("No correct lexical-decision trials with a response time yet.")
+  message("No manipulation-check answers from analysed participants yet.")
+}
+```
+
+```{r}
+#| label: item-difficulty
+#| eval: !expr have_data
+# Exploratory: how hard each anagram was. Uses everyone who completed the study (not only the
+# analysed sample), because its purpose is to check the item set. BR is Gilhooly's (1978)
+# bigram-rank difficulty (lower = easier).
+completed_ids <- d$participant_id[phase1$passed[["Completed the study"]]]
+items <- trials |>
+  filter(task == "anagram", participant_id %in% completed_ids) |>
+  mutate(correct = as.logical(correct))
+if (nrow(items) > 0) {
+  items |>
+    group_by(Word = toupper(solution), Anagram = anagram, BR = gilhooly_br) |>
+    summarise(`People shown` = n_distinct(participant_id),
+              `% solved` = round(100 * n_distinct(participant_id[correct %in% TRUE]) / n_distinct(participant_id)),
+              Skips = sum(action == "skip"),
+              `Median seconds` = round(median(rt[action == "submit"], na.rm = TRUE) / 1000, 1),
+              .groups = "drop") |>
+    arrange(BR) |>
+    knitr::kable(caption = "Exploratory: anagram difficulty among participants who completed the study, ordered by Gilhooly's (1978) difficulty score. The original's cell means imply roughly 35–45% of items solved.")
+} else {
+  message("No anagram attempts from completed sessions yet.")
+}
+```
+
+```{r}
+#| label: screening
+#| eval: !expr have_data
+# Exploratory: screening flags among completed sessions. Only the rules switched on in
+# `exclude_if` (under Key statistics) remove anyone; the rest are reported here.
+done <- d[phase1$passed[["Completed the study"]], ]
+if (nrow(done) > 0) {
+  tibble(
+    Flag = c("Reported outside help on the anagrams", "Had seen the study or letter before",
+             "Not a U.S. citizen or permanent resident", "Left the window during the anagram task",
+             "Did not scroll to the end of the letter", "Median time on the letter (s)",
+             "GPA reported on a weighted scale"),
+    Value = c(sum(done$outside_help %in% "Yes"), sum(done$seen_before %in% "Yes"),
+              sum(done$us_citizen %in% "No"), sum(as.numeric(done$anagram_focus_losses) > 0, na.rm = TRUE),
+              sum(as.numeric(done$letter_max_scroll) < 0.95, na.rm = TRUE),
+              round(median(as.numeric(done$letter_time_ms), na.rm = TRUE) / 1000),
+              sum(str_detect(coalesce(done$hs_gpa_scale, ""), "Weighted")))
+  ) |>
+    knitr::kable(caption = sprintf("Screening flags among the %d completed sessions.", nrow(done)))
 }
 ```
 
@@ -868,43 +1027,42 @@ original's otherwise.
 
 ```{r}
 #| label: phase2-power
-phase2_n_per_group <- 150   # planned analysed participants per condition in Phase 2
+phase2_n_total <- 300   # planned analysed participants in Phase 2 (all four cells together)
 
-p1_counts <- if (have_data) risky_counts(phase1)
-p1_stats  <- if (have_data) diff_ci(p1_counts)
-basis <- if (!is.null(p1_stats)) {
-  list(gain = p1_counts$risky[p1_counts$condition == "gain"] / p1_counts$n[p1_counts$condition == "gain"],
-       loss = p1_counts$risky[p1_counts$condition == "loss"] / p1_counts$n[p1_counts$condition == "loss"],
-       source = "Phase 1")
-} else {
-  list(gain = original_p_gain, loss = original_p_loss, source = "the original study")
+# Effect and residual SD to plan around: Phase 1's if available, otherwise the original's
+# (its residual SD is approximated from the Figure 2 SEs: SE x sqrt(n per cell)).
+basis_f2 <- if (!is.null(res1)) res1$eta_p2 / (1 - res1$eta_p2) else original_f^2
+basis_sd <- if (!is.null(res1)) res1$sigma else mean(original$se) * sqrt(original_N / n_cells)
+basis_source <- if (!is.null(res1)) "Phase 1" else "the original study"
+
+# Expected 95% CI half-width of the difference of differences, and power, at N total with a
+# share q of first-gen students: the interaction's variance is sigma^2 x sum(1/n) over cells.
+half_width <- function(n, q) 1.96 * basis_sd * sqrt((4 / n) * (1 / q + 1 / (1 - q)))
+power_at <- function(n, f2, q) {
+  v <- n - n_cells - n_covariates
+  if (v < 1) return(NA)
+  pwr::pwr.f2.test(u = 1, v = v, f2 = f2 / imbalance(q), sig.level = 0.05)$power
 }
-
-# Expected 95% CI half-width on the difference at n per condition.
-half_width <- function(n) 1.96 * sqrt(basis$gain * (1 - basis$gain) / n + basis$loss * (1 - basis$loss) / n)
-power_at <- function(n, p1, p2) {
-  tryCatch(power.prop.test(n = n, p1 = p1, p2 = p2, sig.level = 0.05)$power, error = function(e) NA)
-}
-
-rows <- tibble(
-  Study = c(if (!is.null(p1_stats)) "Phase 1 (actual)", "Phase 2 (planned)"),
-  `N analysed` = c(if (!is.null(p1_stats)) p1_stats$N, 2 * phase2_n_per_group),
-  `95% CI half-width` = c(if (!is.null(p1_stats)) sprintf("±%.0f points", 100 * (p1_stats$ci_high - p1_stats$ci_low) / 2),
-                          sprintf("±%.0f points (expected)", 100 * half_width(phase2_n_per_group)))
-)
-knitr::kable(rows, caption = sprintf("Precision of the key estimate, Phase 2 expected values based on %s.", basis$source))
 
 tibble(
-  `Effect to detect` = c(sprintf("Original: %.0f points", 100 * (original_p_loss - original_p_gain)),
-                         if (!is.null(p1_stats)) sprintf("Phase 1: %.0f points", 100 * p1_stats$estimate),
-                         sprintf("Half the original: %.0f points", 50 * (original_p_loss - original_p_gain))),
+  Study = c(if (!is.null(res1)) "Phase 1 (actual)", "Phase 2 (planned)"),
+  `N analysed` = c(if (!is.null(res1)) res1$N, phase2_n_total),
+  `95% CI half-width` = c(if (!is.null(res1)) sprintf("±%.1f anagrams", (res1$ci_high - res1$ci_low) / 2),
+                          sprintf("±%.1f anagrams (expected)", half_width(phase2_n_total, planned_first_gen_share)))
+) |>
+  knitr::kable(caption = sprintf("Precision of the key estimate (difference of differences); Phase 2 expected value based on %s, with %.0f%% first-generation students.", basis_source, 100 * planned_first_gen_share))
+
+tibble(
+  `Effect to detect` = c(sprintf("Original: partial η² = %.3f", original_eta_p2),
+                         if (!is.null(res1)) sprintf("Phase 1: partial η² = %.3f", res1$eta_p2),
+                         "Half the original (Cohen's f halved)"),
   `Power at planned N` = scales::percent(c(
-    power_at(phase2_n_per_group, original_p_gain, original_p_loss),
-    if (!is.null(p1_stats)) power_at(phase2_n_per_group, basis$gain, basis$loss),
-    power_at(phase2_n_per_group, original_p_gain, original_p_gain + (original_p_loss - original_p_gain) / 2)
+    power_at(phase2_n_total, original_f^2, planned_first_gen_share),
+    if (!is.null(res1)) power_at(phase2_n_total, basis_f2, planned_first_gen_share),
+    power_at(phase2_n_total, (original_f / 2)^2, planned_first_gen_share)
   ), accuracy = 1)
 ) |>
-  knitr::kable(caption = sprintf("Power of the Phase 2 key test at %d per condition, two-sided alpha = .05.", phase2_n_per_group))
+  knitr::kable(caption = sprintf("Power of the Phase 2 key test at N = %d, two-sided α = .05.", phase2_n_total))
 ```
 
 ## Analysis plan
@@ -945,27 +1103,24 @@ if (!have_phase2) {
 ```{r}
 #| label: phase2-results
 #| eval: !expr have_phase2
-p2_counts <- risky_counts(phase2)
-p2_stats  <- diff_ci(p2_counts)
 cat(sprintf("Phase 2: %d started, %d completed, %d analysed.\n",
-            nrow(phase2$participants), nrow(phase2$complete), nrow(phase2$keep)))
-if (!is.null(p2_stats)) {
-  p_text <- if (p2_stats$p < 0.001) "p < .001" else sprintf("p = %.3f", p2_stats$p)
-  cat(sprintf("Key comparison: %.0f points [%.0f, %.0f], chi-square(1) = %.2f, %s.\n",
-              100 * p2_stats$estimate, 100 * p2_stats$ci_low, 100 * p2_stats$ci_high,
-              p2_stats$statistic, p_text))
+            nrow(phase2$d), sum(phase2$passed[["Completed the study"]]), nrow(phase2$keep)))
+if (!is.null(res2)) {
+  p_text <- if (res2$p < 0.001) "p < .001" else sprintf("p = %.3f", res2$p)
+  cat(sprintf("Key comparison: F(1, %d) = %.2f, %s, partial eta-squared = %.3f; difference of differences %.1f [%.1f, %.1f].\n",
+              res2$df2, res2$F, p_text, res2$eta_p2, res2$estimate, res2$ci_low, res2$ci_high))
 }
 ```
 
 ```{r}
 #| label: fig-phase2
 #| eval: !expr have_phase2
-#| fig-cap: "Percentage choosing the risky program in each frame: original study, Phase 1 replication, and Phase 2 extension. Error bars are 95% confidence intervals."
-#| fig-width: 8
+#| fig-cap: "Anagrams solved by social class and welcome letter: original study (Figure 2, ±1 SE read off the figure), Phase 1 replication, and Phase 2 extension (ANCOVA-adjusted means, ±1 SE)."
+#| fig-width: 10
 #| fig-height: 4
 comparison_plot(Original = original,
-                `Phase 1: replication` = if (have_data) risky_counts(phase1),
-                `Phase 2: extension` = risky_counts(phase2))
+                `Phase 1: replication` = if (!is.null(res1)) res1$means,
+                `Phase 2: extension` = if (!is.null(res2)) res2$means)
 ```
 
 ## Discussion

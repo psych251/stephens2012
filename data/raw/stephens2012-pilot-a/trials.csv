@@ -1,0 +1,196 @@
+participant_id,trial_index,task,condition,trial_type,rt,response,time_elapsed,stimulus,plugin_version,experiment_id,consented,view_history,letter,letter_time_ms,letter_page_times_ms,action,time_left_ms,item_id,anagram,solution,gilhooly_br,presentation,attempt_index,focus_losses,timed_out,skipped,correct,anagrams_solved,reason,mc_individually_motivated,mc_work_together,first_gen,race_white_only
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,0,consent,interdependent,html-button-response,29725,0,29732,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,1,overview,interdependent,instructions,6302,,36037,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":6302}]",,,,,,,,,,,,,,,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,2,letter,interdependent,instructions,16921,,52959,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":2845},{""page_index"":1,""viewing_time"":3435},{""page_index"":0,""viewing_time"":2379},{""page_index"":1,""viewing_time"":8262}]",interdependent,16921,"[2845,3435,2379,8262]",,,,,,,,,,,,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,3,cover_story,interdependent,instructions,4284,,57245,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":4284}]",,,,,,,,,,,,,,,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,4,anagram_instructions,interdependent,instructions,30162,,87408,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":30162}]",,,,,,,,,,,,,,,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,5,anagram,interdependent,anagram,17258,TULIP,104668,,1.0.0,stephens2012-pilot-a,,,,,,submit,582741,tulip,ITPLU,tulip,98,1,0,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,6,anagram,interdependent,anagram,6666,virus,111335,,1.0.0,stephens2012-pilot-a,,,,,,submit,576074,virus,RSUIV,virus,84,1,1,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,7,anagram,interdependent,anagram,5199,pilot,116536,,1.0.0,stephens2012-pilot-a,,,,,,submit,570874,pilot,OLPTI,pilot,74,1,2,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,8,anagram,interdependent,anagram,2706,woman,119243,,1.0.0,stephens2012-pilot-a,,,,,,submit,568167,woman,NAOWM,woman,12,1,3,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,9,anagram,interdependent,anagram,15476,,134720,,1.0.0,stephens2012-pilot-a,,,,,,skip,552690,doubt,OBDTU,doubt,47,1,4,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,10,anagram,interdependent,anagram,21898,fruit,156619,,1.0.0,stephens2012-pilot-a,,,,,,submit,530791,fruit,IUFTR,fruit,75,1,5,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,11,anagram,interdependent,anagram,18572,,175192,,1.0.0,stephens2012-pilot-a,,,,,,skip,512217,cabin,BNIAC,cabin,62,1,6,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,12,anagram,interdependent,anagram,9089,lunch,184283,,1.0.0,stephens2012-pilot-a,,,,,,submit,503126,lunch,NHULC,lunch,23,1,7,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,13,anagram,interdependent,anagram,23110,,207394,,1.0.0,stephens2012-pilot-a,,,,,,skip,480015,plant,LTNPA,plant,13,1,8,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,14,anagram,interdependent,anagram,43678,,251073,,1.0.0,stephens2012-pilot-a,,,,,,skip,436336,glove,OGELV,glove,27,1,9,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,15,anagram,interdependent,anagram,11098,lyric,262171,,1.0.0,stephens2012-pilot-a,,,,,,submit,425238,lyric,IRLCY,lyric,85,1,10,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,16,anagram,interdependent,anagram,30546,,292719,,1.0.0,stephens2012-pilot-a,,,,,,skip,394691,truck,CUTKR,truck,16,1,11,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,17,anagram,interdependent,anagram,34808,,327528,,1.0.0,stephens2012-pilot-a,,,,,,skip,359882,mouth,HMTUO,mouth,25,1,12,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,18,anagram,interdependent,anagram,16899,juice,344428,,1.0.0,stephens2012-pilot-a,,,,,,submit,342982,juice,ECUJI,juice,18,1,13,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,19,anagram,interdependent,anagram,2890,knife,347319,,1.0.0,stephens2012-pilot-a,,,,,,submit,340091,knife,IENKF,knife,112,1,14,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,20,anagram,interdependent,anagram,6206,judge,353526,,1.0.0,stephens2012-pilot-a,,,,,,submit,333883,judge,GJEDU,judge,44,1,15,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,21,anagram,interdependent,anagram,17006,,370533,,1.0.0,stephens2012-pilot-a,,,,,,skip,316876,apron,RNPAO,apron,149,1,16,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,22,anagram,interdependent,anagram,6588,world,377122,,1.0.0,stephens2012-pilot-a,,,,,,submit,310287,world,DLWRO,world,2,1,17,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,23,anagram,interdependent,anagram,19179,,396302,,1.0.0,stephens2012-pilot-a,,,,,,skip,291108,album,LMUBA,album,120,1,18,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,24,anagram,interdependent,anagram,9102,honey,405404,,1.0.0,stephens2012-pilot-a,,,,,,submit,282005,honey,YNOHE,honey,30,1,19,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,25,anagram,interdependent,anagram,22882,doubt,428288,,1.0.0,stephens2012-pilot-a,,,,,,submit,259122,doubt,OBDTU,doubt,47,2,20,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,26,anagram,interdependent,anagram,49988,cabin,478276,,1.0.0,stephens2012-pilot-a,,,,,,submit,209133,cabin,BNIAC,cabin,62,2,21,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,27,anagram,interdependent,anagram,28949,,507226,,1.0.0,stephens2012-pilot-a,,,,,,skip,180183,plant,LTNPA,plant,13,2,22,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,28,anagram,interdependent,anagram,41512,vogel,548739,,1.0.0,stephens2012-pilot-a,,,,,,submit,138671,glove,OGELV,glove,27,2,23,0,false,false,false,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,29,anagram,interdependent,anagram,22904,truck,571644,,1.0.0,stephens2012-pilot-a,,,,,,submit,115766,truck,CUTKR,truck,16,2,24,0,false,false,true,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,30,anagram,interdependent,anagram,41634,,613279,,1.0.0,stephens2012-pilot-a,,,,,,skip,74131,mouth,HMTUO,mouth,25,2,25,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,31,anagram,interdependent,anagram,12426,,625706,,1.0.0,stephens2012-pilot-a,,,,,,skip,61703,apron,RNPAO,apron,149,2,26,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,32,anagram,interdependent,anagram,26162,,651869,,1.0.0,stephens2012-pilot-a,,,,,,skip,35541,album,LMUBA,album,120,2,27,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,33,anagram,interdependent,anagram,1389,,653260,,1.0.0,stephens2012-pilot-a,,,,,,skip,34150,plant,LTNPA,plant,13,3,28,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,34,anagram,interdependent,anagram,1078,,654338,,1.0.0,stephens2012-pilot-a,,,,,,skip,33071,mouth,HMTUO,mouth,25,3,29,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,35,anagram,interdependent,anagram,876,,655215,,1.0.0,stephens2012-pilot-a,,,,,,skip,32194,apron,RNPAO,apron,149,3,30,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,36,anagram,interdependent,anagram,620,,655837,,1.0.0,stephens2012-pilot-a,,,,,,skip,31573,album,LMUBA,album,120,3,31,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,37,anagram,interdependent,anagram,5232,,661070,,1.0.0,stephens2012-pilot-a,,,,,,skip,26340,plant,LTNPA,plant,13,4,32,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,38,anagram,interdependent,anagram,299,,661370,,1.0.0,stephens2012-pilot-a,,,,,,skip,26040,mouth,HMTUO,mouth,25,4,33,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,39,anagram,interdependent,anagram,185,,661555,,1.0.0,stephens2012-pilot-a,,,,,,skip,25854,apron,RNPAO,apron,149,4,34,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,40,anagram,interdependent,anagram,140,,661695,,1.0.0,stephens2012-pilot-a,,,,,,skip,25714,album,LMUBA,album,120,4,35,0,false,true,,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,41,anagram,interdependent,anagram,10822,nanlt,672518,,1.0.0,stephens2012-pilot-a,,,,,,submit,14892,plant,LTNPA,plant,13,5,36,0,false,false,false,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,42,anagram,interdependent,anagram,8065,tumhr,680584,,1.0.0,stephens2012-pilot-a,,,,,,submit,6826,mouth,HMTUO,mouth,25,5,37,0,false,false,false,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,43,anagram,interdependent,anagram,2053,rfjdf,682638,,1.0.0,stephens2012-pilot-a,,,,,,submit,4771,apron,RNPAO,apron,149,5,38,0,false,false,false,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,44,anagram,interdependent,anagram,2311,fdffdd,684950,,1.0.0,stephens2012-pilot-a,,,,,,submit,2459,album,LMUBA,album,120,5,39,0,false,false,false,,,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,45,anagram_end,interdependent,html-button-response,1389,0,686342,"<div class=""task-instructions"" id=""anagram-end"" data-reason=""finished"">
+        <h2>You have answered all of the anagrams</h2>
+        <p>Thank you. Please press Continue for the next part of the study.</p></div>",2.1.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,15,finished,,,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,46,manipulation_check,interdependent,survey,8056,"{""mc_individually_motivated"":3,""mc_work_together"":4}",694435,,4.0.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,15,,3,4,,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,47,demographics,interdependent,survey,38467,"{""parent1_education"":""associates"",""parent2_education"":""associates"",""household_income"":5,""class_year"":""First-year (frosh)"",""us_citizen"":""Yes"",""gender"":""Man"",""sex"":""none"",""race"":[""white"",""pacific_islander""],""hs_gpa_scale"":""4.0 (unweighted)"",""hs_gpa"":4,""age"":null}",732920,,4.0.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,15,,,,true,false
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,48,final_questions,interdependent,survey,12923,"{""outside_help"":""No"",""seen_before"":""Not sure"",""study_purpose"":null}",745858,,4.0.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,15,,,,true,
+9wmzv9okFSZbkcXZLtNpa24OYQs1-5d08168d,49,debrief,interdependent,html-button-response,13795,0,759653,,2.1.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,15,,,,true,
+Mox8SwKuaHSZoJ13l4Kl1UrrUWi2-26007e9d,0,consent,independent,html-button-response,62,0,75,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+Mox8SwKuaHSZoJ13l4Kl1UrrUWi2-26007e9d,1,overview,independent,instructions,43,,119,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":43}]",,,,,,,,,,,,,,,,,,,,,
+Mox8SwKuaHSZoJ13l4Kl1UrrUWi2-26007e9d,2,letter,independent,instructions,153,,272,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":70},{""page_index"":1,""viewing_time"":83}]",independent,153,"[70,83]",,,,,,,,,,,,,,,,,,
+Mox8SwKuaHSZoJ13l4Kl1UrrUWi2-26007e9d,3,cover_story,independent,instructions,33,,306,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":33}]",,,,,,,,,,,,,,,,,,,,,
+Mox8SwKuaHSZoJ13l4Kl1UrrUWi2-26007e9d,4,anagram_instructions,independent,instructions,83,,389,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":83}]",,,,,,,,,,,,,,,,,,,,,
+Mox8SwKuaHSZoJ13l4Kl1UrrUWi2-26007e9d,5,anagram,independent,anagram,30,cabin,419,,1.0.0,stephens2012-pilot-a,,,,,,submit,19970,cabin,BNIAC,cabin,62,1,0,0,false,false,true,,,,,,
+Mox8SwKuaHSZoJ13l4Kl1UrrUWi2-26007e9d,6,anagram,independent,anagram,19971,,20391,,1.0.0,stephens2012-pilot-a,,,,,,timeout,0,juice,ECUJI,juice,18,1,1,0,true,false,,,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,0,consent,independent,html-button-response,50,0,58,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,1,overview,independent,instructions,99,,157,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":99}]",,,,,,,,,,,,,,,,,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,2,letter,independent,instructions,115,,273,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":82},{""page_index"":1,""viewing_time"":33}]",independent,115,"[82,33]",,,,,,,,,,,,,,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,3,cover_story,independent,instructions,49,,322,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":49}]",,,,,,,,,,,,,,,,,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,4,anagram_instructions,independent,instructions,67,,390,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":67}]",,,,,,,,,,,,,,,,,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,5,anagram,independent,anagram,4002,plan,4392,,1.0.0,stephens2012-pilot-a,,,,,,timeout,0,mouth,HMTUO,mouth,25,1,0,0,true,false,,,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,6,anagram_end,independent,html-button-response,381,0,4773,"<div class=""task-instructions"" id=""anagram-end"" data-reason=""time"">
+        <h2>Time is up</h2>
+        <p>Thank you. Please press Continue for the next part of the study.</p></div>",2.1.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,0,time,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,7,manipulation_check,independent,survey,393,"{""mc_individually_motivated"":null,""mc_work_together"":null}",5194,,4.0.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,0,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,8,demographics,independent,survey,1171,"{""parent1_education"":null,""parent2_education"":null,""household_income"":null,""class_year"":null,""us_citizen"":null,""age"":null,""gender"":null,""sex"":null,""race"":null,""hs_gpa"":null,""hs_gpa_scale"":null}",6380,,4.0.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,0,,,,,
+NX9jl17NmwZHHAoZNi6u47AALBJ2-26e7cb95,9,final_questions,independent,survey,386,"{""outside_help"":null,""seen_before"":null,""study_purpose"":null}",6775,,4.0.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,0,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,0,consent,interdependent,html-button-response,352,0,359,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,1,overview,interdependent,instructions,46,,405,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":46}]",,,,,,,,,,,,,,,,,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,2,letter,interdependent,instructions,534,,940,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":251},{""page_index"":1,""viewing_time"":283}]",interdependent,534,"[251,283]",,,,,,,,,,,,,,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,3,cover_story,interdependent,instructions,216,,1156,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":216}]",,,,,,,,,,,,,,,,,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,4,anagram_instructions,interdependent,instructions,249,,1406,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":249}]",,,,,,,,,,,,,,,,,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,5,anagram,interdependent,anagram,247,honey,1653,,1.0.0,stephens2012-pilot-a,,,,,,submit,39753,honey,YNOHE,honey,30,1,0,0,false,false,true,,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,6,anagram,interdependent,anagram,30035,,31689,,1.0.0,stephens2012-pilot-a,,,,,,skip,9718,knife,IENKF,knife,112,1,1,0,false,true,,,,,,,
+X7DsTUusbiYL1dcNb6y8wf4ljd83-68362e36,7,anagram,interdependent,anagram,9720,,41410,,1.0.0,stephens2012-pilot-a,,,,,,timeout,0,glove,OGELV,glove,27,1,2,0,true,false,,,,,,,
+bLh3jgdyk7XCDbPvj5jnBRHcgo03-5cfdb040,0,consent,interdependent,html-button-response,190,0,199,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+bLh3jgdyk7XCDbPvj5jnBRHcgo03-5cfdb040,1,overview,interdependent,instructions,44,,243,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":44}]",,,,,,,,,,,,,,,,,,,,,
+bLh3jgdyk7XCDbPvj5jnBRHcgo03-5cfdb040,2,letter,interdependent,instructions,438,,682,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":220},{""page_index"":1,""viewing_time"":218}]",interdependent,438,"[220,218]",,,,,,,,,,,,,,,,,,
+bLh3jgdyk7XCDbPvj5jnBRHcgo03-5cfdb040,3,cover_story,interdependent,instructions,230,,913,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":230}]",,,,,,,,,,,,,,,,,,,,,
+bLh3jgdyk7XCDbPvj5jnBRHcgo03-5cfdb040,4,anagram_instructions,interdependent,instructions,238,,1152,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":238}]",,,,,,,,,,,,,,,,,,,,,
+bLh3jgdyk7XCDbPvj5jnBRHcgo03-5cfdb040,5,anagram,interdependent,anagram,218,knife,1371,,1.0.0,stephens2012-pilot-a,,,,,,submit,39781,plant,LTNPA,plant,13,1,0,0,false,false,false,,,,,,
+k4s20BXzvFPLXqw6B7OATCvO1wx1-40df08f2,0,consent,independent,html-button-response,53,0,64,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+k4s20BXzvFPLXqw6B7OATCvO1wx1-40df08f2,1,overview,independent,instructions,40,,105,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":40}]",,,,,,,,,,,,,,,,,,,,,
+k4s20BXzvFPLXqw6B7OATCvO1wx1-40df08f2,2,letter,independent,instructions,343,,449,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":172},{""page_index"":1,""viewing_time"":171}]",independent,343,"[172,171]",,,,,,,,,,,,,,,,,,
+k4s20BXzvFPLXqw6B7OATCvO1wx1-40df08f2,3,cover_story,independent,instructions,184,,634,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":184}]",,,,,,,,,,,,,,,,,,,,,
+k4s20BXzvFPLXqw6B7OATCvO1wx1-40df08f2,4,anagram_instructions,independent,instructions,178,,812,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":178}]",,,,,,,,,,,,,,,,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,0,consent,interdependent,html-button-response,158,0,171,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,1,overview,interdependent,instructions,70,,245,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":70}]",,,,,,,,,,,,,,,,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,2,letter,interdependent,instructions,582,,827,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":283},{""page_index"":1,""viewing_time"":300}]",interdependent,582,"[283,300]",,,,,,,,,,,,,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,3,cover_story,interdependent,instructions,217,,1045,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":217}]",,,,,,,,,,,,,,,,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,4,anagram_instructions,interdependent,instructions,248,,1294,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":248}]",,,,,,,,,,,,,,,,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,5,anagram,interdependent,anagram,249,plant,1543,,1.0.0,stephens2012-pilot-a,,,,,,submit,39751,plant,LTNPA,plant,13,1,0,0,false,false,true,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,6,anagram,interdependent,anagram,30036,,31580,,1.0.0,stephens2012-pilot-a,,,,,,skip,9714,virus,RSUIV,virus,84,1,1,0,false,true,,,,,,,
+uOSrB7Xidlg87bwrkO48U3296rA3-cf765d40,7,anagram,interdependent,anagram,9715,,41296,,1.0.0,stephens2012-pilot-a,,,,,,timeout,0,cabin,BNIAC,cabin,62,1,2,0,true,false,,,,,,,
+zcRWPVL7CmRdtIioA8bnNcEZN403-eda158aa,0,consent,interdependent,html-button-response,144,0,151,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a,true,,,,,,,,,,,,,,,,,,,,,,
+zcRWPVL7CmRdtIioA8bnNcEZN403-eda158aa,1,overview,interdependent,instructions,49,,201,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":49}]",,,,,,,,,,,,,,,,,,,,,
+zcRWPVL7CmRdtIioA8bnNcEZN403-eda158aa,2,letter,interdependent,instructions,467,,668,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":233},{""page_index"":1,""viewing_time"":233}]",interdependent,467,"[233,233]",,,,,,,,,,,,,,,,,,
+zcRWPVL7CmRdtIioA8bnNcEZN403-eda158aa,3,cover_story,interdependent,instructions,232,,901,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":232}]",,,,,,,,,,,,,,,,,,,,,
+zcRWPVL7CmRdtIioA8bnNcEZN403-eda158aa,4,anagram_instructions,interdependent,instructions,232,,1134,,2.1.0,stephens2012-pilot-a,,"[{""page_index"":0,""viewing_time"":232}]",,,,,,,,,,,,,,,,,,,,,
+zcRWPVL7CmRdtIioA8bnNcEZN403-eda158aa,5,anagram,interdependent,anagram,3001,,4137,,1.0.0,stephens2012-pilot-a,,,,,,timeout,0,tulip,ITPLU,tulip,98,1,0,0,true,false,,,,,,,
+zcRWPVL7CmRdtIioA8bnNcEZN403-eda158aa,6,anagram_end,interdependent,html-button-response,75,0,4215,"<div class=""task-instructions"" id=""anagram-end"" data-reason=""time"">
+        <h2>Time is up</h2>
+        <p>Thank you. Please press Continue for the next part of the study.</p></div>",2.1.0,stephens2012-pilot-a,,,,,,,,,,,,,,,,,,0,time,,,,
