@@ -69,6 +69,7 @@ async function runThroughExperiment(page, { answerAnagrams = true, finish = true
   const letterBtn = page.locator("#jspsych-html-button-response-btngroup button");
   await expect(page.locator(".letter")).toBeVisible();
   await expect(letterBtn).toBeEnabled({ timeout: 10000 });
+  await letterBtn.scrollIntoViewIfNeeded();
   await letterBtn.click();
   await nextPage(page);                 // cover story
   await nextPage(page);                 // anagram instructions: "Start"
@@ -198,6 +199,8 @@ test.describe("experiment", () => {
     expect(letter.letter).toBe(pdoc.condition);
     expect(letter.letter_time_ms).toBeGreaterThanOrEqual(900);   // Continue was locked for ~1 s
     expect(letter.letter_min_ms).toBe(1000);
+    expect(letter.letter_max_scroll).toBeGreaterThan(0.95);       // the robot scrolled to the bottom
+    expect(letter.letter_max_scroll).toBeLessThanOrEqual(1);
 
     const ana = trials.filter((t) => t.task === "anagram");
     expect(ana.length).toBe(21);

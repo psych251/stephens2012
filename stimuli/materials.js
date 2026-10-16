@@ -15,8 +15,8 @@ window.STIMULI = (function () {
   // One page, laid out like the original two-page letter: header (with the president's photo
   // box), the four themes, a strip of student photos, then the letter in two columns.
   // `photos` are the student photos cropped from page 1 of the original materials for this
-  // condition (solo students vs groups), with their pixel sizes so the strip keeps the
-  // original proportions: each photo grows in proportion to its width/height.
+  // condition (solo students vs groups). Both conditions use the same frame (see CSS); `focus`
+  // says which part of a photo to keep when it is cropped to fit, e.g. faces near the top.
   function onePage(themes, paragraphs, photos, showPhotos, presidentPhoto) {
     const box = (label, cls) => `<div class="photo-placeholder ${cls}"><span>${label}</span></div>`;
     return `
@@ -36,7 +36,7 @@ window.STIMULI = (function () {
             ${themes.map((t) => `<li>${t}</li>`).join("")}
           </ul>
           ${showPhotos ? `<div class="photo-strip">${photos.map((ph) =>
-            `<img class="photo-strip-item" src="${ph.src}" alt="" style="flex: ${(ph.w / ph.h).toFixed(3)}">`).join("")}</div>` : ""}
+            `<img class="photo-strip-item" src="${ph.src}" alt="" style="object-position: ${ph.focus || "center"}">`).join("")}</div>` : ""}
           <div class="letter-text">
             ${paragraphs.map((p) => `<p>${p}</p>`).join("")}
             <p class="letter-sign">Jonathan Levin<br>President</p>
@@ -48,9 +48,9 @@ window.STIMULI = (function () {
   const letters = {
     independent: {
       photos: [
-        { src: "stimuli/photos/independent-1.jpg", w: 267, h: 506 },
-        { src: "stimuli/photos/independent-2.jpg", w: 260, h: 506 },
-        { src: "stimuli/photos/independent-3.jpg", w: 663, h: 506 },
+        { src: "stimuli/photos/independent-1.jpg", focus: "center 20%" },
+        { src: "stimuli/photos/independent-2.jpg", focus: "center 65%" },
+        { src: "stimuli/photos/independent-3.jpg", focus: "center 30%" },
       ],
       themes: [
         "Learn by exploring your personal interests",
@@ -71,9 +71,9 @@ window.STIMULI = (function () {
     },
     interdependent: {
       photos: [
-        { src: "stimuli/photos/interdependent-1.jpg", w: 239, h: 312 },
-        { src: "stimuli/photos/interdependent-2.jpg", w: 370, h: 312 },
-        { src: "stimuli/photos/interdependent-3.jpg", w: 630, h: 312 },
+        { src: "stimuli/photos/interdependent-1.jpg", focus: "center" },
+        { src: "stimuli/photos/interdependent-2.jpg", focus: "center" },
+        { src: "stimuli/photos/interdependent-3.jpg", focus: "center" },
       ],
       themes: [
         "Learn by being part of a community",

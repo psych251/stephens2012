@@ -293,11 +293,13 @@ function classifyFirstGen(p1, p2) {
   // -------------------------------------------------------------------------
   // One page. Continue stays disabled for LETTER_MIN_MS and counts down on its label. Reading
   // time (rt) is saved for screening; scroll depth shows whether they reached the end.
+  // jsPsych scrolls inside its display element (overflow-y: auto), not the window.
   let letterTick = null;
   let letterMaxScroll = 0;
+  const scroller = () => jsPsych.getDisplayContainerElement();
   const onLetterScroll = () => {
-    const doc = document.documentElement;
-    const seen = (window.scrollY + window.innerHeight) / Math.max(1, doc.scrollHeight);
+    const el = scroller();
+    const seen = (el.scrollTop + el.clientHeight) / Math.max(1, el.scrollHeight);
     letterMaxScroll = Math.max(letterMaxScroll, Math.min(1, seen));
   };
   const letter = {
@@ -309,9 +311,9 @@ function classifyFirstGen(p1, p2) {
     save_trial_parameters: { stimulus: false },
     data: { task: "letter", letter: condition },
     on_load: () => {
-      window.scrollTo(0, 0);
+      scroller().scrollTop = 0;
       onLetterScroll();
-      window.addEventListener("scroll", onLetterScroll);
+      scroller().addEventListener("scroll", onLetterScroll);
       const btn = document.querySelector("#jspsych-html-button-response-btngroup button");
       const shownAt = Date.now();
       const label = () => {
@@ -324,12 +326,13 @@ function classifyFirstGen(p1, p2) {
     },
     on_finish: (data) => {
       clearInterval(letterTick);
-      window.removeEventListener("scroll", onLetterScroll);
+      onLetterScroll(); // final reading: scroll events arrive asynchronously, after the click
+      scroller().removeEventListener("scroll", onLetterScroll);
       data.letter_time_ms = data.rt;
       data.letter_min_ms = LETTER_MIN_MS;
       data.letter_max_scroll = Math.round(letterMaxScroll * 100) / 100; // 1 = scrolled to the bottom
       saver.updateParticipant({ letter_time_ms: data.rt, letter_max_scroll: data.letter_max_scroll });
-      window.scrollTo(0, 0);
+      scroller().scrollTop = 0;
       progress(0.2);
     },
   };
