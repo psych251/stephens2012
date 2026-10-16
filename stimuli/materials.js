@@ -3,53 +3,52 @@
  *
  * Letters: transcribed word for word from the original materials (see
  * materials/welcome-letters-draft.md), with the president updated to Jonathan Levin.
- * Text only for now: no president photo, signature, or campus photos.
+ * Shown on one page. Photos are grey labelled placeholders until approved images exist;
+ * the president's name is typed, not a reproduced signature.
  *
  * Anagrams: the backup set in materials/anagrams-backup.csv (main items only), built by
  * scripts/make-anagrams.py from Gilhooly (1978). If you change that CSV, update this list.
  */
 window.STIMULI = (function () {
-  function header() {
-    return `
-      <div class="letter-header">
-        <div class="letter-from">From Stanford's President</div>
-        <div class="letter-title">Welcome to Stanford University</div>
-      </div>`;
-  }
-
-  function themesPage(themes) {
+  // One page, laid out like the original two-page letter: header (with the president's photo
+  // box), the four themes, a strip of student photos, then the letter in two columns.
+  // `photos` describes what the original's photo strip showed in this condition.
+  function onePage(themes, paragraphs, photos, showPlaceholders) {
+    const box = (label, cls) => showPlaceholders
+      ? `<div class="photo-placeholder ${cls}"><span>${label}</span></div>` : "";
     return `
       <div class="letter">
-        ${header()}
+        <div class="letter-header">
+          <div class="letter-header-text">
+            <div class="letter-from">From Stanford's President</div>
+            <div class="letter-title">Welcome to Stanford University</div>
+          </div>
+          ${box("Photo: President Levin", "photo-head")}
+        </div>
         <div class="letter-body">
           <p class="letter-lead">At Stanford you have the opportunity to…</p>
           <ul class="letter-themes">
             ${themes.map((t) => `<li>${t}</li>`).join("")}
           </ul>
-        </div>
-      </div>`;
-  }
-
-  function letterPage(paragraphs) {
-    return `
-      <div class="letter">
-        ${header()}
-        <div class="letter-body letter-text">
-          ${paragraphs.map((p) => `<p>${p}</p>`).join("")}
-          <p class="letter-sign">Jonathan Levin<br>President</p>
+          ${showPlaceholders ? `<div class="photo-strip">${photos.map((ph) => box(ph, "photo-strip-item")).join("")}</div>` : ""}
+          <div class="letter-text">
+            ${paragraphs.map((p) => `<p>${p}</p>`).join("")}
+            <p class="letter-sign">Jonathan Levin<br>President</p>
+          </div>
         </div>
       </div>`;
   }
 
   const letters = {
-    independent: [
-      themesPage([
+    independent: {
+      photos: ["Photo: a student on their own", "Photo: a student working alone", "Photo: a student studying alone"],
+      themes: [
         "Learn by exploring your personal interests",
         "Express your ideas and opinions",
         "Create your own intellectual journey",
         "Participate in independent research",
-      ]),
-      letterPage([
+      ],
+      paragraphs: [
         "I am delighted that you have decided that Stanford University is the right place for you. For the next few years, you will have many opportunities to explore new areas of interest and to learn from our faculty and from your own individual experiences.",
         "As Stanford's 13th president and a faculty member for more than 25 years, I encourage you to make the most of your time here, and I offer you a few suggestions to get you started.",
         "Stanford has an accomplished faculty. These teachers and researchers are here because of you and your desire to develop your extraordinary talents and unique interests. From your first days on campus, I urge you to get to know our faculty. Stop by during office hours to initiate a discussion, to share your ideas, or to simply tell the professor what you think about the course.",
@@ -58,16 +57,17 @@ window.STIMULI = (function () {
         "Stanford is an intellectually vibrant place and you are a critical part of creating your own journey. Some of your most valuable experiences might involve working independently to understand a difficult concept or influencing others by expressing your own ideas.",
         "Stanford has a tradition of independence: of bold students who assert their own ideas, thoughts, and opinions. I hope you do the same while you are here. This is your time to develop yourself, to become your own person, and to explore your own personal interests—whether it is in the classroom, in a laboratory, in a theater, or on an athletic field.",
         "Above all, I urge you to be your own person, enjoy your intellectual journey, and to pursue it with enthusiasm.",
-      ]),
-    ],
-    interdependent: [
-      themesPage([
+      ],
+    },
+    interdependent: {
+      photos: ["Photo: students together", "Photo: a group of students", "Photo: students working together"],
+      themes: [
         "Learn by being part of a community",
         "Connect with fellow students and faculty",
         "Work together with and learn from others",
         "Participate in collaborative research",
-      ]),
-      letterPage([
+      ],
+      paragraphs: [
         "I am delighted that you and your family have decided that Stanford is the right place for you. For the next few years, together with the Stanford community, you will have many opportunities to consider new areas of interest and to learn from our faculty and your peers.",
         "As Stanford's 13th president and a faculty member for more than 25 years, I encourage you to make the most of your time here, and I offer you a few suggestions to get you started.",
         "Stanford has an accomplished faculty. These teachers and researchers are here because of their desire to be a part of your and your classmates' experiences, to connect with students, and to learn from all of your backgrounds and experiences. From your first days on campus, I urge you to get to know our faculty. Stop by during office hours to continue a class discussion and to share your perspective. Take advantage of the opportunity to learn from the expertise of the professor and from the larger Stanford community.",
@@ -76,8 +76,8 @@ window.STIMULI = (function () {
         "Stanford is an intellectually vibrant place and your fellow students are a critical part of your experience. Some of your most valuable experiences will be shared with your peers, whether you are working together to understand a difficult concept or learning more about one another.",
         "Stanford has a tradition of learning through community—bridging academic study with public service. I hope that you will do the same while you are here. This is your time to grow and to collaborate—whether it is in the classroom, in a laboratory, in a theater, or on an athletic field.",
         "Above all, I urge you to work together with others, enjoy the intellectual journey, and pursue it with enthusiasm.",
-      ]),
-    ],
+      ],
+    },
   };
 
   // solution, anagram, Gilhooly (1978) bigram rank (lower = easier)
@@ -89,5 +89,10 @@ window.STIMULI = (function () {
     ["tulip", "ITPLU", 98], ["knife", "IENKF", 112], ["album", "LMUBA", 120], ["apron", "RNPAO", 149],
   ].map(([solution, anagram, br]) => ({ item_id: solution, solution, anagram, gilhooly_br: br }));
 
-  return { letters, anagrams };
+  const letterHtml = (condition, showPlaceholders) => {
+    const L = letters[condition];
+    return onePage(L.themes, L.paragraphs, L.photos, showPlaceholders);
+  };
+
+  return { letters, letterHtml, anagrams };
 })();

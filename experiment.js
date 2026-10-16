@@ -13,11 +13,14 @@
  *   Other:  manipulation check (2 items, 1-7); covariates race and high school GPA, collected
  *           in the demographics survey.
  *   Screening fields (cutoffs are decided in the preregistration, not here): completion,
- *           class year, citizenship, unclassifiable social class, time spent on the letter,
+ *           eligibility, citizenship, unclassifiable social class, time spent on and scroll depth through the letter,
  *           window focus losses during the anagram task, self-reported outside help, prior
  *           exposure to the letters. Everyone can finish the study regardless.
  *
- * Timeline: consent -> overview -> [demographics if position "before"] -> welcome letter ->
+ * Eligibility: first-year students only (class year asked right after consent; others are
+ *           thanked and the study ends, recorded as eligible = false).
+ * Timeline: consent -> eligibility -> overview -> [demographics if position "before"] ->
+ *   welcome letter (one page, Continue locked for 45 s) ->
  *   cover story + anagram instructions -> anagram task -> manipulation check ->
  *   [demographics if position "after"] -> final questions -> debrief.
  */
@@ -56,6 +59,13 @@ const EXPERIMENT = {
   // "after": demographics follow the manipulation check, so social class is not made salient
   // before the task. "before": demographics come right after consent, as in the writeup draft.
   demographics_position: "after",
+
+  // Seconds before the Continue button under the welcome letter becomes available.
+  letter_min_seconds: 45,
+
+  // Grey labelled boxes where the original had a president photo and student photos.
+  // Turn off (or replace with approved images) before running real participants.
+  show_photo_placeholders: true,
 };
 
 // True on anything with a mouse, trackpad, or stylus, including laptops with touchscreens.
@@ -80,6 +90,10 @@ const IS_LOCAL = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 const ANAGRAM_MS = ((USE_EMULATOR || IS_LOCAL) && Number(URL_PARAMS.get("anagram_seconds")))
   ? Number(URL_PARAMS.get("anagram_seconds")) * 1000
   : EXPERIMENT.anagram_minutes * 60 * 1000;
+// Same rule for `?letter_seconds=N`, which shortens the letter's minimum reading time.
+const LETTER_MIN_MS = ((USE_EMULATOR || IS_LOCAL) && URL_PARAMS.get("letter_seconds") !== null)
+  ? Number(URL_PARAMS.get("letter_seconds")) * 1000
+  : EXPERIMENT.letter_min_seconds * 1000;
 
 // Parental education answers that count as a 4-year degree or more.
 const FOUR_YEAR = ["bachelors", "graduate"];
@@ -155,6 +169,13 @@ function classifyFirstGen(p1, p2) {
           "You may close this window" + (EXPERIMENT.prolific_completion_code ? " and return the study on Prolific" : "") + ".</p>";
         return;
       }
+      const eligibilityRow = jsPsych.data.get().filter({ task: "eligibility" }).values()[0];
+      if (eligibilityRow && eligibilityRow.eligible === false) {
+        msg.innerHTML = "<h2 class='thanks' id='screened-out'>Thank you for your interest</h2>" +
+          "<p class='thanks'>This study is only open to first-year students, so it ends here. " +
+          "You may close this window.</p>";
+        return;
+      }
       if (result.ok && EXPERIMENT.prolific_completion_code && !USE_EMULATOR) {
         msg.innerHTML = "<p class='thanks'>Saved. Returning you to Prolific…</p>";
         window.location.href =
@@ -218,6 +239,36 @@ function classifyFirstGen(p1, p2) {
   };
 
   // -------------------------------------------------------------------------
+  // Eligibility: first-year students only. Anyone else (including "Prefer not to say", since
+  // eligibility cannot then be confirmed) is thanked and the study ends; the visit is still
+  // recorded with eligible = false so screen-outs can be counted.
+  // -------------------------------------------------------------------------
+  // Every multiple-choice question is required, but always offers this option: the consent text
+  // promises participants may decline any question.
+  const preferNot = { isRequired: true, showNoneItem: true, noneText: "Prefer not to say" };
+  const FIRST_YEAR = "First-year (frosh)";
+  const eligibility = {
+    type: jsPsychSurvey,
+    survey_json: {
+      showQuestionNumbers: "off",
+      completeText: "Continue",
+      pages: [{
+        elements: [
+          { type: "radiogroup", name: "class_year", title: "What is your class year?", choices: [FIRST_YEAR, "Sophomore", "Junior", "Senior", "Other"], ...preferNot },
+        ],
+      }],
+    },
+    data: { task: "eligibility" },
+    on_finish: (data) => {
+      const year = (data.response || {}).class_year ?? null;
+      data.class_year = year;
+      data.eligible = year === FIRST_YEAR;
+      saver.updateParticipant({ class_year: year, eligible: data.eligible });
+      if (!data.eligible) jsPsych.abortExperiment();
+    },
+  };
+
+  // -------------------------------------------------------------------------
   // Overview (describes what participants do, not the hypothesis)
   // -------------------------------------------------------------------------
   const overview = {
@@ -237,23 +288,45 @@ function classifyFirstGen(p1, p2) {
   // -------------------------------------------------------------------------
   // Welcome letter (the manipulation): two pages, as in the original materials
   // -------------------------------------------------------------------------
+  // One page. Continue stays disabled for LETTER_MIN_MS and counts down on its label. Reading
+  // time (rt) is saved for screening; scroll depth shows whether they reached the end.
+  let letterTick = null;
+  let letterMaxScroll = 0;
+  const onLetterScroll = () => {
+    const doc = document.documentElement;
+    const seen = (window.scrollY + window.innerHeight) / Math.max(1, doc.scrollHeight);
+    letterMaxScroll = Math.max(letterMaxScroll, Math.min(1, seen));
+  };
   const letter = {
-    type: jsPsychInstructions,
-    pages: [
-      `<p class="letter-intro">Please read the following welcome message from Stanford University carefully.</p>`
-        + STIMULI.letters[condition][0],
-      STIMULI.letters[condition][1],
-    ],
-    show_clickable_nav: true,
-    allow_backward: true,
-    button_label_next: "Continue",
-    save_trial_parameters: { pages: false },
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `<p class="letter-intro">Please read the following welcome message from Stanford University carefully.</p>`
+      + STIMULI.letterHtml(condition, EXPERIMENT.show_photo_placeholders),
+    choices: ["Continue"],
+    enable_button_after: LETTER_MIN_MS,
+    save_trial_parameters: { stimulus: false },
     data: { task: "letter", letter: condition },
+    on_load: () => {
+      window.scrollTo(0, 0);
+      onLetterScroll();
+      window.addEventListener("scroll", onLetterScroll);
+      const btn = document.querySelector("#jspsych-html-button-response-btngroup button");
+      const shownAt = Date.now();
+      const label = () => {
+        const left = Math.ceil((LETTER_MIN_MS - (Date.now() - shownAt)) / 1000);
+        if (left > 0) btn.textContent = `Continue (available in ${left} s)`;
+        else { btn.textContent = "Continue"; clearInterval(letterTick); }
+      };
+      label();
+      letterTick = setInterval(label, 250);
+    },
     on_finish: (data) => {
-      // Total and per-page reading time, for the screening summary.
+      clearInterval(letterTick);
+      window.removeEventListener("scroll", onLetterScroll);
       data.letter_time_ms = data.rt;
-      data.letter_page_times_ms = (data.view_history || []).map((v) => v.viewing_time);
-      saver.updateParticipant({ letter_time_ms: data.rt });
+      data.letter_min_ms = LETTER_MIN_MS;
+      data.letter_max_scroll = Math.round(letterMaxScroll * 100) / 100; // 1 = scrolled to the bottom
+      saver.updateParticipant({ letter_time_ms: data.rt, letter_max_scroll: data.letter_max_scroll });
+      window.scrollTo(0, 0);
       progress(0.2);
     },
   };
@@ -399,16 +472,18 @@ function classifyFirstGen(p1, p2) {
       pages: [{
         description: "How much do you agree with each statement?",
         elements: [
-          { type: "radiogroup", name: "mc_individually_motivated", title: "My university expects college students to be individually motivated.", choices: agreeScale },
-          { type: "radiogroup", name: "mc_work_together", title: "My university expects college students to work together with other students.", choices: agreeScale },
+          { type: "radiogroup", name: "mc_individually_motivated", title: "My university expects college students to be individually motivated.", choices: agreeScale, ...preferNot },
+          { type: "radiogroup", name: "mc_work_together", title: "My university expects college students to work together with other students.", choices: agreeScale, ...preferNot },
         ],
       }],
     },
     data: { task: "manipulation_check" },
     on_finish: (data) => {
       const r = data.response || {};
-      data.mc_individually_motivated = r.mc_individually_motivated ?? null;
-      data.mc_work_together = r.mc_work_together ?? null;
+      // "Prefer not to say" is stored by SurveyJS as "none"; keep only numeric ratings here.
+      const num = (v) => (typeof v === "number" ? v : null);
+      data.mc_individually_motivated = num(r.mc_individually_motivated);
+      data.mc_work_together = num(r.mc_work_together);
       progress(0.85);
     },
   };
@@ -417,7 +492,6 @@ function classifyFirstGen(p1, p2) {
   // Demographics. Nothing is required: the consent text promises participants may decline any
   // question, so every item has a "Prefer not to say" option or can be left blank.
   // -------------------------------------------------------------------------
-  const preferNot = { showNoneItem: true, noneText: "Prefer not to say" };
   const demographics = {
     type: jsPsychSurvey,
     survey_json: {
@@ -444,9 +518,9 @@ function classifyFirstGen(p1, p2) {
         {
           title: "About you",
           elements: [
-            { type: "radiogroup", name: "class_year", title: "What is your class year?", choices: ["First-year (frosh)", "Sophomore", "Junior", "Senior", "Other"], ...preferNot },
             { type: "radiogroup", name: "us_citizen", title: "Are you a U.S. citizen or permanent resident?", choices: ["Yes", "No"], ...preferNot },
-            { type: "text", name: "age", title: "How old are you? (optional)", inputType: "number", min: 16, max: 100 },
+            { type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 100, requiredIf: "{age_decline} notcontains 'decline'", enableIf: "{age_decline} notcontains 'decline'" },
+            { type: "checkbox", name: "age_decline", titleLocation: "hidden", title: "Age", choices: [{ value: "decline", text: "Prefer not to say" }] },
             { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...preferNot },
             { type: "radiogroup", name: "sex", title: "What sex were you assigned at birth?", choices: ["Female", "Male", "Intersex"], ...preferNot },
             {
@@ -464,8 +538,9 @@ function classifyFirstGen(p1, p2) {
         {
           title: "High school",
           elements: [
-            { type: "text", name: "hs_gpa", title: "What was your high school GPA? (optional)", inputType: "number", min: 0, max: 10, step: 0.01 },
-            { type: "radiogroup", name: "hs_gpa_scale", title: "What scale is that GPA on?", choices: ["4.0 (unweighted)", "Weighted (e.g., out of 5.0)", "Other / not sure"], ...preferNot },
+            { type: "text", name: "hs_gpa", title: "What was your high school GPA?", inputType: "number", min: 0, max: 10, step: 0.01, requiredIf: "{hs_gpa_decline} notcontains 'decline'", enableIf: "{hs_gpa_decline} notcontains 'decline'" },
+            { type: "checkbox", name: "hs_gpa_decline", titleLocation: "hidden", title: "High school GPA", choices: [{ value: "decline", text: "Prefer not to say" }] },
+            { type: "radiogroup", name: "hs_gpa_scale", title: "What scale is that GPA on?", choices: ["4.0 (unweighted)", "Weighted (e.g., out of 5.0)", "Other / not sure"], visibleIf: "{hs_gpa_decline} notcontains 'decline'", ...preferNot },
           ],
         },
       ],
@@ -475,6 +550,10 @@ function classifyFirstGen(p1, p2) {
       const r = data.response || {};
       const race = Array.isArray(r.race) ? r.race : [];
       data.first_gen = classifyFirstGen(r.parent1_education, r.parent2_education);
+      const declinedQ = (q) => Array.isArray(r[q + "_decline"]) && r[q + "_decline"].includes("decline");
+      data.age = declinedQ("age") || r.age === undefined ? null : Number(r.age);
+      data.hs_gpa = declinedQ("hs_gpa") || r.hs_gpa === undefined ? null : Number(r.hs_gpa);
+      data.hs_gpa_scale = declinedQ("hs_gpa") ? null : (r.hs_gpa_scale ?? null);
       // Analysis covariate (White vs non-White). Multiracial participants who include White
       // are coded as not White-only here; the raw selections are kept so the rule can change.
       data.race_white_only = race.length === 0 || race.includes("none") ? null : (race.length === 1 && race[0] === "white");
@@ -482,7 +561,6 @@ function classifyFirstGen(p1, p2) {
       saver.updateParticipant({
         first_gen: data.first_gen,
         race_white_only: data.race_white_only,
-        class_year: r.class_year ?? null,
         us_citizen: r.us_citizen ?? null,
       });
       progress(0.92);
@@ -557,6 +635,7 @@ function classifyFirstGen(p1, p2) {
   const before = EXPERIMENT.demographics_position === "before";
   await jsPsych.run([
     consent,
+    eligibility,
     overview,
     ...(before ? [demographics] : []),
     letter,

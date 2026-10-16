@@ -8,19 +8,25 @@
 #jspsych-html-button-response-btngroup { text-align: center; }
 .thanks { text-align: center; }
 
-/* Welcome letter, styled after the original materials */
+/* Welcome letter, styled after the original materials (one page) */
 .letter-intro { text-align: center; color: #555; }
-.letter { border-left: 4px solid #b5a642; margin: 0 auto 1em; max-width: 680px; background: #fff; }
-.letter-header { background: #b5a642; color: #fff; padding: 18px 24px; }
+.letter { border-left: 4px solid #b5a642; margin: 0 auto 1em; max-width: 700px; background: #fff; }
+.letter-header { background: #b5a642; color: #fff; display: flex; align-items: stretch; justify-content: space-between; }
+.letter-header-text { padding: 18px 24px; flex: 1; }
 .letter-from { font-style: italic; text-align: right; font-size: 15px; }
-.letter-title { font-family: Georgia, serif; font-size: 30px; margin-top: 6px; }
-.letter-body { padding: 18px 28px; font-family: Georgia, serif; }
-.letter-lead { font-weight: bold; font-size: 22px; border-bottom: 2px solid #b5a642; padding-bottom: 8px; }
-.letter-themes { list-style: none; padding: 0; }
-.letter-themes li { font-style: italic; letter-spacing: 0.08em; font-size: 19px; margin: 18px 0; }
+.letter-title { font-family: Georgia, serif; font-size: 30px; margin-top: 10px; }
+.letter-body { padding: 18px 28px 24px; font-family: Georgia, serif; }
+.letter-lead { font-weight: bold; font-size: 22px; border-bottom: 2px solid #b5a642; padding-bottom: 8px; margin-top: 8px; }
+.letter-themes { list-style: none; padding: 0 8px; margin: 0 0 18px; }
+.letter-themes li { font-style: italic; letter-spacing: 0.08em; font-size: 19px; margin: 16px 0; }
 .letter-themes li:nth-child(odd) { text-align: right; }
 .letter-text p { font-size: 16px; line-height: 1.55; text-indent: 2em; margin: 0 0 0.6em; }
 .letter-text .letter-sign { text-indent: 0; margin-top: 1.2em; }
+.photo-placeholder { background: #e4e4e4; color: #777; font: 12px/1.3 system-ui, sans-serif; display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; box-sizing: border-box; }
+.photo-head { width: 120px; min-height: 110px; }
+.photo-strip { display: flex; gap: 8px; margin: 0 0 22px; }
+.photo-strip-item { flex: 1; height: 120px; }
+.photo-strip-item:last-child { flex: 2; }
 
 /* Anagram task */
 .task-instructions { font-size: 17px; line-height: 1.55; }

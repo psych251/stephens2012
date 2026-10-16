@@ -16,9 +16,9 @@ const EMULATOR = process.env.EMULATOR === "1" || !!process.env.FIRESTORE_EMULATO
 const PROJECT = "demo-psych251";
 const EXPERIMENT_ID = "stephens2012-pilot-a";
 const FS = `http://localhost:8080/v1/projects/${PROJECT}/databases/(default)/documents`;
-// Shorter clock for tests (honoured only in emulator runs and on localhost). The robot
-// finishes all 20 anagrams long before this runs out.
-const CLOCK = "anagram_seconds=120";
+// Shorter clocks for tests (honoured only in emulator runs and on localhost): the letter's
+// Continue button unlocks after 1 s, and the robot finishes all 20 anagrams long before 120 s.
+const CLOCK = "anagram_seconds=120&letter_seconds=1";
 
 // Click "next" on an instructions page and wait until the page actually changes, because
 // consecutive instruction screens reuse the same button id.
@@ -56,16 +56,26 @@ async function doAnagrams(page) {
   }
 }
 
-async function runThroughExperiment(page, { answerAnagrams = true, finish = true } = {}) {
+async function startStudy(page, classYear = "First-year (frosh)") {
   await page.getByRole("button", { name: "I agree to participate" }).click();
+  await pick(page, "class_year", classYear);
+  await page.locator('input[value="Continue"]').click();
+}
+
+async function runThroughExperiment(page, { answerAnagrams = true, finish = true, stopAtManipulationCheck = false } = {}) {
+  await startStudy(page);
   await nextPage(page);                 // overview
-  await nextPage(page);                 // welcome letter, page 1
-  await nextPage(page);                 // welcome letter, page 2
+  // Welcome letter: one page; Continue unlocks after the minimum reading time.
+  const letterBtn = page.locator("#jspsych-html-button-response-btngroup button");
+  await expect(page.locator(".letter")).toBeVisible();
+  await expect(letterBtn).toBeEnabled({ timeout: 10000 });
+  await letterBtn.click();
   await nextPage(page);                 // cover story
   await nextPage(page);                 // anagram instructions: "Start"
   if (answerAnagrams) await doAnagrams(page);
   await expect(page.locator("#anagram-end")).toBeVisible({ timeout: 30000 });
   await page.getByRole("button", { name: "Continue" }).click();
+  if (stopAtManipulationCheck) return;
 
   // Manipulation check
   await pick(page, "mc_individually_motivated", "Agree (6)");
@@ -77,7 +87,6 @@ async function runThroughExperiment(page, { answerAnagrams = true, finish = true
   await pick(page, "parent2_education", "Not applicable (no second parent/guardian)");
   await pick(page, "household_income", "$30,000 to $49,999");
   await page.locator('input[value="Next"]').click();
-  await pick(page, "class_year", "First-year (frosh)");
   await pick(page, "us_citizen", "Yes");
   await page.locator('[data-name="age"] input').fill("18");
   await pick(page, "gender", "Woman");
@@ -169,6 +178,7 @@ test.describe("experiment", () => {
     expect(pdoc.first_gen).toBe(true);
     expect(pdoc.race_white_only).toBe(true);
     expect(pdoc.class_year).toBe("First-year (frosh)");
+    expect(pdoc.eligible).toBe(true);
     expect(pdoc.us_citizen).toBe("Yes");
     expect(pdoc.outside_help).toBe("No");
     expect(pdoc.seen_before).toBe("No");
@@ -186,7 +196,8 @@ test.describe("experiment", () => {
 
     const letter = trials.find((t) => t.task === "letter");
     expect(letter.letter).toBe(pdoc.condition);
-    expect(letter.letter_page_times_ms.length).toBeGreaterThanOrEqual(2);
+    expect(letter.letter_time_ms).toBeGreaterThanOrEqual(900);   // Continue was locked for ~1 s
+    expect(letter.letter_min_ms).toBe(1000);
 
     const ana = trials.filter((t) => t.task === "anagram");
     expect(ana.length).toBe(21);
@@ -206,7 +217,8 @@ test.describe("experiment", () => {
     expect(mc.mc_individually_motivated).toBe(6);
     expect(mc.mc_work_together).toBe(5);
     const demo = trials.find((t) => t.task === "demographics");
-    expect(demo.response.age).toBe(18);
+    expect(demo.age).toBe(18);
+    expect(demo.hs_gpa).toBe(3.9);
     expect(demo.response.household_income).toBe(4);
     expect(demo.response.race).toEqual(["white"]);
     expect(demo.first_gen).toBe(true);
@@ -221,7 +233,7 @@ test.describe("experiment", () => {
   });
 
   test("the anagram clock ends the task and records the unfinished item as timed out", async ({ page }) => {
-    await page.goto(EMULATOR ? "/?emulator=1&anagram_seconds=3" : "/?anagram_seconds=3");
+    await page.goto(EMULATOR ? "/?emulator=1&anagram_seconds=3&letter_seconds=1" : "/?anagram_seconds=3&letter_seconds=1");
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await runThroughExperiment(page, { answerAnagrams: false });
     if (!EMULATOR) return;
@@ -236,6 +248,32 @@ test.describe("experiment", () => {
     expect(ana[0].timed_out).toBe(true);
     expect(ana[0].correct).toBe(null);
     expect(trials.find((t) => t.task === "anagram_end").reason).toBe("time");
+  });
+
+  test("students who are not first-years are thanked and screened out before the letter", async ({ page }) => {
+    await page.goto(EMULATOR ? "/?emulator=1" : "/");
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    await startStudy(page, "Sophomore");
+    await expect(page.locator("#screened-out")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator(".letter")).toHaveCount(0);
+    if (!EMULATOR) return;
+    const uid = await page.evaluate(() => window.__saver.docId);
+    const pdoc = decodeFields((await fsGet(`experiments/${EXPERIMENT_ID}/participants/${uid}`)).body.fields);
+    expect(pdoc.eligible).toBe(false);
+    expect(pdoc.class_year).toBe("Sophomore");
+  });
+
+  test("required questions block Continue until answered, and Prefer not to say counts as an answer", async ({ page }) => {
+    await page.goto(EMULATOR ? `/?emulator=1&${CLOCK}` : `/?${CLOCK}`);
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    await runThroughExperiment(page, { answerAnagrams: true, stopAtManipulationCheck: true });
+    await page.locator('input[value="Continue"]').click();
+    await expect(page.locator('[data-name="mc_work_together"]')).toBeVisible();   // still on the page
+    await expect(page.getByText("Response required.").first()).toBeVisible();
+    await pick(page, "mc_individually_motivated", "Prefer not to say");
+    await pick(page, "mc_work_together", "Prefer not to say");
+    await page.locator('input[value="Continue"]').click();
+    await expect(page.locator('[data-name="parent1_education"]')).toBeVisible();
   });
 
   test("chunked writes (chunk_size > 1) save every trial", async ({ page }) => {
