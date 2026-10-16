@@ -296,6 +296,8 @@ function classifyFirstGen(p1, p2) {
   // jsPsych scrolls inside its display element (overflow-y: auto), not the window.
   let letterTick = null;
   let letterMaxScroll = 0;
+  let letterObserver = null;
+  let letterObserverStart = null;
   const scroller = () => jsPsych.getDisplayContainerElement();
   const onLetterScroll = () => {
     const el = scroller();
@@ -307,6 +309,7 @@ function classifyFirstGen(p1, p2) {
     stimulus: `<p class="letter-intro">Please read the following welcome message from Stanford University carefully.</p>`
       + STIMULI.letterHtml(condition, EXPERIMENT.show_student_photos, EXPERIMENT.president_photo),
     choices: ["Continue"],
+    button_html: (choice) => `<button class="jspsych-btn letter-continue">${choice}</button>`,
     enable_button_after: LETTER_MIN_MS,
     save_trial_parameters: { stimulus: false },
     data: { task: "letter", letter: condition },
@@ -314,6 +317,22 @@ function classifyFirstGen(p1, p2) {
       scroller().scrollTop = 0;
       onLetterScroll();
       scroller().addEventListener("scroll", onLetterScroll);
+
+      // Motion (CSS, identical in both conditions): the header, themes and photos animate in on
+      // load; each paragraph then rises into view as it scrolls on screen. Paragraphs already on
+      // screen wait until the opening animation has finished.
+      const letterEl = document.querySelector(".letter");
+      const chunks = [...letterEl.querySelectorAll(".letter-text p")];
+      if ("IntersectionObserver" in window) {
+        letterEl.classList.add("animated");
+        chunks.forEach((p) => p.classList.add("reveal"));
+        letterObserver = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) { e.target.classList.add("is-visible"); letterObserver.unobserve(e.target); }
+          }
+        }, { threshold: 0.12 }); // root = the viewport; clipping by jsPsych's scroller is accounted for
+        letterObserverStart = setTimeout(() => chunks.forEach((p) => letterObserver.observe(p)), 1800);
+      }
       const btn = document.querySelector("#jspsych-html-button-response-btngroup button");
       const shownAt = Date.now();
       const label = () => {
@@ -326,6 +345,8 @@ function classifyFirstGen(p1, p2) {
     },
     on_finish: (data) => {
       clearInterval(letterTick);
+      clearTimeout(letterObserverStart);
+      if (letterObserver) letterObserver.disconnect();
       onLetterScroll(); // final reading: scroll events arrive asynchronously, after the click
       scroller().removeEventListener("scroll", onLetterScroll);
       data.letter_time_ms = data.rt;
