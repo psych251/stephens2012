@@ -162,17 +162,15 @@ caption.
 
 # ---- Exclusion rules: EDIT to match your preregistration ---------------------------------
 # Always applied, in this order (they define who can be analysed at all): consented,
-# first-year (the inclusion criterion), reached the debrief, social class classifiable from
+# freshman (the inclusion criterion), reached the debrief, social class classifiable from
 # the parental-education answers, and both covariates reported (the ANCOVA needs them).
 # Optional rules: TRUE removes those participants; FALSE only reports the flag (see the
 # screening table under Exploratory analyses).
 exclude_if <- list(
-  outside_help   = FALSE,  # answered "Yes" to using outside help on the anagrams
-  seen_before    = FALSE,  # had taken part before or seen the welcome letter before
-  not_us_citizen = FALSE   # not a U.S. citizen or permanent resident (Study 2's rule, p. 1186)
+  outside_help = FALSE  # answered "Yes" to using outside help on the anagrams
 )
 
-first_year <- "First-year (frosh)"
+first_year <- "First-year (frosh)"  # only for Pilot A sessions recorded before the "Are you a freshman?" screen
 
 # One answer from a SurveyJS response (a JSON string). NA when skipped or "Prefer not to say"
 # (which SurveyJS stores as "none"). Multi-select answers are joined with ";".
@@ -198,7 +196,7 @@ read_phase <- function(id) {
   # Participant-level fields saved by the experiment. A column is missing from exports made
   # before the field existed (e.g. `eligible` before the first-year screen was added).
   for (col in c("condition", "class_year", "eligible", "first_gen", "race_white_only",
-                "us_citizen", "outside_help", "seen_before", "anagrams_solved",
+                "outside_help", "anagrams_solved",
                 "letter_time_ms", "letter_max_scroll", "anagram_focus_losses")) {
     if (!col %in% names(participants)) participants[[col]] <- NA
   }
@@ -232,14 +230,12 @@ read_phase <- function(id) {
   rules <- list(
     "Started"                          = rep(TRUE, nrow(d)),
     "Consented"                        = d$participant_id %in% consented,
-    "First-year (inclusion criterion)" = d$eligible %in% TRUE,
+    "Freshman (inclusion criterion)"   = d$eligible %in% TRUE,
     "Completed the study"              = d$participant_id %in% reached("debrief"),
     "Social class classifiable"        = !is.na(d$first_gen),
     "Covariates reported (race, GPA)"  = !is.na(d$race_white) & !is.na(d$hs_gpa)
   )
   if (isTRUE(exclude_if$outside_help))   rules[["No outside help"]] <- !(d$outside_help %in% "Yes")
-  if (isTRUE(exclude_if$seen_before))    rules[["Not seen before"]] <- !(d$seen_before %in% "Yes")
-  if (isTRUE(exclude_if$not_us_citizen)) rules[["U.S. citizen or permanent resident"]] <- !(d$us_citizen %in% "No")
   # Each step keeps the participants who pass it and every earlier step.
   passed <- setNames(accumulate(rules, `&`), names(rules))
 
@@ -895,12 +891,10 @@ if (nrow(items) > 0) {
 done <- d[phase1$passed[["Completed the study"]], ]
 if (nrow(done) > 0) {
   tibble(
-    Flag = c("Reported outside help on the anagrams", "Had seen the study or letter before",
-             "Not a U.S. citizen or permanent resident", "Left the window during the anagram task",
+    Flag = c("Reported outside help on the anagrams", "Left the window during the anagram task",
              "Did not scroll to the end of the letter", "Median time on the letter (s)",
              "GPA reported on a weighted scale"),
-    Value = c(sum(done$outside_help %in% "Yes"), sum(done$seen_before %in% "Yes"),
-              sum(done$us_citizen %in% "No"), sum(as.numeric(done$anagram_focus_losses) > 0, na.rm = TRUE),
+    Value = c(sum(done$outside_help %in% "Yes"), sum(as.numeric(done$anagram_focus_losses) > 0, na.rm = TRUE),
               sum(as.numeric(done$letter_max_scroll) < 0.95, na.rm = TRUE),
               round(median(as.numeric(done$letter_time_ms), na.rm = TRUE) / 1000),
               sum(str_detect(coalesce(done$hs_gpa_scale, ""), "Weighted")))

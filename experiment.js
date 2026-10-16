@@ -13,12 +13,11 @@
  *   Other:  manipulation check (2 items, 1-7); covariates race and high school GPA, collected
  *           in the demographics survey.
  *   Screening fields (cutoffs are decided in the preregistration, not here): completion,
- *           eligibility, citizenship, unclassifiable social class, time spent on and scroll depth through the letter,
- *           window focus losses during the anagram task, self-reported outside help, prior
- *           exposure to the letters. Everyone can finish the study regardless.
+ *           eligibility, unclassifiable social class, time spent on and scroll depth through the letter,
+ *           window focus losses during the anagram task, self-reported outside help. Everyone can finish the study regardless.
  *
- * Eligibility: first-year students only (class year asked right after consent; others are
- *           thanked and the study ends, recorded as eligible = false).
+ * Eligibility: freshmen only ("Are you a freshman?" right after consent; "No" is thanked
+ *           and the study ends, recorded as eligible = false).
  * Timeline: consent -> eligibility -> overview -> [demographics if position "before"] ->
  *   welcome letter (one page, Continue locked for 45 s) ->
  *   cover story + anagram instructions -> anagram task -> manipulation check ->
@@ -174,8 +173,8 @@ function classifyFirstGen(p1, p2) {
       }
       const eligibilityRow = jsPsych.data.get().filter({ task: "eligibility" }).values()[0];
       if (eligibilityRow && eligibilityRow.eligible === false) {
-        msg.innerHTML = "<h2 class='thanks' id='screened-out'>Thank you for your interest</h2>" +
-          "<p class='thanks'>This study is only open to first-year students, so it ends here. " +
+        msg.innerHTML = "<h2 class='thanks' id='screened-out'>Thank you for your interest.</h2>" +
+          "<p class='thanks'>This study is only open to freshmen. " +
           "You may close this window.</p>";
         return;
       }
@@ -242,14 +241,12 @@ function classifyFirstGen(p1, p2) {
   };
 
   // -------------------------------------------------------------------------
-  // Eligibility: first-year students only. Anyone else (including "Prefer not to say", since
-  // eligibility cannot then be confirmed) is thanked and the study ends; the visit is still
-  // recorded with eligible = false so screen-outs can be counted.
+  // Eligibility: freshmen (first-year students) only. Anyone answering "No" is thanked and the
+  // study ends; the visit is still recorded with eligible = false so screen-outs can be counted.
   // -------------------------------------------------------------------------
   // Every multiple-choice question is required, but always offers this option: the consent text
   // promises participants may decline any question.
   const preferNot = { isRequired: true, showNoneItem: true, noneText: "Prefer not to say" };
-  const FIRST_YEAR = "First-year (frosh)";
   const eligibility = {
     type: jsPsychSurvey,
     survey_json: {
@@ -257,16 +254,16 @@ function classifyFirstGen(p1, p2) {
       completeText: "Continue",
       pages: [{
         elements: [
-          { type: "radiogroup", name: "class_year", title: "What is your class year?", choices: [FIRST_YEAR, "Sophomore", "Junior", "Senior", "Other"], ...preferNot },
+          { type: "radiogroup", name: "freshman", title: "Are you a freshman?", choices: ["Yes", "No"], isRequired: true },
         ],
       }],
     },
     data: { task: "eligibility" },
     on_finish: (data) => {
-      const year = (data.response || {}).class_year ?? null;
-      data.class_year = year;
-      data.eligible = year === FIRST_YEAR;
-      saver.updateParticipant({ class_year: year, eligible: data.eligible });
+      const answer = (data.response || {}).freshman ?? null;
+      data.freshman = answer;
+      data.eligible = answer === "Yes";
+      saver.updateParticipant({ freshman: answer, eligible: data.eligible });
       if (!data.eligible) jsPsych.abortExperiment();
     },
   };
@@ -277,9 +274,9 @@ function classifyFirstGen(p1, p2) {
   const overview = {
     type: jsPsychInstructions,
     pages: [
-      `<h2>Welcome</h2>
-       <p>In this study you will read a short welcome message, complete an activity, and answer
-       some questions about yourself and your experience. It takes about 20 minutes.</p>
+      `<h2>Welcome!</h2>
+       <p>In this study you will read a message, complete an activity, and answer
+       some questions about yourself. It takes about 20 minutes.</p>
        <p>Please complete the study in one sitting, in a quiet place, on a laptop or desktop
        computer, and keep this window open the whole time.</p>`,
     ],
@@ -367,7 +364,7 @@ function classifyFirstGen(p1, p2) {
     type: jsPsychInstructions,
     pages: [
       `<div class="task-instructions">
-         <p>I'd like you to complete and evaluate an activity that has been used in the past with
+         <p>We'd like you to complete and evaluate an activity that has been used in the past with
          incoming students. The task's purpose is to assess different learning styles.</p>
        </div>`,
     ],
@@ -380,16 +377,15 @@ function classifyFirstGen(p1, p2) {
     pages: [
       `<div class="task-instructions">
          <h2>Anagrams</h2>
-         <p>You will see ${STIMULI.anagrams.length} anagrams, one at a time. Each one is a real
+         <p>You will see ${STIMULI.anagrams.length} anagrams, one at a time. Each one is an
          English word with its letters scrambled. Rearrange the letters to find the word, type it
-         in the box, and press <strong>Enter</strong> or <strong>Submit</strong>.</p>
+         in the box, and press <strong>Submit</strong>.</p>
          <p>For example, <span class="anagram-example">T A C</span> is <strong>CAT</strong>.</p>
          <p>You have <strong>${minutes > 0 ? minutes + " minutes" : Math.round(ANAGRAM_MS / 1000) + " seconds"}</strong>
          to solve as many as you can. If you get stuck, press <strong>Skip for now</strong>:
          skipped anagrams come back after you have seen all the others, as long as time remains.
          Once you submit an answer, you cannot change it.</p>
          <p>Please work on your own, without using websites, apps, or other people.</p>
-         <p>The clock starts when you press <strong>Start</strong>.</p>
        </div>`,
     ],
     show_clickable_nav: true,
@@ -460,7 +456,6 @@ function classifyFirstGen(p1, p2) {
     stimulus: () => {
       const outOfTime = queue.length > 0;
       return `<div class="task-instructions" id="anagram-end" data-reason="${outOfTime ? "time" : "finished"}">
-        <h2>${outOfTime ? "Time is up" : "You have answered all of the anagrams"}</h2>
         <p>Thank you. Please press Continue for the next part of the study.</p></div>`;
     },
     choices: ["Continue"],
@@ -499,8 +494,8 @@ function classifyFirstGen(p1, p2) {
       pages: [{
         description: "How much do you agree with each statement?",
         elements: [
-          { type: "radiogroup", name: "mc_individually_motivated", title: "My university expects college students to be individually motivated.", choices: agreeScale, ...preferNot },
-          { type: "radiogroup", name: "mc_work_together", title: "My university expects college students to work together with other students.", choices: agreeScale, ...preferNot },
+          { type: "radiogroup", name: "mc_individually_motivated", title: "Stanford University expects college students to be individually motivated.", choices: agreeScale, ...preferNot },
+          { type: "radiogroup", name: "mc_work_together", title: "Stanford University expects college students to work together with other students.", choices: agreeScale, ...preferNot },
         ],
       }],
     },
@@ -545,7 +540,6 @@ function classifyFirstGen(p1, p2) {
         {
           title: "About you",
           elements: [
-            { type: "radiogroup", name: "us_citizen", title: "Are you a U.S. citizen or permanent resident?", choices: ["Yes", "No"], ...preferNot },
             { type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 100, requiredIf: "{age_decline} notcontains 'decline'", enableIf: "{age_decline} notcontains 'decline'" },
             { type: "checkbox", name: "age_decline", titleLocation: "hidden", title: "Age", choices: [{ value: "decline", text: "Prefer not to say" }] },
             { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...preferNot },
@@ -588,7 +582,6 @@ function classifyFirstGen(p1, p2) {
       saver.updateParticipant({
         first_gen: data.first_gen,
         race_white_only: data.race_white_only,
-        us_citizen: r.us_citizen ?? null,
       });
       progress(0.92);
     },
@@ -609,19 +602,13 @@ function classifyFirstGen(p1, p2) {
             title: "Did you use any outside help on the anagrams (for example, a website, an app, or another person)? Your answer will not affect your credit.",
             choices: ["No", "Yes"], ...preferNot,
           },
-          {
-            type: "radiogroup", name: "seen_before",
-            title: "Before today, had you taken part in this study or seen the welcome message you read?",
-            choices: ["No", "Yes", "Not sure"], ...preferNot,
-          },
-          { type: "comment", name: "study_purpose", title: "In your own words, what do you think this study was about? (optional)", rows: 3 },
         ],
       }],
     },
     data: { task: "final_questions" },
     on_finish: (data) => {
       const r = data.response || {};
-      saver.updateParticipant({ outside_help: r.outside_help ?? null, seen_before: r.seen_before ?? null });
+      saver.updateParticipant({ outside_help: r.outside_help ?? null });
       progress(0.97);
     },
   };
@@ -634,17 +621,17 @@ function classifyFirstGen(p1, p2) {
     stimulus: `
       <div class="debrief">
         <h2>Thank you</h2>
-        <p>This study replicates a 2012 experiment on how the way a university describes itself
-        relates to students' performance. Different participants read different welcome messages:
-        one described Stanford in terms of independence (for example, exploring your own
-        interests), the other in terms of interdependence (for example, being part of a community).
+        <p>This study replicates an experiment on how the way a university describes itself
+        relates to students' performance. Different participants read different messages:
+        one described Stanford in terms of independence (e.g., exploring your own
+        interests), the other in terms of interdependence (e.g., being part of a community).
         We are testing whether the message affects performance on the anagram task, and whether
         that effect differs for students whose parents did or did not attend a 4-year college.</p>
         <p><strong>Two things in this study were not what they seemed.</strong> First, the welcome
-        message was written by the researchers, adapted from the materials of the original 2012
+        message was written by the researchers, adapted from the materials of the original
         study. It was not written or approved by President Levin or the Office of the President,
         and it does not represent Stanford's official views. Second, the anagram task was described
-        as assessing learning styles. In fact it measured how many anagrams you solved. We did not
+        as assessing learning styles. In fact, it measured how many anagrams you solved. We did not
         tell you this beforehand because knowing the purpose could have changed how people
         performed. Your individual score is not used to judge you and is not shared with anyone.</p>
         <p>Please do not discuss the details of this study with other students who might take

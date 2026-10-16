@@ -56,9 +56,9 @@ async function doAnagrams(page) {
   }
 }
 
-async function startStudy(page, classYear = "First-year (frosh)") {
+async function startStudy(page, freshman = "Yes") {
   await page.getByRole("button", { name: "I agree to participate" }).click();
-  await pick(page, "class_year", classYear);
+  await pick(page, "freshman", freshman);
   await page.locator('input[value="Continue"]').click();
 }
 
@@ -88,7 +88,6 @@ async function runThroughExperiment(page, { answerAnagrams = true, finish = true
   await pick(page, "parent2_education", "Not applicable (no second parent/guardian)");
   await pick(page, "household_income", "$30,000 to $49,999");
   await page.locator('input[value="Next"]').click();
-  await pick(page, "us_citizen", "Yes");
   await page.locator('[data-name="age"] input').fill("18");
   await pick(page, "gender", "Woman");
   await pick(page, "sex", "Female");
@@ -100,7 +99,6 @@ async function runThroughExperiment(page, { answerAnagrams = true, finish = true
 
   // Final screening questions
   await pick(page, "outside_help", "No");
-  await pick(page, "seen_before", "No");
   await page.locator('input[value="Continue"]').click();
 
   // Debrief
@@ -178,11 +176,9 @@ test.describe("experiment", () => {
     expect(pdoc.anagram_order.length).toBe(20);
     expect(pdoc.first_gen).toBe(true);
     expect(pdoc.race_white_only).toBe(true);
-    expect(pdoc.class_year).toBe("First-year (frosh)");
+    expect(pdoc.freshman).toBe("Yes");
     expect(pdoc.eligible).toBe(true);
-    expect(pdoc.us_citizen).toBe("Yes");
     expect(pdoc.outside_help).toBe("No");
-    expect(pdoc.seen_before).toBe("No");
     expect(pdoc.letter_time_ms).toBeGreaterThan(0);
     expect(typeof pdoc.full_data).toBe("string");
     const full = JSON.parse(pdoc.full_data);
@@ -253,17 +249,17 @@ test.describe("experiment", () => {
     expect(trials.find((t) => t.task === "anagram_end").reason).toBe("time");
   });
 
-  test("students who are not first-years are thanked and screened out before the letter", async ({ page }) => {
+  test("students who are not freshmen are thanked and screened out before the letter", async ({ page }) => {
     await page.goto(EMULATOR ? "/?emulator=1" : "/");
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
-    await startStudy(page, "Sophomore");
+    await startStudy(page, "No");
     await expect(page.locator("#screened-out")).toBeVisible({ timeout: 15000 });
     await expect(page.locator(".letter")).toHaveCount(0);
     if (!EMULATOR) return;
     const uid = await page.evaluate(() => window.__saver.docId);
     const pdoc = decodeFields((await fsGet(`experiments/${EXPERIMENT_ID}/participants/${uid}`)).body.fields);
     expect(pdoc.eligible).toBe(false);
-    expect(pdoc.class_year).toBe("Sophomore");
+    expect(pdoc.freshman).toBe("No");
   });
 
   test("required questions block Continue until answered, and Prefer not to say counts as an answer", async ({ page }) => {
@@ -277,6 +273,16 @@ test.describe("experiment", () => {
     await pick(page, "mc_work_together", "Prefer not to say");
     await page.locator('input[value="Continue"]').click();
     await expect(page.locator('[data-name="parent1_education"]')).toBeVisible();
+
+    // "Self-describe" (gender) and "Other" (race) open a text box when chosen.
+    for (const q of ["parent1_education", "parent2_education", "household_income"]) await pick(page, q, "Prefer not to say");
+    await page.locator('input[value="Next"]').click();
+    for (const [q, option] of [["gender", "Self-describe"], ["race", "Other"]]) {
+      const box = page.locator(`[data-name="${q}"]`).locator("textarea, input[type=text]");
+      await expect(box).toHaveCount(0);
+      await pick(page, q, option);
+      await expect(box.first()).toBeVisible();
+    }
   });
 
   test("chunked writes (chunk_size > 1) save every trial", async ({ page }) => {
