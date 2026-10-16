@@ -5,7 +5,30 @@
 .consent .buttons { text-align: center; }
 .stimulus { font-size: 44px; text-align: center; font-family: monospace; letter-spacing: 0.05em; }
 .fixation { font-size: 44px; text-align: center; }
-.framing { font-size: 18px; line-height: 1.6; }
-.framing .programs { margin: 1em 0; padding-left: 1.2em; }
 #jspsych-html-button-response-btngroup { text-align: center; }
 .thanks { text-align: center; }
+
+/* Welcome letter, styled after the original materials */
+.letter-intro { text-align: center; color: #555; }
+.letter { border-left: 4px solid #b5a642; margin: 0 auto 1em; max-width: 680px; background: #fff; }
+.letter-header { background: #b5a642; color: #fff; padding: 18px 24px; }
+.letter-from { font-style: italic; text-align: right; font-size: 15px; }
+.letter-title { font-family: Georgia, serif; font-size: 30px; margin-top: 6px; }
+.letter-body { padding: 18px 28px; font-family: Georgia, serif; }
+.letter-lead { font-weight: bold; font-size: 22px; border-bottom: 2px solid #b5a642; padding-bottom: 8px; }
+.letter-themes { list-style: none; padding: 0; }
+.letter-themes li { font-style: italic; letter-spacing: 0.08em; font-size: 19px; margin: 18px 0; }
+.letter-themes li:nth-child(odd) { text-align: right; }
+.letter-text p { font-size: 16px; line-height: 1.55; text-indent: 2em; margin: 0 0 0.6em; }
+.letter-text .letter-sign { text-indent: 0; margin-top: 1.2em; }
+
+/* Anagram task */
+.task-instructions { font-size: 17px; line-height: 1.55; }
+.anagram-example { font-family: monospace; font-weight: bold; letter-spacing: 0.1em; }
+.anagram-trial { text-align: center; width: 600px; max-width: 100%; margin: 0 auto; }
+.anagram-timer { text-align: right; font-family: monospace; font-size: 18px; color: #555; }
+.anagram-letters { font-family: monospace; font-size: 52px; letter-spacing: 0.15em; margin: 40px 0 28px; }
+#anagram-input { font-size: 26px; padding: 6px 10px; width: 220px; text-align: center; text-transform: uppercase; font-family: monospace; }
+.anagram-buttons { margin-top: 18px; }
+.anagram-buttons .jspsych-btn { margin: 0 8px; }
+.debrief { font-size: 16px; line-height: 1.55; }

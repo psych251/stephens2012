@@ -1,20 +1,25 @@
 /*
- * Psych 251 experiment template: demo experiment.
+ * Replication of Stephens, Fryberg, Markus, Johnson & Covarrubias (2012), Study 3.
  *
- * This file is the one you edit. It builds a jsPsych 8 timeline and wires it to DataSaver
- * (src/save.js), which writes to your Firebase project. Everything below is a working
- * example you can replace piece by piece:
+ * Design summary
+ *   IVs:    welcome-letter condition (independent vs interdependent), BETWEEN subjects, randomly
+ *           assigned (`condition`); social class (first- vs continuing-generation), measured
+ *           (`first_gen`, derived from the two parental-education items).
+ *   DV:     anagrams solved in 10 minutes = rows with task "anagram", action "submit",
+ *           correct true (also saved per participant as `anagrams_solved`).
+ *   Trials: 20 five-letter anagrams (Gilhooly, 1978), one at a time, typed answers, order
+ *           shuffled per participant. "Skip for now" sends an item to the end of the queue;
+ *           a submitted answer is final. One 10-minute clock for the whole task. No feedback.
+ *   Other:  manipulation check (2 items, 1-7); covariates race and high school GPA, collected
+ *           in the demographics survey.
+ *   Screening fields (cutoffs are decided in the preregistration, not here): completion,
+ *           class year, citizenship, unclassifiable social class, time spent on the letter,
+ *           window focus losses during the anagram task, self-reported outside help, prior
+ *           exposure to the letters. Everyone can finish the study regardless.
  *
- *   1. consent           course-wide consent text (required at the start of every study)
- *   2. instructions
- *   3. demographics      a multi-question survey page (jsPsych "survey" plugin, SurveyJS)
- *   4. framing task      a between-subjects manipulation with random assignment
- *   5. lexical decision  a short keyboard reaction-time block (trial-level data)
- *   6. feedback          Likert + free text
- *   7. debrief           saves data, then shows thanks or redirects to Prolific
- *
- * The example manipulation is the classic "Asian disease" framing problem
- * (Tversky & Kahneman, 1981): people are risk-averse for gains and risk-seeking for losses.
+ * Timeline: consent -> overview -> [demographics if position "before"] -> welcome letter ->
+ *   cover story + anagram instructions -> anagram task -> manipulation check ->
+ *   [demographics if position "after"] -> final questions -> debrief.
  */
 
 // ---------------------------------------------------------------------------
@@ -23,31 +28,34 @@
 window.TEMPLATE_VERSION = "0.1.0";
 
 const EXPERIMENT = {
-  // Firestore path: experiments/<id>/participants/... Change it when you start a new study
-  // so pilot data and real data never mix (e.g. "smith2016-pilot-a", "smith2016-final").
-  id: "framing-demo",
+  // Firestore path: experiments/<id>/participants/... Change it for each phase so pilot data
+  // and real data never mix (e.g. "stephens2012-pilot-b", "stephens2012-final").
+  id: "stephens2012-pilot-a",
 
   // Trials per Firestore write. 1 = save every trial the moment it finishes (dropouts leave
-  // partial data). The free tier allows 20,000 writes/day: with 200 participants x 100 trials
-  // you would exceed it, so raise this for long trial-based tasks (e.g. 20).
+  // partial data). A participant makes roughly 20-60 anagram attempts, well inside the quota.
   chunk_size: 1,
 
   // Also store the complete jsPsych dataset on the participant document at the end.
-  // Costs one extra write and makes export robust; turn off if trials are very large.
   save_full_data_at_end: true,
 
-  // Prolific: if set, participants are redirected to Prolific when they finish.
-  // Leave empty for local testing or non-Prolific samples.
+  // Prolific only. Psych 1 pool participants are not on Prolific, so leave this empty.
   prolific_completion_code: "",
 
   // Contact shown in consent and debrief.
   contact_email: "stanfordpsych251@gmail.com",
 
-  // Does this study need a physical keyboard? The demo does (the word task uses F and J).
-  // On a phone or tablet no keyboard appears, so a participant cannot answer those trials;
-  // they would time out silently and the session would still look complete. When true, such
-  // devices are turned away before consent. Set to false if your study is buttons/touch only.
+  // The anagram task is answered by typing, so phones and tablets are turned away.
   requires_keyboard: true,
+
+  // Anagram task settings (original: 20 anagrams, 10 minutes; Stephens et al., 2012, p. 1190).
+  anagram_minutes: 10,
+  randomize_anagram_order: true, // false = everyone sees the order in stimuli/materials.js
+  show_anagram_timer: true,      // a countdown in the corner of the anagram screen
+
+  // "after": demographics follow the manipulation check, so social class is not made salient
+  // before the task. "before": demographics come right after consent, as in the writeup draft.
+  demographics_position: "after",
 };
 
 // True on anything with a mouse, trackpad, or stylus, including laptops with touchscreens.
@@ -66,6 +74,36 @@ const CHUNK_SIZE = Number(URL_PARAMS.get("chunk_size")) || EXPERIMENT.chunk_size
 // Test-only: `?cc=CODE` sets a Prolific completion code during emulator runs, so the test
 // suite can check the screen a participant sees once you have set yours. Ignored in live runs.
 if (USE_EMULATOR && URL_PARAMS.get("cc")) EXPERIMENT.prolific_completion_code = URL_PARAMS.get("cc");
+// Test/pilot-only: `?anagram_seconds=N` shortens the anagram clock, honoured only in emulator
+// runs or on your own machine (localhost), never on the live site.
+const IS_LOCAL = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const ANAGRAM_MS = ((USE_EMULATOR || IS_LOCAL) && Number(URL_PARAMS.get("anagram_seconds")))
+  ? Number(URL_PARAMS.get("anagram_seconds")) * 1000
+  : EXPERIMENT.anagram_minutes * 60 * 1000;
+
+// Parental education answers that count as a 4-year degree or more.
+const FOUR_YEAR = ["bachelors", "graduate"];
+const EDUCATION_CHOICES = [
+  { value: "less_than_hs", text: "Less than high school" },
+  { value: "high_school", text: "High school diploma or GED" },
+  { value: "some_college", text: "Some college, no degree" },
+  { value: "associates", text: "Associate's degree (2-year)" },
+  { value: "bachelors", text: "Bachelor's degree (4-year)" },
+  { value: "graduate", text: "Graduate or professional degree (e.g., MA, PhD, MD, JD)" },
+  { value: "dont_know", text: "Don't know" },
+  { value: "not_applicable", text: "Not applicable (no second parent/guardian)" },
+];
+
+// First-generation = neither parent/guardian has a 4-year degree (Stephens et al., 2012, p. 1186).
+// Returns true / false, or null when the answers cannot classify the participant.
+// Unclassifiable: a skipped item, "Don't know", or "Prefer not to say" (stored as "none") for a
+// parent without a 4-year degree, since that parent might have one.
+const NO_FOUR_YEAR = ["less_than_hs", "high_school", "some_college", "associates"];
+function classifyFirstGen(p1, p2) {
+  if (FOUR_YEAR.includes(p1) || FOUR_YEAR.includes(p2)) return false;
+  const p2Clear = NO_FOUR_YEAR.includes(p2) || p2 === "not_applicable";
+  return NO_FOUR_YEAR.includes(p1) && p2Clear ? true : null;
+}
 
 // ---------------------------------------------------------------------------
 // Boot: connect the saver first so even a crash in the first trial gets logged.
@@ -91,9 +129,8 @@ if (USE_EMULATOR && URL_PARAMS.get("cc")) EXPERIMENT.prolific_completion_code = 
       '<div id="device-unsupported" class="jspsych-content" style="max-width:640px;margin:15vh auto;font:16px/1.6 system-ui,sans-serif;">' +
       "<h2>Please use a computer</h2>" +
       "<p>This study needs a computer with a physical keyboard, because part of it is answered " +
-      "by pressing keys. Phones and tablets cannot be used.</p>" +
-      "<p>Please reopen this link on a laptop or desktop computer. If you were sent here from " +
-      "Prolific, you can return the study and take it later on a computer; nothing has been recorded " +
+      "by typing. Phones and tablets cannot be used.</p>" +
+      "<p>Please reopen this link on a laptop or desktop computer. Nothing has been recorded " +
       "against you.</p>" +
       "<p>Questions: <a href=\"mailto:" + EXPERIMENT.contact_email + "\">" + EXPERIMENT.contact_email + "</a></p></div>";
     return;
@@ -101,7 +138,7 @@ if (USE_EMULATOR && URL_PARAMS.get("cc")) EXPERIMENT.prolific_completion_code = 
 
   const jsPsych = initJsPsych({
     show_progress_bar: true,
-    auto_update_progress_bar: true,
+    auto_update_progress_bar: false, // the anagram task has a variable number of trials
     on_data_update: (trial) => saver.onTrial(trial),
     on_finish: async () => {
       const el = jsPsych.getDisplayElement();
@@ -134,6 +171,7 @@ if (USE_EMULATOR && URL_PARAMS.get("cc")) EXPERIMENT.prolific_completion_code = 
           : "");
     },
   });
+  const progress = (p) => jsPsych.progressBar && (jsPsych.progressBar.progress = p);
 
   // Record the participant id and URL parameters on every trial row.
   jsPsych.data.addProperties({
@@ -143,15 +181,16 @@ if (USE_EMULATOR && URL_PARAMS.get("cc")) EXPERIMENT.prolific_completion_code = 
     experiment_id: EXPERIMENT.id,
   });
 
-  // Random assignment to a between-subjects condition, recorded on every trial and on the
-  // participant document. (For exact counterbalancing you would need a server; random
-  // assignment is fine at course sample sizes.)
-  const condition = jsPsych.randomization.sampleWithoutReplacement(["gain", "loss"], 1)[0];
+  // Random assignment to the welcome-letter condition, recorded on every trial and on the
+  // participant document. Simple randomization: at course sample sizes the two conditions
+  // will be close to, but not exactly, equal in size, and the split within first-gen students
+  // is not controlled. Check balance in the analysis.
+  const condition = jsPsych.randomization.sampleWithoutReplacement(["independent", "interdependent"], 1)[0];
   jsPsych.data.addProperties({ condition: condition });
-  saver.updateParticipant({ condition: condition });
+  saver.updateParticipant({ condition: condition, demographics_position: EXPERIMENT.demographics_position });
 
   // -------------------------------------------------------------------------
-  // 1. Consent (course-wide IRB text; edit only the contact address)
+  // Consent (course-wide IRB text; edit only the contact address)
   // -------------------------------------------------------------------------
   const consent = {
     type: jsPsychHtmlButtonResponse,
@@ -179,24 +218,206 @@ if (USE_EMULATOR && URL_PARAMS.get("cc")) EXPERIMENT.prolific_completion_code = 
   };
 
   // -------------------------------------------------------------------------
-  // 2. Instructions
+  // Overview (describes what participants do, not the hypothesis)
   // -------------------------------------------------------------------------
-  const instructions = {
+  const overview = {
     type: jsPsychInstructions,
     pages: [
       `<h2>Welcome</h2>
-       <p>This short study has three parts: a few questions about you, one decision problem,
-       and a quick word task. It takes about three minutes.</p>`,
-      `<p>Please complete the study in one sitting, in a quiet place, on a laptop or desktop
-       computer. Use the buttons or the arrow keys to move between pages.</p>`,
+       <p>In this study you will read a short welcome message, complete an activity, and answer
+       some questions about yourself and your experience. It takes about 20 minutes.</p>
+       <p>Please complete the study in one sitting, in a quiet place, on a laptop or desktop
+       computer, and keep this window open the whole time.</p>`,
     ],
     show_clickable_nav: true,
-    data: { task: "instructions" },
+    data: { task: "overview" },
+    on_finish: () => progress(0.05),
   };
 
   // -------------------------------------------------------------------------
-  // 3. Demographics (survey plugin: one page, several question types)
+  // Welcome letter (the manipulation): two pages, as in the original materials
   // -------------------------------------------------------------------------
+  const letter = {
+    type: jsPsychInstructions,
+    pages: [
+      `<p class="letter-intro">Please read the following welcome message from Stanford University carefully.</p>`
+        + STIMULI.letters[condition][0],
+      STIMULI.letters[condition][1],
+    ],
+    show_clickable_nav: true,
+    allow_backward: true,
+    button_label_next: "Continue",
+    save_trial_parameters: { pages: false },
+    data: { task: "letter", letter: condition },
+    on_finish: (data) => {
+      // Total and per-page reading time, for the screening summary.
+      data.letter_time_ms = data.rt;
+      data.letter_page_times_ms = (data.view_history || []).map((v) => v.viewing_time);
+      saver.updateParticipant({ letter_time_ms: data.rt });
+      progress(0.2);
+    },
+  };
+
+  // -------------------------------------------------------------------------
+  // Cover story and anagram instructions
+  // -------------------------------------------------------------------------
+  // The cover story is the experimenter's script in the original (p. 1190), here on screen.
+  const minutes = Math.round(ANAGRAM_MS / 60000);
+  const coverStory = {
+    type: jsPsychInstructions,
+    pages: [
+      `<div class="task-instructions">
+         <p>I'd like you to complete and evaluate an activity that has been used in the past with
+         incoming students. The task's purpose is to assess different learning styles.</p>
+       </div>`,
+    ],
+    show_clickable_nav: true,
+    button_label_next: "Continue",
+    data: { task: "cover_story" },
+  };
+  const anagramInstructions = {
+    type: jsPsychInstructions,
+    pages: [
+      `<div class="task-instructions">
+         <h2>Anagrams</h2>
+         <p>You will see ${STIMULI.anagrams.length} anagrams, one at a time. Each one is a real
+         English word with its letters scrambled. Rearrange the letters to find the word, type it
+         in the box, and press <strong>Enter</strong> or <strong>Submit</strong>.</p>
+         <p>For example, <span class="anagram-example">T A C</span> is <strong>CAT</strong>.</p>
+         <p>You have <strong>${minutes > 0 ? minutes + " minutes" : Math.round(ANAGRAM_MS / 1000) + " seconds"}</strong>
+         to solve as many as you can. If you get stuck, press <strong>Skip for now</strong>:
+         skipped anagrams come back after you have seen all the others, as long as time remains.
+         Once you submit an answer, you cannot change it.</p>
+         <p>Please work on your own, without using websites, apps, or other people.</p>
+         <p>The clock starts when you press <strong>Start</strong>.</p>
+       </div>`,
+    ],
+    show_clickable_nav: true,
+    button_label_next: "Start",
+    data: { task: "anagram_instructions" },
+    on_finish: () => startAnagramTask(),
+  };
+
+  // -------------------------------------------------------------------------
+  // Anagram task: a queue of items; skipped items go to the back; one shared deadline
+  // -------------------------------------------------------------------------
+  let queue = [];
+  let deadline = null;
+  let taskStartedAt = null;
+  let focusLosses = 0;      // window blur events while the anagram task is running
+  let trialFocusLosses = 0; // the same, for the current anagram only
+  let attemptIndex = 0;
+  const presentations = {};
+  let anagramTaskRunning = false;
+  window.addEventListener("blur", () => {
+    if (anagramTaskRunning) { focusLosses++; trialFocusLosses++; }
+  });
+
+  function startAnagramTask() {
+    const items = STIMULI.anagrams.slice();
+    queue = EXPERIMENT.randomize_anagram_order ? jsPsych.randomization.shuffle(items) : items;
+    taskStartedAt = Date.now();
+    deadline = taskStartedAt + ANAGRAM_MS;
+    anagramTaskRunning = true;
+    saver.updateParticipant({ anagram_order: queue.map((it) => it.item_id), anagram_ms: ANAGRAM_MS });
+  }
+
+  const anagramTrial = {
+    type: jsPsychAnagram,
+    anagram: () => queue[0].anagram,
+    deadline: () => deadline,
+    show_timer: EXPERIMENT.show_anagram_timer,
+    data: { task: "anagram" },
+    on_start: () => { trialFocusLosses = 0; },
+    on_finish: (data) => {
+      const item = queue.shift();
+      presentations[item.item_id] = (presentations[item.item_id] || 0) + 1;
+      data.item_id = item.item_id;
+      data.anagram = item.anagram;
+      data.solution = item.solution;
+      data.gilhooly_br = item.gilhooly_br;
+      data.presentation = presentations[item.item_id]; // 1 = first time shown, 2+ = after a skip
+      data.attempt_index = attemptIndex++;
+      data.focus_losses = trialFocusLosses;
+      data.timed_out = data.action === "timeout";
+      data.skipped = data.action === "skip";
+      // Scoring: only a submitted answer can be correct; case and spaces are ignored. Only the
+      // target word counts (Gilhooly's words have single solutions; see materials/).
+      data.correct = data.action === "submit"
+        ? data.response.toLowerCase().replace(/\s+/g, "") === item.solution
+        : null;
+      if (data.action === "skip") queue.push(item);
+      progress(0.2 + 0.55 * Math.min(1, (Date.now() - taskStartedAt) / ANAGRAM_MS));
+    },
+  };
+  const anagramTask = {
+    timeline: [anagramTrial],
+    loop_function: () => queue.length > 0 && Date.now() < deadline,
+  };
+
+  const anagramEnd = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: () => {
+      const outOfTime = queue.length > 0;
+      return `<div class="task-instructions" id="anagram-end" data-reason="${outOfTime ? "time" : "finished"}">
+        <h2>${outOfTime ? "Time is up" : "You have answered all of the anagrams"}</h2>
+        <p>Thank you. Please press Continue for the next part of the study.</p></div>`;
+    },
+    choices: ["Continue"],
+    data: { task: "anagram_end" },
+    on_start: () => {
+      anagramTaskRunning = false;
+      const rows = jsPsych.data.get().filter({ task: "anagram" }).values();
+      const submitted = rows.filter((r) => r.action === "submit");
+      const summary = {
+        anagrams_solved: submitted.filter((r) => r.correct).length,
+        anagrams_submitted: submitted.length,
+        anagrams_unanswered: STIMULI.anagrams.length - submitted.length,
+        anagram_skips: rows.filter((r) => r.action === "skip").length,
+        anagram_focus_losses: focusLosses,
+        anagram_time_used_ms: Math.min(ANAGRAM_MS, Date.now() - taskStartedAt),
+        anagram_finished_early: queue.length === 0,
+      };
+      jsPsych.data.addProperties({ anagrams_solved: summary.anagrams_solved });
+      saver.updateParticipant(summary);
+    },
+    on_finish: (data) => { data.reason = queue.length > 0 ? "time" : "finished"; progress(0.8); },
+  };
+
+  // -------------------------------------------------------------------------
+  // Manipulation check (p. 1190): 1 = strongly disagree ... 7 = strongly agree
+  // -------------------------------------------------------------------------
+  const agreeScale = [
+    "Strongly disagree", "Disagree", "Somewhat disagree", "Neither agree nor disagree",
+    "Somewhat agree", "Agree", "Strongly agree",
+  ].map((text, i) => ({ value: i + 1, text: `${text} (${i + 1})` }));
+  const manipulationCheck = {
+    type: jsPsychSurvey,
+    survey_json: {
+      showQuestionNumbers: "off",
+      completeText: "Continue",
+      pages: [{
+        description: "How much do you agree with each statement?",
+        elements: [
+          { type: "radiogroup", name: "mc_individually_motivated", title: "My university expects college students to be individually motivated.", choices: agreeScale },
+          { type: "radiogroup", name: "mc_work_together", title: "My university expects college students to work together with other students.", choices: agreeScale },
+        ],
+      }],
+    },
+    data: { task: "manipulation_check" },
+    on_finish: (data) => {
+      const r = data.response || {};
+      data.mc_individually_motivated = r.mc_individually_motivated ?? null;
+      data.mc_work_together = r.mc_work_together ?? null;
+      progress(0.85);
+    },
+  };
+
+  // -------------------------------------------------------------------------
+  // Demographics. Nothing is required: the consent text promises participants may decline any
+  // question, so every item has a "Prefer not to say" option or can be left blank.
+  // -------------------------------------------------------------------------
+  const preferNot = { showNoneItem: true, noneText: "Prefer not to say" };
   const demographics = {
     type: jsPsychSurvey,
     survey_json: {
@@ -204,149 +425,148 @@ if (USE_EMULATOR && URL_PARAMS.get("cc")) EXPERIMENT.prolific_completion_code = 
       completeText: "Continue",
       pages: [
         {
+          title: "About your family",
           elements: [
-            // The consent text promises participants may decline any question, so nothing here is required.
-            { type: "text", name: "age", title: "How old are you?", inputType: "number", min: 18, max: 120 },
+            { type: "radiogroup", name: "parent1_education", title: "What is the highest level of education completed by your first parent or guardian?", choices: EDUCATION_CHOICES.filter((c) => c.value !== "not_applicable"), ...preferNot },
+            { type: "radiogroup", name: "parent2_education", title: "What is the highest level of education completed by your second parent or guardian?", choices: EDUCATION_CHOICES, ...preferNot },
             {
-              type: "radiogroup", name: "gender", title: "What is your gender?",
-              choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, showNoneItem: true, noneText: "Prefer not to say",
+              type: "radiogroup", name: "household_income", title: "What is your family's approximate yearly household income?",
+              choices: [
+                { value: 1, text: "Less than $10,000" }, { value: 2, text: "$10,000 to $19,999" },
+                { value: 3, text: "$20,000 to $29,999" }, { value: 4, text: "$30,000 to $49,999" },
+                { value: 5, text: "$50,000 to $74,999" }, { value: 6, text: "$75,000 to $99,999" },
+                { value: 7, text: "$100,000 to $200,000" }, { value: 8, text: "More than $200,000" },
+              ],
+              ...preferNot,
             },
-            { type: "boolean", name: "native_english", title: "Is English your first language?", labelTrue: "Yes", labelFalse: "No" },
+          ],
+        },
+        {
+          title: "About you",
+          elements: [
+            { type: "radiogroup", name: "class_year", title: "What is your class year?", choices: ["First-year (frosh)", "Sophomore", "Junior", "Senior", "Other"], ...preferNot },
+            { type: "radiogroup", name: "us_citizen", title: "Are you a U.S. citizen or permanent resident?", choices: ["Yes", "No"], ...preferNot },
+            { type: "text", name: "age", title: "How old are you? (optional)", inputType: "number", min: 16, max: 100 },
+            { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...preferNot },
+            { type: "radiogroup", name: "sex", title: "What sex were you assigned at birth?", choices: ["Female", "Male", "Intersex"], ...preferNot },
+            {
+              type: "checkbox", name: "race", title: "What is your race or ethnicity? Select all that apply.",
+              choices: [
+                { value: "white", text: "White" }, { value: "asian", text: "Asian or Asian American" },
+                { value: "latino", text: "Latino/a/x or Hispanic" }, { value: "black", text: "Black or African American" },
+                { value: "american_indian", text: "American Indian or Alaska Native" },
+                { value: "pacific_islander", text: "Native Hawaiian or Pacific Islander" },
+              ],
+              showOtherItem: true, otherText: "Other", ...preferNot,
+            },
+          ],
+        },
+        {
+          title: "High school",
+          elements: [
+            { type: "text", name: "hs_gpa", title: "What was your high school GPA? (optional)", inputType: "number", min: 0, max: 10, step: 0.01 },
+            { type: "radiogroup", name: "hs_gpa_scale", title: "What scale is that GPA on?", choices: ["4.0 (unweighted)", "Weighted (e.g., out of 5.0)", "Other / not sure"], ...preferNot },
           ],
         },
       ],
     },
     data: { task: "demographics" },
-  };
-
-  // -------------------------------------------------------------------------
-  // 4. Framing problem (between-subjects: gain vs loss frame)
-  // -------------------------------------------------------------------------
-  const framingText = {
-    gain: {
-      a: "If Program A is adopted, 200 people will be saved.",
-      b: "If Program B is adopted, there is a one-third probability that 600 people will be saved, and a two-thirds probability that no people will be saved.",
-    },
-    loss: {
-      a: "If Program A is adopted, 400 people will die.",
-      b: "If Program B is adopted, there is a one-third probability that nobody will die, and a two-thirds probability that 600 people will die.",
-    },
-  };
-  const framing = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: () => `
-      <div class="framing">
-        <p>Imagine that the country is preparing for the outbreak of an unusual disease, which is
-        expected to kill 600 people. Two alternative programs to combat the disease have been
-        proposed. Assume that the exact scientific estimates of the consequences of the programs
-        are as follows:</p>
-        <ul class="programs">
-          <li>${framingText[condition].a}</li>
-          <li>${framingText[condition].b}</li>
-        </ul>
-        <p>Which of the two programs would you favor?</p>
-      </div>`,
-    choices: ["Program A", "Program B"],
-    data: { task: "framing" },
     on_finish: (data) => {
-      // Program A is the certain option in both frames; B is the risky gamble.
-      data.choice = data.response === 0 ? "certain" : "risky";
+      const r = data.response || {};
+      const race = Array.isArray(r.race) ? r.race : [];
+      data.first_gen = classifyFirstGen(r.parent1_education, r.parent2_education);
+      // Analysis covariate (White vs non-White). Multiracial participants who include White
+      // are coded as not White-only here; the raw selections are kept so the rule can change.
+      data.race_white_only = race.length === 0 || race.includes("none") ? null : (race.length === 1 && race[0] === "white");
+      jsPsych.data.addProperties({ first_gen: data.first_gen });
+      saver.updateParticipant({
+        first_gen: data.first_gen,
+        race_white_only: data.race_white_only,
+        class_year: r.class_year ?? null,
+        us_citizen: r.us_citizen ?? null,
+      });
+      progress(0.92);
     },
   };
 
   // -------------------------------------------------------------------------
-  // 5. Lexical decision (short RT block with trial-level logging)
+  // Final questions for screening (asked before the debrief reveals the cover story)
   // -------------------------------------------------------------------------
-  const ldInstructions = {
-    type: jsPsychInstructions,
-    pages: [
-      `<h2>Word task</h2>
-       <p>You will see a string of letters. Press <strong>F</strong> if it is a real English word
-       and <strong>J</strong> if it is not. Respond as quickly and accurately as you can.
-       Place your fingers on F and J now.</p>`,
-    ],
-    show_clickable_nav: true,
-    data: { task: "instructions" },
-  };
-  const ldItems = [
-    { word: "TABLE", is_word: true }, { word: "GARDEN", is_word: true },
-    { word: "PLANET", is_word: true }, { word: "SILVER", is_word: true },
-    { word: "FLIRP", is_word: false }, { word: "MANTOR", is_word: false },
-    { word: "BRENDLE", is_word: false }, { word: "TOSKIN", is_word: false },
-  ];
-  const fixation = {
-    type: jsPsychHtmlKeyboardResponse,
-    stimulus: '<div class="fixation">+</div>',
-    choices: "NO_KEYS",
-    trial_duration: 500,
-    data: { task: "fixation" },
-  };
-  const ldTrial = {
-    type: jsPsychHtmlKeyboardResponse,
-    stimulus: () => `<div class="stimulus">${jsPsych.evaluateTimelineVariable("word")}</div>`,
-    choices: ["f", "j"],
-    trial_duration: 3000,
-    data: {
-      task: "lexical_decision",
-      word: jsPsych.timelineVariable("word"),
-      is_word: jsPsych.timelineVariable("is_word"),
+  const finalQuestions = {
+    type: jsPsychSurvey,
+    survey_json: {
+      showQuestionNumbers: "off",
+      completeText: "Continue",
+      pages: [{
+        elements: [
+          {
+            type: "radiogroup", name: "outside_help",
+            title: "Did you use any outside help on the anagrams (for example, a website, an app, or another person)? Your answer will not affect your credit.",
+            choices: ["No", "Yes"], ...preferNot,
+          },
+          {
+            type: "radiogroup", name: "seen_before",
+            title: "Before today, had you taken part in this study or seen the welcome message you read?",
+            choices: ["No", "Yes", "Not sure"], ...preferNot,
+          },
+          { type: "comment", name: "study_purpose", title: "In your own words, what do you think this study was about? (optional)", rows: 3 },
+        ],
+      }],
     },
+    data: { task: "final_questions" },
     on_finish: (data) => {
-      const expected = data.is_word ? "f" : "j";
-      data.correct = data.response === expected;
-      data.timed_out = data.response === null;
+      const r = data.response || {};
+      saver.updateParticipant({ outside_help: r.outside_help ?? null, seen_before: r.seen_before ?? null });
+      progress(0.97);
     },
   };
-  const lexicalDecision = {
-    timeline: [fixation, ldTrial],
-    timeline_variables: ldItems,
-    randomize_order: true,
-  };
 
   // -------------------------------------------------------------------------
-  // 6. Feedback
-  // -------------------------------------------------------------------------
-  const feedback = {
-    type: jsPsychSurveyLikert,
-    questions: [
-      {
-        prompt: "How clear were the instructions?", name: "instructions_clear", required: false,
-        labels: ["Very unclear", "Unclear", "Neutral", "Clear", "Very clear"],
-      },
-    ],
-    data: { task: "feedback_likert" },
-  };
-  const comments = {
-    type: jsPsychSurveyText,
-    questions: [{ prompt: "Any comments about the study? (optional)", name: "comments", rows: 4 }],
-    data: { task: "feedback_text" },
-  };
-
-  // -------------------------------------------------------------------------
-  // 7. Debrief
+  // Debrief: explains the goal and reveals both deceptions (the letter and the cover story)
   // -------------------------------------------------------------------------
   const debrief = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <h2>Debrief</h2>
-      <p>Thank you. In this study we tested whether describing the same outcomes as lives saved or
-      as lives lost changes which program people choose. Different participants saw different
-      wordings. If you have questions about this research, contact
-      <a href="mailto:${EXPERIMENT.contact_email}">${EXPERIMENT.contact_email}</a>.
-      Press the button to save your responses and finish.</p>`,
+      <div class="debrief">
+        <h2>Thank you</h2>
+        <p>This study replicates a 2012 experiment on how the way a university describes itself
+        relates to students' performance. Different participants read different welcome messages:
+        one described Stanford in terms of independence (for example, exploring your own
+        interests), the other in terms of interdependence (for example, being part of a community).
+        We are testing whether the message affects performance on the anagram task, and whether
+        that effect differs for students whose parents did or did not attend a 4-year college.</p>
+        <p><strong>Two things in this study were not what they seemed.</strong> First, the welcome
+        message was written by the researchers, adapted from the materials of the original 2012
+        study. It was not written or approved by President Levin or the Office of the President,
+        and it does not represent Stanford's official views. Second, the anagram task was described
+        as assessing learning styles. In fact it measured how many anagrams you solved. We did not
+        tell you this beforehand because knowing the purpose could have changed how people
+        performed. Your individual score is not used to judge you and is not shared with anyone.</p>
+        <p>Please do not discuss the details of this study with other students who might take
+        part, since that could affect the results.</p>
+        <p>If you have questions about this research, contact
+        <a href="mailto:${EXPERIMENT.contact_email}">${EXPERIMENT.contact_email}</a>.
+        Press the button to save your responses and finish.</p>
+      </div>`,
     choices: ["Finish"],
+    save_trial_parameters: { stimulus: false },
     data: { task: "debrief" },
+    on_finish: () => progress(1),
   };
 
+  const before = EXPERIMENT.demographics_position === "before";
   await jsPsych.run([
     consent,
-    instructions,
-    demographics,
-    framing,
-    ldInstructions,
-    lexicalDecision,
-    feedback,
-    comments,
+    overview,
+    ...(before ? [demographics] : []),
+    letter,
+    coverStory,
+    anagramInstructions,
+    anagramTask,
+    anagramEnd,
+    manipulationCheck,
+    ...(before ? [] : [demographics]),
+    finalQuestions,
     debrief,
   ]);
 })();

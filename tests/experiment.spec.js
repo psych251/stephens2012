@@ -14,39 +14,88 @@ const { test, expect, devices } = require("@playwright/test");
 
 const EMULATOR = process.env.EMULATOR === "1" || !!process.env.FIRESTORE_EMULATOR_HOST;
 const PROJECT = "demo-psych251";
-const EXPERIMENT_ID = "framing-demo";
+const EXPERIMENT_ID = "stephens2012-pilot-a";
 const FS = `http://localhost:8080/v1/projects/${PROJECT}/databases/(default)/documents`;
+// Shorter clock for tests (honoured only in emulator runs and on localhost). The robot
+// finishes all 20 anagrams long before this runs out.
+const CLOCK = "anagram_seconds=120";
 
-async function runThroughExperiment(page) {
-  // 1. consent
-  await page.getByRole("button", { name: "I agree to participate" }).click();
-  // 2. instructions (two pages)
+// Click "next" on an instructions page and wait until the page actually changes, because
+// consecutive instruction screens reuse the same button id.
+async function nextPage(page) {
+  const before = await page.locator("#jspsych-content").innerHTML();
   await page.locator("#jspsych-instructions-next").click();
-  await page.locator("#jspsych-instructions-next").click();
-  // 3. demographics (SurveyJS)
-  await page.locator('input[type="number"]').fill("34");
-  await page.getByText("Woman", { exact: true }).click();
-  // SurveyJS boolean switches render "Yes" twice once toggled; scope to the question.
-  await page.locator('[data-name="native_english"]').getByText("Yes", { exact: true }).first().click();
-  await page.locator('input[value="Continue"]').click();
-  // 4. framing
-  await page.getByRole("button", { name: "Program A" }).click();
-  // 5. lexical decision: one instructions page, then 8 trials
-  await page.locator("#jspsych-instructions-next").click();
-  for (let i = 0; i < 8; i++) {
-    const stim = page.locator(".stimulus");
-    await stim.waitFor({ state: "visible" });
-    const word = (await stim.textContent()).trim();
-    const realWords = ["TABLE", "GARDEN", "PLANET", "SILVER"];
-    await page.keyboard.press(realWords.includes(word) ? "f" : "j");
-    await stim.waitFor({ state: "detached" });
+  await page.waitForFunction((b) => document.querySelector("#jspsych-content").innerHTML !== b, before);
+}
+// SurveyJS: click an option's label inside one question.
+async function pick(page, question, text) {
+  await page.locator(`[data-name="${question}"]`).getByText(text, { exact: true }).first().click();
+}
+
+// The robot's anagram strategy: answer the 1st correctly, skip the 2nd, answer the 3rd wrong,
+// then answer everything else correctly (including the skipped one when it comes back).
+// Expected: 21 anagram rows, 20 submitted, 19 correct, 1 skip.
+async function doAnagrams(page) {
+  const solutions = Object.fromEntries(
+    (await page.evaluate(() => STIMULI.anagrams)).map((a) => [a.anagram, a.solution]));
+  for (let n = 0; ; n++) {
+    const letters = page.locator(".anagram-letters");
+    const end = page.locator("#anagram-end");
+    await letters.or(end).first().waitFor();
+    if (await end.count()) return;
+    const handle = await letters.elementHandle();
+    const anagram = await letters.getAttribute("data-anagram");
+    if (n === 1) {
+      await page.locator("#anagram-skip").click();
+    } else {
+      await page.locator("#anagram-input").fill(n === 2 ? "zzzzz" : solutions[anagram].toUpperCase());
+      await page.keyboard.press("Enter");
+    }
+    // Wait for this anagram's element to go: the next one reuses the same class.
+    await page.waitForFunction((el) => !el.isConnected, handle);
   }
-  // 6. feedback
-  await page.locator('input[name="Q0"][value="4"]').check();
-  await page.locator("#jspsych-survey-likert-next").click();
-  await page.locator("textarea").fill("Robot participant says hi.");
-  await page.locator("#jspsych-survey-text-next").click();
-  // 7. debrief
+}
+
+async function runThroughExperiment(page, { answerAnagrams = true, finish = true } = {}) {
+  await page.getByRole("button", { name: "I agree to participate" }).click();
+  await nextPage(page);                 // overview
+  await nextPage(page);                 // welcome letter, page 1
+  await nextPage(page);                 // welcome letter, page 2
+  await nextPage(page);                 // cover story
+  await nextPage(page);                 // anagram instructions: "Start"
+  if (answerAnagrams) await doAnagrams(page);
+  await expect(page.locator("#anagram-end")).toBeVisible({ timeout: 30000 });
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  // Manipulation check
+  await pick(page, "mc_individually_motivated", "Agree (6)");
+  await pick(page, "mc_work_together", "Somewhat agree (5)");
+  await page.locator('input[value="Continue"]').click();
+
+  // Demographics (three pages)
+  await pick(page, "parent1_education", "High school diploma or GED");
+  await pick(page, "parent2_education", "Not applicable (no second parent/guardian)");
+  await pick(page, "household_income", "$30,000 to $49,999");
+  await page.locator('input[value="Next"]').click();
+  await pick(page, "class_year", "First-year (frosh)");
+  await pick(page, "us_citizen", "Yes");
+  await page.locator('[data-name="age"] input').fill("18");
+  await pick(page, "gender", "Woman");
+  await pick(page, "sex", "Female");
+  await pick(page, "race", "White");
+  await page.locator('input[value="Next"]').click();
+  await page.locator('[data-name="hs_gpa"] input').fill("3.9");
+  await pick(page, "hs_gpa_scale", "4.0 (unweighted)");
+  await page.locator('input[value="Continue"]').click();
+
+  // Final screening questions
+  await pick(page, "outside_help", "No");
+  await pick(page, "seen_before", "No");
+  await page.locator('input[value="Continue"]').click();
+
+  // Debrief
+  await expect(page.getByText("Two things in this study were not what they seemed")).toBeVisible();
+  if (!finish) return;
   await page.getByRole("button", { name: "Finish" }).click();
   await expect(page.getByText("All done")).toBeVisible({ timeout: 30000 });
 }
@@ -81,7 +130,7 @@ test.describe("experiment", () => {
     const consoleErrors = [];
     page.on("pageerror", (e) => consoleErrors.push(String(e)));
 
-    await page.goto(EMULATOR ? "/?emulator=1&PROLIFIC_PID=robot123&STUDY_ID=s1&SESSION_ID=sess1" : "/");
+    await page.goto(EMULATOR ? `/?emulator=1&PROLIFIC_PID=robot123&STUDY_ID=s1&SESSION_ID=sess1&${CLOCK}` : `/?${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.uid);
     const mode = await page.evaluate(() => window.__saver.mode);
     expect(mode).toBe(EMULATOR ? "emulator" : "offline");
@@ -104,14 +153,26 @@ test.describe("experiment", () => {
     expect(stats.writes_failed).toBe(0);
     await expect(page.locator("#data-saver-fallback")).toHaveCount(0);
 
-    // Participant document is complete and carries condition + Prolific ids.
+    // Participant document is complete and carries condition, scores, and screening fields.
     const p = await fsGet(`experiments/${EXPERIMENT_ID}/participants/${uid}`);
     expect(p.status).toBe(200);
     const pdoc = decodeFields(p.body.fields);
     expect(pdoc.completed).toBe(true);
-    expect(["gain", "loss"]).toContain(pdoc.condition);
+    expect(["independent", "interdependent"]).toContain(pdoc.condition);
     expect(pdoc.prolific_pid).toBe("robot123");
-    expect(pdoc.n_trials).toBeGreaterThan(10);
+    expect(pdoc.anagrams_solved).toBe(19);
+    expect(pdoc.anagrams_submitted).toBe(20);
+    expect(pdoc.anagrams_unanswered).toBe(0);
+    expect(pdoc.anagram_skips).toBe(1);
+    expect(pdoc.anagram_finished_early).toBe(true);
+    expect(pdoc.anagram_order.length).toBe(20);
+    expect(pdoc.first_gen).toBe(true);
+    expect(pdoc.race_white_only).toBe(true);
+    expect(pdoc.class_year).toBe("First-year (frosh)");
+    expect(pdoc.us_citizen).toBe("Yes");
+    expect(pdoc.outside_help).toBe("No");
+    expect(pdoc.seen_before).toBe("No");
+    expect(pdoc.letter_time_ms).toBeGreaterThan(0);
     expect(typeof pdoc.full_data).toBe("string");
     const full = JSON.parse(pdoc.full_data);
     expect(full.length).toBe(pdoc.n_trials);
@@ -122,23 +183,64 @@ test.describe("experiment", () => {
     const docs = (chunks.body.documents || []).map((d) => decodeFields(d.fields));
     expect(docs.length).toBe(pdoc.n_trials);
     const trials = docs.flatMap((d) => d.trials);
-    const framing = trials.find((t) => t.task === "framing");
-    expect(framing.choice).toBe("certain");
-    expect(framing.condition).toBe(pdoc.condition);
-    const ld = trials.filter((t) => t.task === "lexical_decision");
-    expect(ld.length).toBe(8);
-    expect(ld.every((t) => t.correct === true)).toBe(true);
+
+    const letter = trials.find((t) => t.task === "letter");
+    expect(letter.letter).toBe(pdoc.condition);
+    expect(letter.letter_page_times_ms.length).toBeGreaterThanOrEqual(2);
+
+    const ana = trials.filter((t) => t.task === "anagram");
+    expect(ana.length).toBe(21);
+    expect(ana.every((t) => t.condition === pdoc.condition)).toBe(true);
+    expect(ana.filter((t) => t.correct === true).length).toBe(19);
+    const wrong = ana.filter((t) => t.correct === false);
+    expect(wrong.length).toBe(1);
+    expect(wrong[0].response).toBe("zzzzz");
+    const skip = ana.find((t) => t.skipped);
+    expect(skip.correct).toBe(null);
+    const comeback = ana.find((t) => t.item_id === skip.item_id && t.presentation === 2);
+    expect(comeback.correct).toBe(true);            // the skipped item came back and was solved
+    expect(ana.some((t) => t.timed_out)).toBe(false);
+    expect(new Set(ana.map((t) => t.item_id)).size).toBe(20);
+
+    const mc = trials.find((t) => t.task === "manipulation_check");
+    expect(mc.mc_individually_motivated).toBe(6);
+    expect(mc.mc_work_together).toBe(5);
     const demo = trials.find((t) => t.task === "demographics");
-    expect(demo.response.age).toBe(34);
+    expect(demo.response.age).toBe(18);
+    expect(demo.response.household_income).toBe(4);
+    expect(demo.response.race).toEqual(["white"]);
+    expect(demo.first_gen).toBe(true);
+
+    // Demographics come after the task (EXPERIMENT.demographics_position = "after").
+    const order = trials.map((t) => t.task);
+    expect(order.indexOf("demographics")).toBeGreaterThan(order.lastIndexOf("anagram"));
 
     // Every trial row must carry the same participant id as its participant document,
     // otherwise trials.csv and participants.csv cannot be joined in the analysis.
     expect([...new Set(trials.map((t) => t.participant_id))]).toEqual([uid]);
   });
 
+  test("the anagram clock ends the task and records the unfinished item as timed out", async ({ page }) => {
+    await page.goto(EMULATOR ? "/?emulator=1&anagram_seconds=3" : "/?anagram_seconds=3");
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    await runThroughExperiment(page, { answerAnagrams: false });
+    if (!EMULATOR) return;
+    const uid = await page.evaluate(() => window.__saver.docId);
+    const pdoc = decodeFields((await fsGet(`experiments/${EXPERIMENT_ID}/participants/${uid}`)).body.fields);
+    expect(pdoc.anagrams_solved).toBe(0);
+    expect(pdoc.anagram_finished_early).toBe(false);
+    const chunks = await fsGet(`experiments/${EXPERIMENT_ID}/participants/${uid}/trials?pageSize=500`);
+    const trials = (chunks.body.documents || []).map((d) => decodeFields(d.fields)).flatMap((d) => d.trials);
+    const ana = trials.filter((t) => t.task === "anagram");
+    expect(ana.length).toBe(1);
+    expect(ana[0].timed_out).toBe(true);
+    expect(ana[0].correct).toBe(null);
+    expect(trials.find((t) => t.task === "anagram_end").reason).toBe("time");
+  });
+
   test("chunked writes (chunk_size > 1) save every trial", async ({ page }) => {
     test.skip(!EMULATOR, "needs the Firestore emulator");
-    await page.goto("/?emulator=1&chunk_size=5");
+    await page.goto(`/?emulator=1&chunk_size=5&${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.uid);
     await runThroughExperiment(page);
     const uid = await page.evaluate(() => window.__saver.docId);
@@ -162,22 +264,9 @@ test.describe("experiment", () => {
     test.skip(!EMULATOR, "needs the Firestore emulator");
     test.setTimeout(120000);
     // Run the real flow up to the last click, then cut the connection before "Finish".
-    await page.goto("/?emulator=1");
+    await page.goto(`/?emulator=1&${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.uid);
-    await page.getByRole("button", { name: "I agree to participate" }).click();
-    await page.locator("#jspsych-instructions-next").click();
-    await page.locator("#jspsych-instructions-next").click();
-    await page.locator('input[value="Continue"]').click();
-    await page.getByRole("button", { name: "Program B" }).click();
-    await page.locator("#jspsych-instructions-next").click();
-    for (let i = 0; i < 8; i++) {
-      const stim = page.locator(".stimulus");
-      await stim.waitFor({ state: "visible" });
-      await page.keyboard.press("f");
-      await stim.waitFor({ state: "detached" });
-    }
-    await page.locator("#jspsych-survey-likert-next").click();
-    await page.locator("#jspsych-survey-text-next").click();
+    await runThroughExperiment(page, { finish: false });
     await context.setOffline(true);
     await page.getByRole("button", { name: "Finish" }).click();
     await expect(page.locator("#data-saver-fallback")).toBeVisible({ timeout: 40000 });
@@ -194,7 +283,7 @@ test.describe("experiment", () => {
     for (let run = 0; run < 2; run++) {
       // Same page/context both times: the anonymous auth session persists, exactly as it
       // does for a student testing twice in one browser or a participant who reloads.
-      await page.goto("/?emulator=1&PROLIFIC_PID=rerun" + run);
+      await page.goto(`/?emulator=1&PROLIFIC_PID=rerun${run}&${CLOCK}`);
       await page.waitForFunction(() => window.__saver && window.__saver.docId);
       await runThroughExperiment(page);
       const info = await page.evaluate(() => ({
@@ -227,7 +316,7 @@ test.describe("experiment", () => {
     const navigations = [];
     page.on("framenavigated", (f) => { if (f === page.mainFrame()) navigations.push(f.url()); });
 
-    await page.goto(EMULATOR ? "/?emulator=1&cc=QA123CODE" : "/?cc=QA123CODE");
+    await page.goto(EMULATOR ? `/?emulator=1&cc=QA123CODE&${CLOCK}` : `/?cc=QA123CODE&${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await runThroughExperiment(page);
 
