@@ -3,7 +3,9 @@
  *
  * Letters: transcribed word for word from the original materials (see
  * materials/welcome-letters-draft.md), with the president updated to Jonathan Levin.
- * Shown on one page. Photos are grey labelled placeholders until approved images exist;
+ * Shown on one page. The president's photo is stimuli/president.webp (provided by the student;
+ * confirm usage rights before real data collection). Student photos are grey labelled
+ * placeholders until approved images exist;
  * the president's name is typed, not a reproduced signature.
  *
  * Anagrams: the backup set in materials/anagrams-backup.csv (main items only), built by
@@ -13,7 +15,7 @@ window.STIMULI = (function () {
   // One page, laid out like the original two-page letter: header (with the president's photo
   // box), the four themes, a strip of student photos, then the letter in two columns.
   // `photos` describes what the original's photo strip showed in this condition.
-  function onePage(themes, paragraphs, photos, showPlaceholders) {
+  function onePage(themes, paragraphs, photos, showPlaceholders, presidentPhoto) {
     const box = (label, cls) => showPlaceholders
       ? `<div class="photo-placeholder ${cls}"><span>${label}</span></div>` : "";
     return `
@@ -23,7 +25,9 @@ window.STIMULI = (function () {
             <div class="letter-from">From Stanford's President</div>
             <div class="letter-title">Welcome to Stanford University</div>
           </div>
-          ${box("Photo: President Levin", "photo-head")}
+          ${presidentPhoto
+            ? `<img class="photo-head" src="${presidentPhoto}" alt="">`
+            : box("Photo: President Levin", "photo-head")}
         </div>
         <div class="letter-body">
           <p class="letter-lead">At Stanford you have the opportunity to…</p>
@@ -89,9 +93,9 @@ window.STIMULI = (function () {
     ["tulip", "ITPLU", 98], ["knife", "IENKF", 112], ["album", "LMUBA", 120], ["apron", "RNPAO", 149],
   ].map(([solution, anagram, br]) => ({ item_id: solution, solution, anagram, gilhooly_br: br }));
 
-  const letterHtml = (condition, showPlaceholders) => {
+  const letterHtml = (condition, showPlaceholders, presidentPhoto) => {
     const L = letters[condition];
-    return onePage(L.themes, L.paragraphs, L.photos, showPlaceholders);
+    return onePage(L.themes, L.paragraphs, L.photos, showPlaceholders, presidentPhoto);
   };
 
   return { letters, letterHtml, anagrams };

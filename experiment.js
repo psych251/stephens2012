@@ -63,7 +63,10 @@ const EXPERIMENT = {
   // Seconds before the Continue button under the welcome letter becomes available.
   letter_min_seconds: 45,
 
-  // Grey labelled boxes where the original had a president photo and student photos.
+  // Header photo of the president, the same in both conditions. Set to "" to show a grey box.
+  president_photo: "stimuli/president.webp",
+
+  // Grey labelled boxes where the original had student photos (solo vs group by condition).
   // Turn off (or replace with approved images) before running real participants.
   show_photo_placeholders: true,
 };
@@ -300,7 +303,7 @@ function classifyFirstGen(p1, p2) {
   const letter = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `<p class="letter-intro">Please read the following welcome message from Stanford University carefully.</p>`
-      + STIMULI.letterHtml(condition, EXPERIMENT.show_photo_placeholders),
+      + STIMULI.letterHtml(condition, EXPERIMENT.show_photo_placeholders, EXPERIMENT.president_photo),
     choices: ["Continue"],
     enable_button_after: LETTER_MIN_MS,
     save_trial_parameters: { stimulus: false },
