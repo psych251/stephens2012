@@ -262,21 +262,30 @@ test.describe("experiment", () => {
     expect(pdoc.freshman).toBe("No");
   });
 
-  test("required questions block Continue until answered, and Prefer not to say counts as an answer", async ({ page }) => {
+  test("required questions block Continue until answered", async ({ page }) => {
     await page.goto(EMULATOR ? `/?emulator=1&${CLOCK}` : `/?${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await runThroughExperiment(page, { answerAnagrams: true, stopAtManipulationCheck: true });
+    await expect(page.getByText("Prefer not to say")).toHaveCount(0);           // no decline option
     await page.locator('input[value="Continue"]').click();
     await expect(page.locator('[data-name="mc_work_together"]')).toBeVisible();   // still on the page
     await expect(page.getByText("Response required.").first()).toBeVisible();
-    await pick(page, "mc_individually_motivated", "Prefer not to say");
-    await pick(page, "mc_work_together", "Prefer not to say");
+    await pick(page, "mc_individually_motivated", "Agree (6)");
+    await pick(page, "mc_work_together", "Agree (6)");
     await page.locator('input[value="Continue"]').click();
     await expect(page.locator('[data-name="parent1_education"]')).toBeVisible();
 
-    // "Self-describe" (gender) and "Other" (race) open a text box when chosen.
-    for (const q of ["parent1_education", "parent2_education", "household_income"]) await pick(page, q, "Prefer not to say");
+    // Every demographics page is required too, with no "Prefer not to say".
+    await expect(page.getByText("Prefer not to say")).toHaveCount(0);
     await page.locator('input[value="Next"]').click();
+    await expect(page.getByText("Response required.").first()).toBeVisible();
+    await pick(page, "parent1_education", "High school diploma or GED");
+    await pick(page, "parent2_education", "Don't know");
+    await pick(page, "household_income", "$30,000 to $49,999");
+    await page.locator('input[value="Next"]').click();
+
+    // "Self-describe" (gender) and "Other" (race) open a text box when chosen.
+    await expect(page.getByText("Prefer not to say")).toHaveCount(0);
     for (const [q, option] of [["gender", "Self-describe"], ["race", "Other"]]) {
       const box = page.locator(`[data-name="${q}"]`).locator("textarea, input[type=text]");
       await expect(box).toHaveCount(0);

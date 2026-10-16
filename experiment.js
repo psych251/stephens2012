@@ -112,8 +112,8 @@ const EDUCATION_CHOICES = [
 
 // First-generation = neither parent/guardian has a 4-year degree (Stephens et al., 2012, p. 1186).
 // Returns true / false, or null when the answers cannot classify the participant.
-// Unclassifiable: a skipped item, "Don't know", or "Prefer not to say" (stored as "none") for a
-// parent without a 4-year degree, since that parent might have one.
+// Unclassifiable: "Don't know" for a parent (that parent might have a 4-year degree), or an
+// answer missing from an older Pilot A session.
 const NO_FOUR_YEAR = ["less_than_hs", "high_school", "some_college", "associates"];
 function classifyFirstGen(p1, p2) {
   if (FOUR_YEAR.includes(p1) || FOUR_YEAR.includes(p2)) return false;
@@ -244,9 +244,11 @@ function classifyFirstGen(p1, p2) {
   // Eligibility: freshmen (first-year students) only. Anyone answering "No" is thanked and the
   // study ends; the visit is still recorded with eligible = false so screen-outs can be counted.
   // -------------------------------------------------------------------------
-  // Every multiple-choice question is required, but always offers this option: the consent text
-  // promises participants may decline any question.
-  const preferNot = { isRequired: true, showNoneItem: true, noneText: "Prefer not to say" };
+  // Every question is required, with no "Prefer not to say" option (the student's decision after
+  // wording review). Note: the course consent text says participants "may decline to answer any
+  // or all of the following questions"; with this setting the only way to decline is to stop
+  // the study. To be confirmed with the course staff before Pilot B.
+  const required = { isRequired: true };
   const eligibility = {
     type: jsPsychSurvey,
     survey_json: {
@@ -494,15 +496,14 @@ function classifyFirstGen(p1, p2) {
       pages: [{
         description: "How much do you agree with each statement?",
         elements: [
-          { type: "radiogroup", name: "mc_individually_motivated", title: "Stanford University expects college students to be individually motivated.", choices: agreeScale, ...preferNot },
-          { type: "radiogroup", name: "mc_work_together", title: "Stanford University expects college students to work together with other students.", choices: agreeScale, ...preferNot },
+          { type: "radiogroup", name: "mc_individually_motivated", title: "Stanford University expects college students to be individually motivated.", choices: agreeScale, ...required },
+          { type: "radiogroup", name: "mc_work_together", title: "Stanford University expects college students to work together with other students.", choices: agreeScale, ...required },
         ],
       }],
     },
     data: { task: "manipulation_check" },
     on_finish: (data) => {
       const r = data.response || {};
-      // "Prefer not to say" is stored by SurveyJS as "none"; keep only numeric ratings here.
       const num = (v) => (typeof v === "number" ? v : null);
       data.mc_individually_motivated = num(r.mc_individually_motivated);
       data.mc_work_together = num(r.mc_work_together);
@@ -511,8 +512,7 @@ function classifyFirstGen(p1, p2) {
   };
 
   // -------------------------------------------------------------------------
-  // Demographics. Nothing is required: the consent text promises participants may decline any
-  // question, so every item has a "Prefer not to say" option or can be left blank.
+  // Demographics. Every item is required (see the note on `required` above).
   // -------------------------------------------------------------------------
   const demographics = {
     type: jsPsychSurvey,
@@ -523,8 +523,8 @@ function classifyFirstGen(p1, p2) {
         {
           title: "About your family",
           elements: [
-            { type: "radiogroup", name: "parent1_education", title: "What is the highest level of education completed by your first parent or guardian?", choices: EDUCATION_CHOICES.filter((c) => c.value !== "not_applicable"), ...preferNot },
-            { type: "radiogroup", name: "parent2_education", title: "What is the highest level of education completed by your second parent or guardian?", choices: EDUCATION_CHOICES, ...preferNot },
+            { type: "radiogroup", name: "parent1_education", title: "What is the highest level of education completed by your first parent or guardian?", choices: EDUCATION_CHOICES.filter((c) => c.value !== "not_applicable"), ...required },
+            { type: "radiogroup", name: "parent2_education", title: "What is the highest level of education completed by your second parent or guardian?", choices: EDUCATION_CHOICES, ...required },
             {
               type: "radiogroup", name: "household_income", title: "What is your family's approximate yearly household income?",
               choices: [
@@ -533,17 +533,16 @@ function classifyFirstGen(p1, p2) {
                 { value: 5, text: "$50,000 to $74,999" }, { value: 6, text: "$75,000 to $99,999" },
                 { value: 7, text: "$100,000 to $200,000" }, { value: 8, text: "More than $200,000" },
               ],
-              ...preferNot,
+              ...required,
             },
           ],
         },
         {
           title: "About you",
           elements: [
-            { type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 100, requiredIf: "{age_decline} notcontains 'decline'", enableIf: "{age_decline} notcontains 'decline'" },
-            { type: "checkbox", name: "age_decline", titleLocation: "hidden", title: "Age", choices: [{ value: "decline", text: "Prefer not to say" }] },
-            { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...preferNot },
-            { type: "radiogroup", name: "sex", title: "What sex were you assigned at birth?", choices: ["Female", "Male", "Intersex"], ...preferNot },
+            { type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 100, isRequired: true },
+            { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...required },
+            { type: "radiogroup", name: "sex", title: "What sex were you assigned at birth?", choices: ["Female", "Male", "Intersex"], ...required },
             {
               type: "checkbox", name: "race", title: "What is your race or ethnicity? Select all that apply.",
               choices: [
@@ -552,16 +551,15 @@ function classifyFirstGen(p1, p2) {
                 { value: "american_indian", text: "American Indian or Alaska Native" },
                 { value: "pacific_islander", text: "Native Hawaiian or Pacific Islander" },
               ],
-              showOtherItem: true, otherText: "Other", ...preferNot,
+              showOtherItem: true, otherText: "Other", ...required,
             },
           ],
         },
         {
           title: "High school",
           elements: [
-            { type: "text", name: "hs_gpa", title: "What was your high school GPA?", inputType: "number", min: 0, max: 10, step: 0.01, requiredIf: "{hs_gpa_decline} notcontains 'decline'", enableIf: "{hs_gpa_decline} notcontains 'decline'" },
-            { type: "checkbox", name: "hs_gpa_decline", titleLocation: "hidden", title: "High school GPA", choices: [{ value: "decline", text: "Prefer not to say" }] },
-            { type: "radiogroup", name: "hs_gpa_scale", title: "What scale is that GPA on?", choices: ["4.0 (unweighted)", "Weighted (e.g., out of 5.0)", "Other / not sure"], visibleIf: "{hs_gpa_decline} notcontains 'decline'", ...preferNot },
+            { type: "text", name: "hs_gpa", title: "What was your high school GPA?", inputType: "number", min: 0, max: 10, step: 0.01, isRequired: true },
+            { type: "radiogroup", name: "hs_gpa_scale", title: "What scale is that GPA on?", choices: ["4.0 (unweighted)", "Weighted (e.g., out of 5.0)", "Other / not sure"], ...required },
           ],
         },
       ],
@@ -571,10 +569,9 @@ function classifyFirstGen(p1, p2) {
       const r = data.response || {};
       const race = Array.isArray(r.race) ? r.race : [];
       data.first_gen = classifyFirstGen(r.parent1_education, r.parent2_education);
-      const declinedQ = (q) => Array.isArray(r[q + "_decline"]) && r[q + "_decline"].includes("decline");
-      data.age = declinedQ("age") || r.age === undefined ? null : Number(r.age);
-      data.hs_gpa = declinedQ("hs_gpa") || r.hs_gpa === undefined ? null : Number(r.hs_gpa);
-      data.hs_gpa_scale = declinedQ("hs_gpa") ? null : (r.hs_gpa_scale ?? null);
+      data.age = r.age === undefined ? null : Number(r.age);
+      data.hs_gpa = r.hs_gpa === undefined ? null : Number(r.hs_gpa);
+      data.hs_gpa_scale = r.hs_gpa_scale ?? null;
       // Analysis covariate (White vs non-White). Multiracial participants who include White
       // are coded as not White-only here; the raw selections are kept so the rule can change.
       data.race_white_only = race.length === 0 || race.includes("none") ? null : (race.length === 1 && race[0] === "white");
@@ -600,7 +597,7 @@ function classifyFirstGen(p1, p2) {
           {
             type: "radiogroup", name: "outside_help",
             title: "Did you use any outside help on the anagrams (for example, a website, an app, or another person)? Your answer will not affect your credit.",
-            choices: ["No", "Yes"], ...preferNot,
+            choices: ["No", "Yes"], ...required,
           },
         ],
       }],
