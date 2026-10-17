@@ -134,3 +134,25 @@ img.photo-head { height: 120px; object-fit: cover; display: block; }
 .letter.animated.cover-seen .letter-lead::after,
 .letter.animated.cover-seen .letter-themes li,
 .letter.animated.cover-seen .photo-strip-item { animation: none !important; }
+
+/* ---------------------------------------------------------------------------
+   Click-to-reveal letter (EXPERIMENT.letter_format = "reveal"). Identical in both conditions.
+   Unrevealed steps take no space; each revealed step animates in once.
+   --------------------------------------------------------------------------- */
+.letter.revealing { width: 700px; max-width: 100%; } /* same width from the first theme to the end */
+.letter.revealing .reveal-step:not(.shown) { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .letter.revealing .letter-themes li.shown:nth-child(odd)  { animation: letterSlideFromRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .letter.revealing .letter-themes li.shown:nth-child(even) { animation: letterSlideFromLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .letter.revealing .photo-strip.shown { animation: letterRise 0.8s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .letter.revealing .letter-text p.shown { animation: letterRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+}
+.reveal-controls { text-align: center; margin: 22px 0 6px; }
+.reveal-next { background: #fff !important; border: 1.5px solid #b5a642 !important; color: #6b6230 !important;
+  padding: 10px 30px !important; font-size: 16px !important; border-radius: 3px !important; letter-spacing: 0.03em;
+  transition: background 0.2s ease, transform 0.2s ease; }
+.reveal-next:hover { background: #f7f3e1 !important; transform: translateY(-1px); }
+/* Grayed-out Continue (no countdown) until the whole letter is revealed and the minimum time has passed. */
+.letter-continue:disabled { background: #cfcfcf !important; color: #fff !important; opacity: 1; box-shadow: none; }
+/* jsPsych's button style sets display, which would otherwise override the hidden attribute. */
+.reveal-next[hidden] { display: none !important; }

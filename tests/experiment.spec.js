@@ -62,18 +62,17 @@ async function startStudy(page, freshman = "Yes") {
   await page.locator('input[value="Continue"]').click();
 }
 
-// Welcome letter: a two-page flip book. Each page's button unlocks after its minimum time
-// (1 s per page in tests via ?letter_seconds=1).
+// Welcome letter: one page revealed step by step. "Show next" reveals each theme, then each
+// paragraph (12 steps, the first shown on load); Continue unlocks when everything is shown and
+// the minimum time has passed (1 s in tests via ?letter_seconds=1).
 async function readLetter(page) {
-  const next = page.locator("#flipbook-next");
-  await expect(page.locator(".letter-page-cover")).toBeVisible();
-  await expect(next).toBeEnabled({ timeout: 10000 });
-  await next.click();
-  await expect(page.locator("#flipbook-indicator")).toHaveText("Page 2 of 2");
-  await expect(page.locator(".letter-page-text")).toBeVisible();
-  await expect(next).toBeEnabled({ timeout: 10000 });
-  await next.scrollIntoViewIfNeeded();
-  await next.click();
+  const next = page.locator("#reveal-next");
+  await expect(page.locator(".letter.revealing")).toBeVisible();
+  while (await next.isVisible()) await next.click();
+  const cont = page.locator("#jspsych-html-button-response-btngroup button");
+  await expect(cont).toBeEnabled({ timeout: 10000 });
+  await cont.scrollIntoViewIfNeeded();
+  await cont.click();
 }
 
 async function runThroughExperiment(page, { answerAnagrams = true, finish = true, stopAtManipulationCheck = false } = {}) {
@@ -103,7 +102,6 @@ async function runThroughExperiment(page, { answerAnagrams = true, finish = true
   await pick(page, "race", "White");
   await page.locator('input[value="Next"]').click();
   await page.locator('[data-name="hs_gpa"] input').fill("3.9");
-  await pick(page, "hs_gpa_scale", "4.0 (unweighted)");
   await page.locator('input[value="Continue"]').click();
 
   // Final screening questions
@@ -202,14 +200,13 @@ test.describe("experiment", () => {
 
     const letter = trials.find((t) => t.task === "letter");
     expect(letter.letter).toBe(pdoc.condition);
-    expect(letter.letter_format).toBe("flipbook");
-    expect(letter.letter_time_ms).toBeGreaterThanOrEqual(1800);  // two pages, each locked ~1 s
-    expect(letter.letter_min_ms).toBe(2000);
-    expect(letter.page_times_ms.length).toBe(2);
-    expect(letter.page_times_ms.every((ms) => ms >= 900)).toBe(true);
-    expect(letter.page_views).toEqual([1, 1]);
-    expect(pdoc.letter_cover_ms).toBeGreaterThanOrEqual(900);
-    expect(pdoc.letter_text_ms).toBeGreaterThanOrEqual(900);
+    expect(letter.letter_format).toBe("reveal");
+    expect(letter.letter_min_ms).toBe(1000);
+    expect(letter.letter_time_ms).toBeGreaterThanOrEqual(900);
+    expect(letter.reveal_steps).toBe(12);                         // 4 themes + 8 paragraphs
+    expect(letter.reveal_ms.length).toBe(12);
+    expect(letter.reveal_ms[0]).toBeLessThan(500);                // first theme shown on load
+    expect(pdoc.letter_reveal_last_ms).toBe(letter.reveal_ms[11]);
     expect(letter.letter_max_scroll).toBeGreaterThan(0.95);       // the robot scrolled to the bottom
     expect(letter.letter_max_scroll).toBeLessThanOrEqual(1);
 
@@ -346,46 +343,42 @@ test.describe("experiment", () => {
     await age.fill("18");
     await page.locator('input[value="Next"]').click();
 
-    // GPA: "Other" needs its text; an unweighted GPA cannot exceed 4.0.
-    await expect(page.locator('[data-name="hs_gpa_scale"]')).toBeVisible();
-    await pick(page, "hs_gpa_scale", "Other (please specify)");
-    await page.locator('[data-name="hs_gpa"] input').fill("3.5");
-    await page.locator('input[value="Continue"]').click();
-    await expect(page.locator('[data-name="hs_gpa_scale"]').locator(".sd-question__erbox, .sd-error").first()).toBeVisible();
-    await pick(page, "hs_gpa_scale", "4.0 (unweighted)");
+    // GPA: unweighted only, so it must be between 0 and 4.0.
+    await expect(page.locator('[data-name="hs_gpa_scale"]')).toHaveCount(0);
     await page.locator('[data-name="hs_gpa"] input').fill("4.3");
     await page.locator('input[value="Continue"]').click();
-    await expect(page.getByText("can be at most 4.0")).toBeVisible();
+    await expect(page.getByText("from 0 to 4.0")).toBeVisible();
     await page.locator('[data-name="hs_gpa"] input').fill("3.9");
     await page.locator('input[value="Continue"]').click();
     await expect(page.locator('[data-name="outside_help"]')).toBeVisible();   // moved on
   });
 
-  test("flip book: each page is locked for its minimum, and Previous page returns to the cover", async ({ page }) => {
-    await page.goto(EMULATOR ? "/?emulator=1&letter_seconds=3" : "/?letter_seconds=3");
+  test("letter: one click per theme and paragraph; Continue stays grayed out until all shown and time passed", async ({ page }) => {
+    await page.goto(EMULATOR ? "/?emulator=1&letter_seconds=4" : "/?letter_seconds=4");
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await startStudy(page);
     await nextPage(page);
-    const next = page.locator("#flipbook-next");
-    const back = page.locator("#flipbook-back");
-    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 1 of 2");
-    await expect(next).toBeDisabled();
-    await expect(next).toContainText("available in");
-    await expect(back).toBeHidden();                         // nothing to go back to on the cover
-    await expect(page.locator(".letter-themes li")).toHaveCount(4);
-    await expect(next).toBeEnabled({ timeout: 10000 });
-    await next.click();
-    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 2 of 2");
-    await expect(next).toBeDisabled();                       // page 2 has its own minimum
-    await expect(page.locator(".letter-themes")).toHaveCount(0);
-    await back.click();
-    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 1 of 2");
-    await expect(next).toBeEnabled();                        // cover time already met: no new wait
-    await next.click();
-    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 2 of 2");
-    await expect(next).toHaveText("Continue", { timeout: 10000 });
-    await next.click();
-    await expect(page.locator(".task-instructions")).toBeVisible();   // on to the cover story
+    const next = page.locator("#reveal-next");
+    const cont = page.locator("#jspsych-html-button-response-btngroup button");
+    const shownThemes = page.locator(".letter-themes li.shown");
+    const shownParas = page.locator(".letter-text p.shown:not(.letter-sign)");
+    await expect(shownThemes).toHaveCount(1);                      // first theme only
+    await expect(shownParas).toHaveCount(0);
+    await expect(cont).toBeDisabled();
+    await expect(cont).toHaveText("Continue");                     // no countdown on the button
+    for (let i = 2; i <= 4; i++) { await next.click(); await expect(shownThemes).toHaveCount(i); }
+    await expect(page.locator(".photo-strip.shown")).toHaveCount(1);   // photos come with theme 4
+    for (let i = 1; i <= 8; i++) {
+      await expect(cont).toBeDisabled();
+      await next.click();
+      await expect(shownParas).toHaveCount(i);
+    }
+    await expect(page.locator(".letter-sign.shown")).toHaveCount(1);
+    await expect(next).toBeHidden();
+    await expect(cont).toBeEnabled({ timeout: 10000 });            // once the 4 s minimum has passed
+    await expect(cont).toHaveText("Continue");
+    await cont.click();
+    await expect(page.locator(".task-instructions")).toBeVisible();
   });
 
   test("chunked writes (chunk_size > 1) save every trial", async ({ page }) => {

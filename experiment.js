@@ -19,7 +19,7 @@
  * Eligibility: freshmen only ("Are you a freshman?" right after consent; "No" is thanked
  *           and the study ends, recorded as eligible = false).
  * Timeline: consent -> eligibility -> overview -> [demographics if position "before"] ->
- *   welcome letter (two-page flip book, each page locked for a minimum time) ->
+ *   welcome letter (one page, themes and paragraphs revealed one click at a time) ->
  *   cover story + anagram instructions -> anagram task -> manipulation check ->
  *   [demographics if position "after"] -> final questions -> debrief.
  */
@@ -61,12 +61,15 @@ const EXPERIMENT = {
   // before the task. "before": demographics come right after consent, as in the writeup draft.
   demographics_position: "after",
 
-  // "flipbook": two pages as in the original (cover with the four themes and photos, then the
-  // letter), each with its own minimum viewing time. "single": everything on one scrolling page.
-  letter_format: "flipbook",
+  // "reveal": one page; a "Show next" button reveals the four themes one at a time (the photos
+  // appear with the fourth), then each paragraph; earlier parts stay visible. Continue stays
+  // grayed out (no countdown) until everything is revealed AND letter_min_seconds have passed.
+  // "flipbook": two pages (cover, then letter), each with its own minimum viewing time.
+  // "single": everything on one scrolling page, Continue unlocks after letter_min_seconds.
+  letter_format: "reveal",
   // Flip book: seconds on each page before its button becomes available (cover, letter).
   letter_page_min_seconds: [10, 35],
-  // Single page: seconds before the Continue button under the welcome letter becomes available.
+  // "reveal" and "single": minimum seconds on the letter before Continue becomes available.
   letter_min_seconds: 45,
 
   // Header photo of the president, the same in both conditions. Set to "" to show a grey box.
@@ -299,8 +302,8 @@ function classifyFirstGen(p1, p2) {
   };
 
   // -------------------------------------------------------------------------
-  // Welcome letter (the manipulation). EXPERIMENT.letter_format picks the two-page flip book
-  // (as in the original materials) or a single scrolling page. Reading time is saved for
+  // Welcome letter (the manipulation). EXPERIMENT.letter_format picks the click-to-reveal page
+  // (default), the two-page flip book, or a single scrolling page. Reading time is saved for
   // screening; scroll depth shows whether they reached the end of the letter text.
   // jsPsych scrolls inside its display element (overflow-y: auto), not the window.
   // -------------------------------------------------------------------------
@@ -309,12 +312,20 @@ function classifyFirstGen(p1, p2) {
   let letterObserverStart = null;
   let trackingScroll = false;
   const scroller = () => jsPsych.getDisplayContainerElement();
+  // Depending on the browser and page, either jsPsych's container or the document itself
+  // scrolls, so scroll depth is measured from where the letter's bottom edge sits on screen,
+  // and scrolling is listened for anywhere on the page (capture phase).
   const onLetterScroll = () => {
     if (!trackingScroll) return;
-    const el = scroller();
-    const seen = (el.scrollTop + el.clientHeight) / Math.max(1, el.scrollHeight);
-    letterMaxScroll = Math.max(letterMaxScroll, Math.min(1, seen));
+    const el = document.querySelector(".letter");
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const seen = (window.innerHeight - r.top) / Math.max(1, r.height);
+    letterMaxScroll = Math.max(letterMaxScroll, Math.max(0, Math.min(1, seen)));
   };
+  const listenScroll = () => window.addEventListener("scroll", onLetterScroll, true);
+  const unlistenScroll = () => window.removeEventListener("scroll", onLetterScroll, true);
+  const scrollToTop = () => { scroller().scrollTop = 0; if (document.scrollingElement) document.scrollingElement.scrollTop = 0; };
   const stopLetterMotion = () => {
     clearTimeout(letterObserverStart);
     if (letterObserver) letterObserver.disconnect();
@@ -341,13 +352,13 @@ function classifyFirstGen(p1, p2) {
   const saveLetterTimes = (data, extra) => {
     onLetterScroll(); // final reading: scroll events arrive asynchronously, after the click
     trackingScroll = false;
-    scroller().removeEventListener("scroll", onLetterScroll);
+    unlistenScroll();
     stopLetterMotion();
     data.letter_time_ms = data.rt;
     data.letter_max_scroll = Math.round(letterMaxScroll * 100) / 100; // 1 = scrolled to the bottom
     Object.assign(data, extra);
     saver.updateParticipant({ letter_time_ms: data.rt, letter_max_scroll: data.letter_max_scroll, ...extra });
-    scroller().scrollTop = 0;
+    scrollToTop();
     progress(0.2);
   };
 
@@ -360,10 +371,10 @@ function classifyFirstGen(p1, p2) {
     next_label: "Next page",
     back_label: "Previous page",
     finish_label: "Continue",
-    scroller: () => scroller(),
+    scroller: () => (document.scrollingElement && document.scrollingElement.scrollTop > 0 ? document.scrollingElement : scroller()),
     save_trial_parameters: { pages: false },
     data: { task: "letter", letter: condition, letter_format: "flipbook" },
-    on_load: () => scroller().addEventListener("scroll", onLetterScroll),
+    on_load: () => listenScroll(),
     swap_selector: ".letter-body",   // the gold header and photo stay still between pages
     on_page_shown: (index, pageEl, firstView) => {
       // Scroll depth is measured on the letter page, where the text is.
@@ -396,10 +407,10 @@ function classifyFirstGen(p1, p2) {
     save_trial_parameters: { stimulus: false },
     data: { task: "letter", letter: condition, letter_format: "single" },
     on_load: () => {
-      scroller().scrollTop = 0;
+      scrollToTop();
       trackingScroll = true;
       onLetterScroll();
-      scroller().addEventListener("scroll", onLetterScroll);
+      listenScroll();
       animateLetter(document, 1800);
       const btn = document.querySelector("#jspsych-html-button-response-btngroup button");
       const shownAt = Date.now();
@@ -413,7 +424,81 @@ function classifyFirstGen(p1, p2) {
     },
     on_finish: (data) => { clearInterval(letterTick); saveLetterTimes(data, { letter_min_ms: LETTER_MIN_MS }); },
   };
-  const letter = EXPERIMENT.letter_format === "single" ? letterSinglePage : letterFlipbook;
+
+  // One page, revealed step by step. Step 1 (the first theme) is shown on load; each "Show next"
+  // click reveals the next step: themes 2-4 (the photos appear with theme 4), then paragraphs
+  // 1-8 (the signature appears with the last). Earlier steps stay visible. Continue is grayed
+  // out, with no countdown, until every step is revealed and LETTER_MIN_MS have passed.
+  let revealTick = null;
+  let revealSavedMargin = "";
+  const letterReveal = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: STIMULI.letterHtml(condition, EXPERIMENT.show_student_photos, EXPERIMENT.president_photo)
+      + `<div class="reveal-controls"><button type="button" class="jspsych-btn reveal-next" id="reveal-next">Show next</button></div>`,
+    choices: ["Continue"],
+    button_html: (choice) => `<button class="jspsych-btn letter-continue">${choice}</button>`,
+    save_trial_parameters: { stimulus: false },
+    data: { task: "letter", letter: condition, letter_format: "reveal" },
+    on_load: () => {
+      // Pin the letter to the top: jsPsych centres short content vertically, so the letter would
+      // otherwise shift on every click as it grows. Restored in on_finish.
+      revealSavedMargin = jsPsych.getDisplayElement().style.margin;
+      jsPsych.getDisplayElement().style.margin = "28px auto auto";
+      scrollToTop();
+      trackingScroll = true;
+      listenScroll();
+      const root = document.querySelector(".letter");
+      const themes = [...root.querySelectorAll(".letter-themes li")];
+      const strip = root.querySelector(".photo-strip");
+      const paras = [...root.querySelectorAll(".letter-text p:not(.letter-sign)")];
+      const sign = root.querySelector(".letter-sign");
+      const steps = [
+        ...themes.slice(0, 3).map((el) => [el]),
+        [themes[3], strip].filter(Boolean),
+        ...paras.slice(0, -1).map((el) => [el]),
+        [paras[paras.length - 1], sign],
+      ];
+      steps.flat().forEach((el) => el.classList.add("reveal-step"));
+      root.classList.add("revealing");
+
+      const shownAt = performance.now();
+      const revealMs = [];
+      let shown = 0;
+      const nextBtn = document.querySelector("#reveal-next");
+      const cont = document.querySelector("#jspsych-html-button-response-btngroup button");
+      const update = () => {
+        const done = shown === steps.length;
+        cont.disabled = !(done && performance.now() - shownAt >= LETTER_MIN_MS);
+        nextBtn.hidden = done;
+      };
+      const revealStep = (scroll) => {
+        steps[shown].forEach((el) => el.classList.add("shown"));
+        revealMs.push(Math.round(performance.now() - shownAt));
+        const last = steps[shown][steps[shown].length - 1];
+        shown++;
+        update();
+        if (scroll) setTimeout(() => last.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
+      };
+      nextBtn.addEventListener("click", () => { if (shown < steps.length) revealStep(true); });
+      revealStep(false);                       // the first theme is visible from the start
+      revealTick = setInterval(update, 250);
+      letterReveal._revealMs = revealMs;
+      letterReveal._steps = steps.length;
+    },
+    on_finish: (data) => {
+      clearInterval(revealTick);
+      jsPsych.getDisplayElement().style.margin = revealSavedMargin;
+      const ms = letterReveal._revealMs || [];
+      data.reveal_ms = ms;                    // when each step was revealed (ms after the letter appeared)
+      data.reveal_steps = letterReveal._steps;
+      saveLetterTimes(data, {
+        letter_min_ms: LETTER_MIN_MS,
+        letter_reveal_last_ms: ms[ms.length - 1] ?? null,       // when the last paragraph appeared
+        letter_after_last_ms: ms.length ? data.rt - ms[ms.length - 1] : null,  // time after it
+      });
+    },
+  };
+  const letter = { reveal: letterReveal, single: letterSinglePage, flipbook: letterFlipbook }[EXPERIMENT.letter_format] || letterReveal;
 
   // -------------------------------------------------------------------------
   // Cover story and anagram instructions
@@ -572,8 +657,6 @@ function classifyFirstGen(p1, p2) {
   // -------------------------------------------------------------------------
   // Demographics. Every item is required (see the note on `required` above).
   // -------------------------------------------------------------------------
-  const GPA_UNWEIGHTED = "4.0 (unweighted)";
-  const GPA_WEIGHTED = "Weighted (e.g., out of 5.0)";
   const demographics = {
     type: jsPsychSurvey,
     survey_json: {
@@ -602,6 +685,7 @@ function classifyFirstGen(p1, p2) {
           elements: [
             {
               type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 99, isRequired: true,
+              minErrorText: "Please enter an age between 16 and 99.", maxErrorText: "Please enter an age between 16 and 99.",
               validators: [
                 { type: "regex", regex: "^[0-9]+$", text: "Please enter your age as a whole number of years, e.g. 18." },
                 { type: "numeric", minValue: 16, maxValue: 99, text: "Please enter an age between 16 and 99." },
@@ -624,20 +708,13 @@ function classifyFirstGen(p1, p2) {
         {
           title: "High school",
           elements: [
-            // Scale first, so the GPA's allowed range can depend on it.
             {
-              type: "radiogroup", name: "hs_gpa_scale", title: "What scale was your high school GPA on?",
-              choices: [GPA_UNWEIGHTED, GPA_WEIGHTED, "Not sure"], showOtherItem: true, otherText: "Other (please specify)", ...required,
-            },
-            {
-              type: "text", name: "hs_gpa", title: "What was your high school GPA?", inputType: "number", min: 0, step: 0.01, isRequired: true,
+              type: "text", name: "hs_gpa", title: "What was your unweighted high school GPA (on a 4.0 scale)?",
+              inputType: "number", min: 0, max: 4, step: 0.01, isRequired: true,
+              minErrorText: "Please enter your unweighted GPA as a number from 0 to 4.0, e.g. 3.85.",
+              maxErrorText: "Please enter your unweighted GPA as a number from 0 to 4.0, e.g. 3.85.",
               validators: [
-                { type: "numeric", minValue: 0, text: "Please enter a number, e.g. 3.85." },
-                { type: "expression", expression: `{hs_gpa_scale} <> '${GPA_UNWEIGHTED}' or {hs_gpa} <= 4`,
-                  text: "On an unweighted 4.0 scale, GPA can be at most 4.0. If your school weighted grades, choose \"Weighted\" above." },
-                { type: "expression", expression: `{hs_gpa_scale} <> '${GPA_WEIGHTED}' or {hs_gpa} <= 6`,
-                  text: "A weighted GPA is usually at most 5.0 (6.0 at some schools). Please check the number." },
-                { type: "expression", expression: "{hs_gpa} <= 100", text: "Please check the number." },
+                { type: "numeric", minValue: 0, maxValue: 4, text: "Please enter your unweighted GPA as a number from 0 to 4.0, e.g. 3.85." },
               ],
             },
           ],
@@ -651,7 +728,6 @@ function classifyFirstGen(p1, p2) {
       data.first_gen = classifyFirstGen(r.parent1_education, r.parent2_education);
       data.age = r.age === undefined ? null : Number(r.age);
       data.hs_gpa = r.hs_gpa === undefined ? null : Number(r.hs_gpa);
-      data.hs_gpa_scale = r.hs_gpa_scale ?? null;
       // Analysis covariate (White vs non-White). Multiracial participants who include White
       // are coded as not White-only here; the raw selections are kept so the rule can change.
       data.race_white_only = race.length === 0 || race.includes("none") ? null : (race.length === 1 && race[0] === "white");
