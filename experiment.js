@@ -364,11 +364,18 @@ function classifyFirstGen(p1, p2) {
     save_trial_parameters: { pages: false },
     data: { task: "letter", letter: condition, letter_format: "flipbook" },
     on_load: () => scroller().addEventListener("scroll", onLetterScroll),
-    on_page_shown: (index, pageEl) => {
+    swap_selector: ".letter-body",   // the gold header and photo stay still between pages
+    on_page_shown: (index, pageEl, firstView) => {
       // Scroll depth is measured on the letter page, where the text is.
       trackingScroll = index === 1;
-      if (index === 1) { letterMaxScroll = Math.max(letterMaxScroll, 0); onLetterScroll(); }
-      animateLetter(pageEl, index === 0 ? 1800 : 300);
+      if (index === 1) onLetterScroll();
+      // Entrance animations only the first time each page is shown.
+      if (firstView) animateLetter(pageEl, index === 0 ? 1800 : 300);
+      else {
+        stopLetterMotion();
+        pageEl.querySelector(".letter").classList.add("cover-seen");
+        pageEl.querySelectorAll(".letter-text p").forEach((p) => p.classList.remove("reveal"));
+      }
     },
     on_finish: (data) => saveLetterTimes(data, {
       letter_min_ms: LETTER_PAGE_MIN_MS.reduce((a, b) => a + b, 0),
