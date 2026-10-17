@@ -54,7 +54,7 @@ library(jsonlite)
 
 # Must match EXPERIMENT.id in experiment.js, and the --experiment you passed to the export.
 # Phase 2 runs under its own id, so its data never mix with Phase 1's.
-experiment_id        <- "stephens2012-pilot-a"
+experiment_id        <- "stephens2012-pilot-a2"
 experiment_id_phase2 <- "stephens2012-phase2"
 ```
 
@@ -499,6 +499,7 @@ demographics, and any preselection or screening. The stopping rule
 should be data-independent: "collect until N participants pass the
 exclusion criteria below" rather than "until the result is clear".
 :::
+My planned sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. I plan to recruit first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. 
 
 ### Materials
 
@@ -510,6 +511,12 @@ in quotation marks and note that it was followed precisely, or quote it
 and point out the exceptions. Link to the live experiment above rather
 than pasting screenshots of every screen.
 :::
+
+Welcome letter stimuli were followed closely to be adapted to the current year in an online setting. The main differences include: updated Stanford President's name and photo, deletion of Stanford President's signature (was not able to find the current president's signature online), addition of text animation (main three phrases and paragraphs fades in as participant scrolls through the letter). 
+
+Anagram task content and answer key were not provided in supplemental materials. Currently using a placeholder task from Gilhooly 1978. Anagram task timing and instructions were followed closely. I requested original materials to the corresponding author. 
+
+Manipulation check and demographic items were inferred through the original article's text.  
 
 ### Procedure
 
@@ -543,10 +550,8 @@ frame by choice. The effect size is the difference in the proportion
 choosing the risky program (loss minus gain), with a 95% confidence
 interval.
 
-**Exclusions.** Participants are excluded if they did not complete the
-study, if they answered no speeded trial at all (every lexical-decision
-trial timed out, the signature of a device without a keyboard), or if
-they answered fewer than 6 of the 8 lexical-decision trials correctly.
+**Exclusions.** Participants are excluded if they failed to meet the inclusion criteria, did not complete the
+study, or if they answered no anagrams at all.
 
 ### Differences from the original study
 

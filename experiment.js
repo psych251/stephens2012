@@ -32,7 +32,9 @@ window.TEMPLATE_VERSION = "0.1.0";
 const EXPERIMENT = {
   // Firestore path: experiments/<id>/participants/... Change it for each phase so pilot data
   // and real data never mix (e.g. "stephens2012-pilot-b", "stephens2012-final").
-  id: "stephens2012-pilot-a",
+  // "stephens2012-pilot-a" holds test sessions from building and checking the study; real
+  // Pilot A participants start here.
+  id: "stephens2012-pilot-a2",
 
   // Trials per Firestore write. 1 = save every trial the moment it finishes (dropouts leave
   // partial data). A participant makes roughly 20-60 anagram attempts, well inside the quota.
