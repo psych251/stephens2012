@@ -280,7 +280,7 @@ function classifyFirstGen(p1, p2) {
     pages: [
       `<h2>Welcome!</h2>
        <p>In this study you will read a message, complete an activity, and answer
-       some questions about yourself. It takes about 20 minutes.</p>
+       some questions. It takes about 20 minutes.</p>
        <p>Please complete the study in one sitting, in a quiet place, on a laptop or desktop
        computer, and keep this window open the whole time.</p>`,
     ],
@@ -307,8 +307,7 @@ function classifyFirstGen(p1, p2) {
   };
   const letter = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `<p class="letter-intro">Please read the following welcome message from Stanford University carefully.</p>`
-      + STIMULI.letterHtml(condition, EXPERIMENT.show_student_photos, EXPERIMENT.president_photo),
+    stimulus: STIMULI.letterHtml(condition, EXPERIMENT.show_student_photos, EXPERIMENT.president_photo),
     choices: ["Continue"],
     button_html: (choice) => `<button class="jspsych-btn letter-continue">${choice}</button>`,
     enable_button_after: LETTER_MIN_MS,
@@ -516,6 +515,8 @@ function classifyFirstGen(p1, p2) {
   // -------------------------------------------------------------------------
   // Demographics. Every item is required (see the note on `required` above).
   // -------------------------------------------------------------------------
+  const GPA_UNWEIGHTED = "4.0 (unweighted)";
+  const GPA_WEIGHTED = "Weighted (e.g., out of 5.0)";
   const demographics = {
     type: jsPsychSurvey,
     survey_json: {
@@ -542,7 +543,13 @@ function classifyFirstGen(p1, p2) {
         {
           title: "About you",
           elements: [
-            { type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 100, isRequired: true },
+            {
+              type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 99, isRequired: true,
+              validators: [
+                { type: "regex", regex: "^[0-9]+$", text: "Please enter your age as a whole number of years, e.g. 18." },
+                { type: "numeric", minValue: 16, maxValue: 99, text: "Please enter an age between 16 and 99." },
+              ],
+            },
             { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...required },
             { type: "radiogroup", name: "sex", title: "What sex were you assigned at birth?", choices: ["Female", "Male", "Intersex"], ...required },
             {
@@ -560,8 +567,22 @@ function classifyFirstGen(p1, p2) {
         {
           title: "High school",
           elements: [
-            { type: "text", name: "hs_gpa", title: "What was your high school GPA?", inputType: "number", min: 0, max: 10, step: 0.01, isRequired: true },
-            { type: "radiogroup", name: "hs_gpa_scale", title: "What scale is that GPA on?", choices: ["4.0 (unweighted)", "Weighted (e.g., out of 5.0)", "Other / not sure"], ...required },
+            // Scale first, so the GPA's allowed range can depend on it.
+            {
+              type: "radiogroup", name: "hs_gpa_scale", title: "What scale was your high school GPA on?",
+              choices: [GPA_UNWEIGHTED, GPA_WEIGHTED, "Not sure"], showOtherItem: true, otherText: "Other (please specify)", ...required,
+            },
+            {
+              type: "text", name: "hs_gpa", title: "What was your high school GPA?", inputType: "number", min: 0, step: 0.01, isRequired: true,
+              validators: [
+                { type: "numeric", minValue: 0, text: "Please enter a number, e.g. 3.85." },
+                { type: "expression", expression: `{hs_gpa_scale} <> '${GPA_UNWEIGHTED}' or {hs_gpa} <= 4`,
+                  text: "On an unweighted 4.0 scale, GPA can be at most 4.0. If your school weighted grades, choose \"Weighted\" above." },
+                { type: "expression", expression: `{hs_gpa_scale} <> '${GPA_WEIGHTED}' or {hs_gpa} <= 6`,
+                  text: "A weighted GPA is usually at most 5.0 (6.0 at some schools). Please check the number." },
+                { type: "expression", expression: "{hs_gpa} <= 100", text: "Please check the number." },
+              ],
+            },
           ],
         },
       ],

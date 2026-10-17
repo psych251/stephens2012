@@ -294,6 +294,60 @@ test.describe("experiment", () => {
     }
   });
 
+  test("answer checks: anagram box takes letters only; age, GPA and Other text are validated", async ({ page }) => {
+    await page.goto(EMULATOR ? `/?emulator=1&${CLOCK}` : `/?${CLOCK}`);
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    await startStudy(page);
+    await nextPage(page);
+    const letterBtn = page.locator("#jspsych-html-button-response-btngroup button");
+    await expect(letterBtn).toBeEnabled({ timeout: 10000 });
+    await letterBtn.click();
+    await nextPage(page);
+    await nextPage(page);
+
+    // Anagram box: non-letters are dropped and the length is capped at the anagram's length.
+    const input = page.locator("#anagram-input");
+    await input.pressSequentially("a1b c!d-efgh");
+    await expect(input).toHaveValue("abcde");
+    await input.fill("");
+    await doAnagrams(page);
+    await page.getByRole("button", { name: "Continue" }).click();
+    await pick(page, "mc_individually_motivated", "Agree (6)");
+    await pick(page, "mc_work_together", "Agree (6)");
+    await page.locator('input[value="Continue"]').click();
+    await pick(page, "parent1_education", "High school diploma or GED");
+    await pick(page, "parent2_education", "Don't know");
+    await pick(page, "household_income", "$30,000 to $49,999");
+    await page.locator('input[value="Next"]').click();
+
+    // Age must be a whole number from 16 to 99.
+    await pick(page, "gender", "Woman");
+    await pick(page, "sex", "Female");
+    await pick(page, "race", "White");
+    const age = page.locator('[data-name="age"] input');
+    for (const bad of ["15", "18.5", "120"]) {
+      await age.fill(bad);
+      await page.locator('input[value="Next"]').click();
+      await expect(page.locator('[data-name="age"]').locator(".sd-question__erbox, .sd-error").first()).toBeVisible();
+    }
+    await age.fill("18");
+    await page.locator('input[value="Next"]').click();
+
+    // GPA: "Other" needs its text; an unweighted GPA cannot exceed 4.0.
+    await expect(page.locator('[data-name="hs_gpa_scale"]')).toBeVisible();
+    await pick(page, "hs_gpa_scale", "Other (please specify)");
+    await page.locator('[data-name="hs_gpa"] input').fill("3.5");
+    await page.locator('input[value="Continue"]').click();
+    await expect(page.locator('[data-name="hs_gpa_scale"]').locator(".sd-question__erbox, .sd-error").first()).toBeVisible();
+    await pick(page, "hs_gpa_scale", "4.0 (unweighted)");
+    await page.locator('[data-name="hs_gpa"] input').fill("4.3");
+    await page.locator('input[value="Continue"]').click();
+    await expect(page.getByText("can be at most 4.0")).toBeVisible();
+    await page.locator('[data-name="hs_gpa"] input').fill("3.9");
+    await page.locator('input[value="Continue"]').click();
+    await expect(page.locator('[data-name="outside_help"]')).toBeVisible();   // moved on
+  });
+
   test("chunked writes (chunk_size > 1) save every trial", async ({ page }) => {
     test.skip(!EMULATOR, "needs the Firestore emulator");
     await page.goto(`/?emulator=1&chunk_size=5&${CLOCK}`);

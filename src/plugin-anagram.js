@@ -1,7 +1,8 @@
 /*
  * jsPsych 8 plugin: one anagram, answered by typing.
  *
- * Shows the scrambled letters, a text box, and Submit / Skip buttons. Enter submits. The
+ * Shows the scrambled letters, a text box, and Submit / Skip buttons. Enter submits. The box
+ * accepts letters only, up to the anagram's length, and pasting is blocked. The
  * trial ends on submit (non-empty answer), skip, or when the shared task deadline passes
  * (`deadline` is a Date.now() timestamp, so one clock covers the whole 10-minute task).
  * Scoring happens in experiment.js, so this plugin only reports what the participant did.
@@ -45,7 +46,7 @@ var jsPsychAnagram = (function (jspsych) {
           ${trial.show_timer ? `<div class="anagram-timer" id="anagram-timer">${fmt(trial.deadline - Date.now())}</div>` : ""}
           <div class="anagram-letters" data-anagram="${trial.anagram}">${trial.anagram.split("").join(" ")}</div>
           <form id="anagram-form" autocomplete="off">
-            <input id="anagram-input" type="text" maxlength="20" spellcheck="false"
+            <input id="anagram-input" type="text" maxlength="${trial.anagram.length}" spellcheck="false"
                    autocapitalize="off" autocorrect="off" aria-label="Your answer">
             <div class="anagram-buttons">
               <button type="submit" id="anagram-submit" class="jspsych-btn">Submit</button>
@@ -57,6 +58,13 @@ var jsPsychAnagram = (function (jspsych) {
       const input = display_element.querySelector("#anagram-input");
       const timerEl = display_element.querySelector("#anagram-timer");
       input.focus();
+      // Letters only (anything else is dropped as it is typed), and no pasting or dropping text.
+      input.addEventListener("input", () => {
+        const clean = input.value.replace(/[^a-zA-Z]/g, "").slice(0, trial.anagram.length);
+        if (clean !== input.value) input.value = clean;
+      });
+      input.addEventListener("paste", (e) => e.preventDefault());
+      input.addEventListener("drop", (e) => e.preventDefault());
 
       const end = (action) => {
         if (done) return;
