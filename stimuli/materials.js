@@ -6,7 +6,8 @@
  * Shown on one page. The president's photo is stimuli/president.webp (provided by the student;
  * confirm usage rights before real data collection). Student photos (stimuli/photos/) are
  * cropped from page 1 of the original materials, three per condition;
- * the president's name is typed, not a reproduced signature.
+ * the signature is the president's name set in a script typeface (stimuli/fonts/), not a
+ * reproduction of his handwritten signature.
  *
  * Anagrams: the backup set in materials/anagrams-backup.csv (main items only), built by
  * scripts/make-anagrams.py from Gilhooly (1978). If you change that CSV, update this list.
@@ -39,7 +40,7 @@ window.STIMULI = (function () {
             `<img class="photo-strip-item" src="${ph.src}" alt="" style="object-position: ${ph.focus || "center"}">`).join("")}</div>` : ""}
           <div class="letter-text">
             ${paragraphs.map((p) => `<p>${p}</p>`).join("")}
-            <p class="letter-sign">Jonathan Levin<br>President</p>
+            <p class="letter-sign"><span class="letter-signature" aria-hidden="true">Jonathan Levin</span><br>Jonathan Levin<br>President</p>
           </div>
         </div>
       </div>`;

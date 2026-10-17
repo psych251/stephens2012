@@ -8,6 +8,14 @@
 #jspsych-html-button-response-btngroup { text-align: center; }
 .thanks { text-align: center; }
 
+/* Signature-style name under the letter: a script typeface served from the repo (see
+   stimuli/fonts/README.md), identical in both conditions. */
+@font-face {
+  font-family: "LetterSignature";
+  src: url("../stimuli/fonts/mrs-saint-delafield.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: block;
+}
+
 /* Welcome letter, styled after the original materials (one page) */
 .letter-intro { text-align: center; color: #555; }
 .letter { border-left: 4px solid #b5a642; margin: 0 auto 1em; max-width: 700px; background: #fff; }
@@ -23,6 +31,8 @@
 .letter-themes li:nth-child(odd) { text-align: right; }
 .letter-text p { font-size: 16px; line-height: 1.55; text-indent: 2em; margin: 0 0 0.6em; }
 .letter-text .letter-sign { text-indent: 0; margin-top: 1.2em; }
+.letter-signature { font-family: "LetterSignature", cursive; font-size: 46px; line-height: 1.05; color: #1d1d2b;
+  display: inline-block; margin: 14px 0 4px 6px; transform: rotate(-3deg); transform-origin: left bottom; }
 .photo-placeholder { background: #e4e4e4; color: #777; font: 12px/1.3 system-ui, sans-serif; display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; box-sizing: border-box; }
 .photo-head { width: 120px; min-height: 110px; }
 img.photo-head { height: 120px; object-fit: cover; display: block; }
