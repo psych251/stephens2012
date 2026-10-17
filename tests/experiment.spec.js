@@ -62,15 +62,24 @@ async function startStudy(page, freshman = "Yes") {
   await page.locator('input[value="Continue"]').click();
 }
 
+// Welcome letter: a two-page flip book. Each page's button unlocks after its minimum time
+// (1 s per page in tests via ?letter_seconds=1).
+async function readLetter(page) {
+  const next = page.locator("#flipbook-next");
+  await expect(page.locator(".letter-page-cover")).toBeVisible();
+  await expect(next).toBeEnabled({ timeout: 10000 });
+  await next.click();
+  await expect(page.locator("#flipbook-indicator")).toHaveText("Page 2 of 2");
+  await expect(page.locator(".letter-page-text")).toBeVisible();
+  await expect(next).toBeEnabled({ timeout: 10000 });
+  await next.scrollIntoViewIfNeeded();
+  await next.click();
+}
+
 async function runThroughExperiment(page, { answerAnagrams = true, finish = true, stopAtManipulationCheck = false } = {}) {
   await startStudy(page);
   await nextPage(page);                 // overview
-  // Welcome letter: one page; Continue unlocks after the minimum reading time.
-  const letterBtn = page.locator("#jspsych-html-button-response-btngroup button");
-  await expect(page.locator(".letter")).toBeVisible();
-  await expect(letterBtn).toBeEnabled({ timeout: 10000 });
-  await letterBtn.scrollIntoViewIfNeeded();
-  await letterBtn.click();
+  await readLetter(page);
   await nextPage(page);                 // cover story
   await nextPage(page);                 // anagram instructions: "Start"
   if (answerAnagrams) await doAnagrams(page);
@@ -193,8 +202,14 @@ test.describe("experiment", () => {
 
     const letter = trials.find((t) => t.task === "letter");
     expect(letter.letter).toBe(pdoc.condition);
-    expect(letter.letter_time_ms).toBeGreaterThanOrEqual(900);   // Continue was locked for ~1 s
-    expect(letter.letter_min_ms).toBe(1000);
+    expect(letter.letter_format).toBe("flipbook");
+    expect(letter.letter_time_ms).toBeGreaterThanOrEqual(1800);  // two pages, each locked ~1 s
+    expect(letter.letter_min_ms).toBe(2000);
+    expect(letter.page_times_ms.length).toBe(2);
+    expect(letter.page_times_ms.every((ms) => ms >= 900)).toBe(true);
+    expect(letter.page_views).toEqual([1, 1]);
+    expect(pdoc.letter_cover_ms).toBeGreaterThanOrEqual(900);
+    expect(pdoc.letter_text_ms).toBeGreaterThanOrEqual(900);
     expect(letter.letter_max_scroll).toBeGreaterThan(0.95);       // the robot scrolled to the bottom
     expect(letter.letter_max_scroll).toBeLessThanOrEqual(1);
 
@@ -299,9 +314,7 @@ test.describe("experiment", () => {
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await startStudy(page);
     await nextPage(page);
-    const letterBtn = page.locator("#jspsych-html-button-response-btngroup button");
-    await expect(letterBtn).toBeEnabled({ timeout: 10000 });
-    await letterBtn.click();
+    await readLetter(page);
     await nextPage(page);
     await nextPage(page);
 
@@ -346,6 +359,33 @@ test.describe("experiment", () => {
     await page.locator('[data-name="hs_gpa"] input').fill("3.9");
     await page.locator('input[value="Continue"]').click();
     await expect(page.locator('[data-name="outside_help"]')).toBeVisible();   // moved on
+  });
+
+  test("flip book: each page is locked for its minimum, and Previous page returns to the cover", async ({ page }) => {
+    await page.goto(EMULATOR ? "/?emulator=1&letter_seconds=3" : "/?letter_seconds=3");
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    await startStudy(page);
+    await nextPage(page);
+    const next = page.locator("#flipbook-next");
+    const back = page.locator("#flipbook-back");
+    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 1 of 2");
+    await expect(next).toBeDisabled();
+    await expect(next).toContainText("available in");
+    await expect(back).toBeHidden();                         // nothing to go back to on the cover
+    await expect(page.locator(".letter-themes li")).toHaveCount(4);
+    await expect(next).toBeEnabled({ timeout: 10000 });
+    await next.click();
+    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 2 of 2");
+    await expect(next).toBeDisabled();                       // page 2 has its own minimum
+    await expect(page.locator(".letter-themes")).toHaveCount(0);
+    await back.click();
+    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 1 of 2");
+    await expect(next).toBeEnabled();                        // cover time already met: no new wait
+    await next.click();
+    await expect(page.locator("#flipbook-indicator")).toHaveText("Page 2 of 2");
+    await expect(next).toHaveText("Continue", { timeout: 10000 });
+    await next.click();
+    await expect(page.locator(".task-instructions")).toBeVisible();   // on to the cover story
   });
 
   test("chunked writes (chunk_size > 1) save every trial", async ({ page }) => {

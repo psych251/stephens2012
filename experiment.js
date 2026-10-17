@@ -19,7 +19,7 @@
  * Eligibility: freshmen only ("Are you a freshman?" right after consent; "No" is thanked
  *           and the study ends, recorded as eligible = false).
  * Timeline: consent -> eligibility -> overview -> [demographics if position "before"] ->
- *   welcome letter (one page, Continue locked for 45 s) ->
+ *   welcome letter (two-page flip book, each page locked for a minimum time) ->
  *   cover story + anagram instructions -> anagram task -> manipulation check ->
  *   [demographics if position "after"] -> final questions -> debrief.
  */
@@ -61,7 +61,12 @@ const EXPERIMENT = {
   // before the task. "before": demographics come right after consent, as in the writeup draft.
   demographics_position: "after",
 
-  // Seconds before the Continue button under the welcome letter becomes available.
+  // "flipbook": two pages as in the original (cover with the four themes and photos, then the
+  // letter), each with its own minimum viewing time. "single": everything on one scrolling page.
+  letter_format: "flipbook",
+  // Flip book: seconds on each page before its button becomes available (cover, letter).
+  letter_page_min_seconds: [10, 35],
+  // Single page: seconds before the Continue button under the welcome letter becomes available.
   letter_min_seconds: 45,
 
   // Header photo of the president, the same in both conditions. Set to "" to show a grey box.
@@ -98,6 +103,10 @@ const ANAGRAM_MS = ((USE_EMULATOR || IS_LOCAL) && Number(URL_PARAMS.get("anagram
 const LETTER_MIN_MS = ((USE_EMULATOR || IS_LOCAL) && URL_PARAMS.get("letter_seconds") !== null)
   ? Number(URL_PARAMS.get("letter_seconds")) * 1000
   : EXPERIMENT.letter_min_seconds * 1000;
+// Per-page minimums for the flip book; `?letter_seconds=N` sets every page to N (test/pilot only).
+const LETTER_PAGE_MIN_MS = ((USE_EMULATOR || IS_LOCAL) && URL_PARAMS.get("letter_seconds") !== null)
+  ? EXPERIMENT.letter_page_min_seconds.map(() => Number(URL_PARAMS.get("letter_seconds")) * 1000)
+  : EXPERIMENT.letter_page_min_seconds.map((sec) => sec * 1000);
 
 // Parental education answers that count as a 4-year degree or more.
 const FOUR_YEAR = ["bachelors", "graduate"];
@@ -290,49 +299,101 @@ function classifyFirstGen(p1, p2) {
   };
 
   // -------------------------------------------------------------------------
-  // Welcome letter (the manipulation): two pages, as in the original materials
-  // -------------------------------------------------------------------------
-  // One page. Continue stays disabled for LETTER_MIN_MS and counts down on its label. Reading
-  // time (rt) is saved for screening; scroll depth shows whether they reached the end.
+  // Welcome letter (the manipulation). EXPERIMENT.letter_format picks the two-page flip book
+  // (as in the original materials) or a single scrolling page. Reading time is saved for
+  // screening; scroll depth shows whether they reached the end of the letter text.
   // jsPsych scrolls inside its display element (overflow-y: auto), not the window.
-  let letterTick = null;
+  // -------------------------------------------------------------------------
   let letterMaxScroll = 0;
   let letterObserver = null;
   let letterObserverStart = null;
+  let trackingScroll = false;
   const scroller = () => jsPsych.getDisplayContainerElement();
   const onLetterScroll = () => {
+    if (!trackingScroll) return;
     const el = scroller();
     const seen = (el.scrollTop + el.clientHeight) / Math.max(1, el.scrollHeight);
     letterMaxScroll = Math.max(letterMaxScroll, Math.min(1, seen));
   };
-  const letter = {
+  const stopLetterMotion = () => {
+    clearTimeout(letterObserverStart);
+    if (letterObserver) letterObserver.disconnect();
+  };
+
+  // Motion (CSS, identical in both conditions): the header, themes and photos animate in; each
+  // paragraph rises into view as it scrolls on screen. Paragraphs already on screen wait until
+  // the opening animation has finished (`delay`).
+  const animateLetter = (root, delay) => {
+    stopLetterMotion();
+    const letterEl = root.querySelector(".letter");
+    const chunks = [...letterEl.querySelectorAll(".letter-text p")];
+    if (!("IntersectionObserver" in window)) return;
+    letterEl.classList.add("animated");
+    chunks.forEach((p) => p.classList.add("reveal"));
+    letterObserver = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) { e.target.classList.add("is-visible"); letterObserver.unobserve(e.target); }
+      }
+    }, { threshold: 0.12 }); // root = the viewport; clipping by jsPsych's scroller is accounted for
+    letterObserverStart = setTimeout(() => chunks.forEach((p) => letterObserver.observe(p)), delay);
+  };
+
+  const saveLetterTimes = (data, extra) => {
+    onLetterScroll(); // final reading: scroll events arrive asynchronously, after the click
+    trackingScroll = false;
+    scroller().removeEventListener("scroll", onLetterScroll);
+    stopLetterMotion();
+    data.letter_time_ms = data.rt;
+    data.letter_max_scroll = Math.round(letterMaxScroll * 100) / 100; // 1 = scrolled to the bottom
+    Object.assign(data, extra);
+    saver.updateParticipant({ letter_time_ms: data.rt, letter_max_scroll: data.letter_max_scroll, ...extra });
+    scroller().scrollTop = 0;
+    progress(0.2);
+  };
+
+  // Two pages: cover (header, four themes, photos), then the letter. Each page's button unlocks
+  // after its minimum (LETTER_PAGE_MIN_MS); "Previous page" turns back to the cover.
+  const letterFlipbook = {
+    type: jsPsychFlipbook,
+    pages: STIMULI.letterPages(condition, EXPERIMENT.show_student_photos, EXPERIMENT.president_photo),
+    min_ms: LETTER_PAGE_MIN_MS,
+    next_label: "Next page",
+    back_label: "Previous page",
+    finish_label: "Continue",
+    scroller: () => scroller(),
+    save_trial_parameters: { pages: false },
+    data: { task: "letter", letter: condition, letter_format: "flipbook" },
+    on_load: () => scroller().addEventListener("scroll", onLetterScroll),
+    on_page_shown: (index, pageEl) => {
+      // Scroll depth is measured on the letter page, where the text is.
+      trackingScroll = index === 1;
+      if (index === 1) { letterMaxScroll = Math.max(letterMaxScroll, 0); onLetterScroll(); }
+      animateLetter(pageEl, index === 0 ? 1800 : 300);
+    },
+    on_finish: (data) => saveLetterTimes(data, {
+      letter_min_ms: LETTER_PAGE_MIN_MS.reduce((a, b) => a + b, 0),
+      letter_cover_ms: data.page_times_ms[0],
+      letter_text_ms: data.page_times_ms[1],
+      letter_cover_views: data.page_views[0],
+    }),
+  };
+
+  // One page: Continue stays disabled for LETTER_MIN_MS and counts down on its label.
+  let letterTick = null;
+  const letterSinglePage = {
     type: jsPsychHtmlButtonResponse,
     stimulus: STIMULI.letterHtml(condition, EXPERIMENT.show_student_photos, EXPERIMENT.president_photo),
     choices: ["Continue"],
     button_html: (choice) => `<button class="jspsych-btn letter-continue">${choice}</button>`,
     enable_button_after: LETTER_MIN_MS,
     save_trial_parameters: { stimulus: false },
-    data: { task: "letter", letter: condition },
+    data: { task: "letter", letter: condition, letter_format: "single" },
     on_load: () => {
       scroller().scrollTop = 0;
+      trackingScroll = true;
       onLetterScroll();
       scroller().addEventListener("scroll", onLetterScroll);
-
-      // Motion (CSS, identical in both conditions): the header, themes and photos animate in on
-      // load; each paragraph then rises into view as it scrolls on screen. Paragraphs already on
-      // screen wait until the opening animation has finished.
-      const letterEl = document.querySelector(".letter");
-      const chunks = [...letterEl.querySelectorAll(".letter-text p")];
-      if ("IntersectionObserver" in window) {
-        letterEl.classList.add("animated");
-        chunks.forEach((p) => p.classList.add("reveal"));
-        letterObserver = new IntersectionObserver((entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) { e.target.classList.add("is-visible"); letterObserver.unobserve(e.target); }
-          }
-        }, { threshold: 0.12 }); // root = the viewport; clipping by jsPsych's scroller is accounted for
-        letterObserverStart = setTimeout(() => chunks.forEach((p) => letterObserver.observe(p)), 1800);
-      }
+      animateLetter(document, 1800);
       const btn = document.querySelector("#jspsych-html-button-response-btngroup button");
       const shownAt = Date.now();
       const label = () => {
@@ -343,20 +404,9 @@ function classifyFirstGen(p1, p2) {
       label();
       letterTick = setInterval(label, 250);
     },
-    on_finish: (data) => {
-      clearInterval(letterTick);
-      clearTimeout(letterObserverStart);
-      if (letterObserver) letterObserver.disconnect();
-      onLetterScroll(); // final reading: scroll events arrive asynchronously, after the click
-      scroller().removeEventListener("scroll", onLetterScroll);
-      data.letter_time_ms = data.rt;
-      data.letter_min_ms = LETTER_MIN_MS;
-      data.letter_max_scroll = Math.round(letterMaxScroll * 100) / 100; // 1 = scrolled to the bottom
-      saver.updateParticipant({ letter_time_ms: data.rt, letter_max_scroll: data.letter_max_scroll });
-      scroller().scrollTop = 0;
-      progress(0.2);
-    },
+    on_finish: (data) => { clearInterval(letterTick); saveLetterTimes(data, { letter_min_ms: LETTER_MIN_MS }); },
   };
+  const letter = EXPERIMENT.letter_format === "single" ? letterSinglePage : letterFlipbook;
 
   // -------------------------------------------------------------------------
   // Cover story and anagram instructions

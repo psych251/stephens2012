@@ -104,3 +104,27 @@ img.photo-head { height: 120px; object-fit: cover; display: block; }
   box-shadow: 0 4px 14px rgba(120, 100, 20, 0.25); transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease; }
 .letter-continue:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(120, 100, 20, 0.32); }
 .letter-continue:disabled { opacity: 0.55; cursor: default; box-shadow: none; }
+
+/* ---------------------------------------------------------------------------
+   Two-page flip book for the welcome letter (src/plugin-flipbook.js). Identical in both
+   conditions. The page turns like a book page hinged on its left edge.
+   --------------------------------------------------------------------------- */
+.flipbook { width: 700px; max-width: 100%; margin: 0 auto; } /* fixed width: both pages the same size */
+.flipbook-stage { perspective: 1800px; }
+.flipbook-page { transform-origin: left center; backface-visibility: hidden; }
+.flipbook-page .letter { margin-bottom: 0; }
+.flipbook-nav { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 10px; }
+.flipbook-indicator { color: #777; font-size: 14px; letter-spacing: 0.04em; }
+.flipbook-back { background: #fff !important; border: 1px solid #c9c2a0 !important; color: #6b6230 !important; }
+.letter-page-cover .letter-body { min-height: 440px; }
+
+@keyframes flipOutForward { from { transform: rotateY(0); opacity: 1; } to { transform: rotateY(-88deg); opacity: 0.2; } }
+@keyframes flipInForward  { from { transform: rotateY(88deg); opacity: 0.2; } to { transform: rotateY(0); opacity: 1; } }
+@keyframes flipOutBack    { from { transform: rotateY(0); opacity: 1; } to { transform: rotateY(88deg); opacity: 0.2; } }
+@keyframes flipInBack     { from { transform: rotateY(-88deg); opacity: 0.2; } to { transform: rotateY(0); opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .flipbook-page.flip-out-forward { animation: flipOutForward 0.42s cubic-bezier(0.55, 0, 0.75, 0.3) both; }
+  .flipbook-page.flip-in-forward  { animation: flipInForward 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .flipbook-page.flip-out-back    { animation: flipOutBack 0.42s cubic-bezier(0.55, 0, 0.75, 0.3) both; }
+  .flipbook-page.flip-in-back     { animation: flipInBack 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+}

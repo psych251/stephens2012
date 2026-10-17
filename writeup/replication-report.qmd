@@ -197,7 +197,8 @@ read_phase <- function(id) {
   # before the field existed (e.g. `eligible` before the first-year screen was added).
   for (col in c("condition", "class_year", "eligible", "first_gen", "race_white_only",
                 "outside_help", "anagrams_solved",
-                "letter_time_ms", "letter_max_scroll", "anagram_focus_losses")) {
+                "letter_time_ms", "letter_cover_ms", "letter_text_ms", "letter_max_scroll",
+                "anagram_focus_losses")) {
     if (!col %in% names(participants)) participants[[col]] <- NA
   }
   reached <- function(task_name) unique(trials$participant_id[trials$task == task_name])
@@ -898,10 +899,12 @@ if (nrow(done) > 0) {
   tibble(
     Flag = c("Reported outside help on the anagrams", "Left the window during the anagram task",
              "Did not scroll to the end of the letter", "Median time on the letter (s)",
+             "Median time on the cover page with the four themes (s)",
              "GPA reported on a weighted scale"),
     Value = c(sum(done$outside_help %in% "Yes"), sum(as.numeric(done$anagram_focus_losses) > 0, na.rm = TRUE),
               sum(as.numeric(done$letter_max_scroll) < 0.95, na.rm = TRUE),
               round(median(as.numeric(done$letter_time_ms), na.rm = TRUE) / 1000),
+              round(median(as.numeric(done$letter_cover_ms), na.rm = TRUE) / 1000),
               sum(str_detect(coalesce(done$hs_gpa_scale, ""), "Weighted")))
   ) |>
     knitr::kable(caption = sprintf("Screening flags among the %d completed sessions.", nrow(done)))

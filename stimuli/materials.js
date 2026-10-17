@@ -3,7 +3,8 @@
  *
  * Letters: transcribed word for word from the original materials (see
  * materials/welcome-letters-draft.md), with the president updated to Jonathan Levin.
- * Shown on one page. The president's photo is stimuli/president.webp (provided by the student;
+ * Shown as two pages like the original (cover with the four themes and photos, then the letter;
+ * `letterPages`) or on one page (`letterHtml`). The president's photo is stimuli/president.webp (provided by the student;
  * confirm usage rights before real data collection). Student photos (stimuli/photos/) are
  * cropped from page 1 of the original materials, three per condition;
  * the signature is the president's name set in a script typeface (stimuli/fonts/), not a
@@ -109,5 +110,20 @@ window.STIMULI = (function () {
     return onePage(L.themes, L.paragraphs, L.photos, showPhotos, presidentPhoto);
   };
 
-  return { letters, letterHtml, anagrams };
+  // Two pages, as in the original materials: page 1 is the header, the four themes and the
+  // photos; page 2 is the header and the letter itself. Built from the one-page version, so
+  // the wording, photos and styling are identical.
+  const letterPages = (condition, showPhotos, presidentPhoto) => {
+    const page = document.createElement("div");
+    page.innerHTML = letterHtml(condition, showPhotos, presidentPhoto);
+    const cover = page.cloneNode(true);
+    cover.querySelector(".letter-text").remove();
+    cover.querySelector(".letter").classList.add("letter-page-cover");
+    const text = page.cloneNode(true);
+    text.querySelectorAll(".letter-lead, .letter-themes, .photo-strip").forEach((el) => el.remove());
+    text.querySelector(".letter").classList.add("letter-page-text");
+    return [cover.innerHTML, text.innerHTML];
+  };
+
+  return { letters, letterHtml, letterPages, anagrams };
 })();
