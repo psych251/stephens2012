@@ -1,0 +1,192 @@
+participant_id,trial_index,task,condition,trial_type,rt,response,time_elapsed,stimulus,plugin_version,experiment_id,consented,freshman,eligible,view_history,letter,letter_format,page_times_ms,page_views,min_ms,letter_time_ms,letter_max_scroll,letter_min_ms,letter_cover_ms,letter_text_ms,letter_cover_views,action,time_left_ms,item_id,anagram,solution,gilhooly_br,presentation,attempt_index,focus_losses,timed_out,skipped,correct,anagrams_solved,reason,mc_individually_motivated,mc_work_together,first_gen,age,hs_gpa,hs_gpa_scale,race_white_only,reveal_ms,reveal_steps,letter_reveal_last_ms,letter_after_last_ms
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,0,consent,interdependent,html-button-response,4161,0,4173,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a2,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,1,eligibility,interdependent,survey,3019,"{""freshman"":""Yes""}",7327,,4.0.0,stephens2012-pilot-a2,,Yes,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,2,overview,interdependent,instructions,2943,,10272,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":2943}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,3,letter,interdependent,flipbook,102220,,112495,,1.0.0,stephens2012-pilot-a2,,,,"[{""page"":0,""viewing_time"":25701},{""page"":1,""viewing_time"":76310}]",interdependent,flipbook,"[25701,76310]","[1,1]","[10000,35000]",102220,1,45000,25701,76310,1,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,4,cover_story,interdependent,instructions,51356,,163853,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":51356}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,5,anagram_instructions,interdependent,instructions,20893,,184747,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":20893}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,6,anagram,interdependent,anagram,3992,world,188740,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,596008,world,DLWRO,world,2,1,0,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,7,anagram,interdependent,anagram,9068,plant,197809,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,586939,plant,LTNPA,plant,13,1,1,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,8,anagram,interdependent,anagram,17880,,215689,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,569058,cabin,BNIAC,cabin,62,1,2,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,9,anagram,interdependent,anagram,20256,,235946,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,548802,pilot,OLPTI,pilot,74,1,3,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,10,anagram,interdependent,anagram,9900,Lunch,245847,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,538900,lunch,NHULC,lunch,23,1,4,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,11,anagram,interdependent,anagram,28561,,274409,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,510339,knife,IENKF,knife,112,1,5,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,12,anagram,interdependent,anagram,11670,truck,286080,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,498667,truck,CUTKR,truck,16,1,6,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,13,anagram,interdependent,anagram,5836,tulip,291917,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,492831,tulip,ITPLU,tulip,98,1,7,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,14,anagram,interdependent,anagram,15025,,306943,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,477805,woman,NAOWM,woman,12,1,8,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,15,anagram,interdependent,anagram,19687,,326631,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,458116,virus,RSUIV,virus,84,1,9,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,16,anagram,interdependent,anagram,17989,apron,344621,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,440127,apron,RNPAO,apron,149,1,10,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,17,anagram,interdependent,anagram,22404,doubt,367026,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,417722,doubt,OBDTU,doubt,47,1,11,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,18,anagram,interdependent,anagram,16566,fruit,383593,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,401154,fruit,IUFTR,fruit,75,1,12,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,19,anagram,interdependent,anagram,15850,judge,399443,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,385304,judge,GJEDU,judge,44,1,13,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,20,anagram,interdependent,anagram,25300,lyric,424744,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,360003,lyric,IRLCY,lyric,85,1,14,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,21,anagram,interdependent,anagram,33667,,458412,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,326335,mouth,HMTUO,mouth,25,1,15,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,22,anagram,interdependent,anagram,22224,baulm,480638,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,304109,album,LMUBA,album,120,1,16,0,false,false,false,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,23,anagram,interdependent,anagram,7971,honey,488610,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,296137,honey,YNOHE,honey,30,1,17,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,24,anagram,interdependent,anagram,52935,glove,541546,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,243201,glove,OGELV,glove,27,1,18,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,25,anagram,interdependent,anagram,8191,juice,549737,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,235010,juice,ECUJI,juice,18,1,19,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,26,anagram,interdependent,anagram,60471,,610210,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,174538,cabin,BNIAC,cabin,62,2,20,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,27,anagram,interdependent,anagram,24220,pilot,634431,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,150316,pilot,OLPTI,pilot,74,2,21,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,28,anagram,interdependent,anagram,41645,Knife,676077,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,108670,knife,IENKF,knife,112,2,22,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,29,anagram,interdependent,anagram,29830,woman,705908,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,78839,woman,NAOWM,woman,12,2,23,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,30,anagram,interdependent,anagram,28499,,734407,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,50340,virus,RSUIV,virus,84,2,24,0,false,true,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,31,anagram,interdependent,anagram,13839,mouth,748247,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,36501,mouth,HMTUO,mouth,25,2,25,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,32,anagram,interdependent,anagram,25633,cabin,773881,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,10867,cabin,BNIAC,cabin,62,3,26,0,false,false,true,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,33,anagram,interdependent,anagram,10877,,784759,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,timeout,0,virus,RSUIV,virus,84,3,27,0,true,false,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,34,anagram_end,interdependent,html-button-response,3247,0,788008,"<div class=""task-instructions"" id=""anagram-end"" data-reason=""finished"">
+        <p>Thank you. Please press Continue for the next part of the study.</p></div>",2.1.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,finished,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,35,manipulation_check,interdependent,survey,26311,"{""mc_individually_motivated"":7,""mc_work_together"":7}",814346,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,7,7,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,36,demographics,interdependent,survey,71572,"{""parent1_education"":""graduate"",""parent2_education"":""graduate"",""household_income"":8,""age"":19,""gender"":""Man"",""sex"":""Male"",""race"":[""asian""],""hs_gpa_scale"":""4.0 (unweighted)"",""hs_gpa"":4}",885941,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,,,false,19,4,4.0 (unweighted),false,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,37,final_questions,interdependent,survey,7643,"{""outside_help"":""Yes""}",893594,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,,,false,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-b4be27eb,38,debrief,interdependent,html-button-response,31842,0,925437,,2.1.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,,,false,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-bd44d12c,0,consent,independent,html-button-response,2554,0,2560,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a2,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-bd44d12c,1,eligibility,independent,survey,3200,"{""freshman"":""Yes""}",5776,,4.0.0,stephens2012-pilot-a2,,Yes,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+1BaF9PNtZGP70yerZWY5XEemEBu2-bd44d12c,2,overview,independent,instructions,1703,,7480,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":1703}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+HvyM7Guu93fns0oHrM8Le01KLMQ2-584d153e,0,consent,independent,html-button-response,4998,0,5008,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a2,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+HvyM7Guu93fns0oHrM8Le01KLMQ2-584d153e,1,eligibility,independent,survey,1434,"{""freshman"":""Yes""}",6477,,4.0.0,stephens2012-pilot-a2,,Yes,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+HvyM7Guu93fns0oHrM8Le01KLMQ2-584d153e,2,overview,independent,instructions,1094,,7572,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":1094}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,0,consent,interdependent,html-button-response,2580,0,2592,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a2,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,1,eligibility,interdependent,survey,4665,"{""freshman"":""Yes""}",7317,,4.0.0,stephens2012-pilot-a2,,Yes,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,2,overview,interdependent,instructions,13544,,20863,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":13544}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,3,letter,interdependent,html-button-response,48522,0,69389,,2.1.0,stephens2012-pilot-a2,,,,,interdependent,reveal,,,,48522,1,45000,,,,,,,,,,,,,,,,,,,,,,,,,"[0,4433,7003,8608,10462,11651,13856,14893,16496,17299,18068,18738]",12,18738,29784
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,4,cover_story,interdependent,instructions,4402,,73792,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":4402}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,5,anagram_instructions,interdependent,instructions,10900,,84693,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":10900}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,6,anagram,interdependent,anagram,7034,juice,91729,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,592965,juice,ECUJI,juice,18,1,0,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,7,anagram,interdependent,anagram,3241,knife,94972,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,589723,knife,IENKF,knife,112,1,1,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,8,anagram,interdependent,anagram,8705,album,103678,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,581016,album,LMUBA,album,120,1,2,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,9,anagram,interdependent,anagram,4891,honey,108570,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,576124,honey,YNOHE,honey,30,1,3,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,10,anagram,interdependent,anagram,33366,,141939,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,542755,virus,RSUIV,virus,84,1,4,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,11,anagram,interdependent,anagram,15567,mouth,157507,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,527187,mouth,HMTUO,mouth,25,1,5,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,12,anagram,interdependent,anagram,5452,glove,162961,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,521733,glove,OGELV,glove,27,1,6,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,13,anagram,interdependent,anagram,4113,plant,167075,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,517620,plant,LTNPA,plant,13,1,7,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,14,anagram,interdependent,anagram,40511,,207588,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,477106,apron,RNPAO,apron,149,1,8,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,15,anagram,interdependent,anagram,5827,woman,213416,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,471278,woman,NAOWM,woman,12,1,9,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,16,anagram,interdependent,anagram,14377,tulip,227795,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,456900,tulip,ITPLU,tulip,98,1,10,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,17,anagram,interdependent,anagram,35962,,263759,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,420935,lyric,IRLCY,lyric,85,1,11,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,18,anagram,interdependent,anagram,9844,cabin,273604,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,411090,cabin,BNIAC,cabin,62,1,12,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,19,anagram,interdependent,anagram,4732,judge,278337,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,406357,judge,GJEDU,judge,44,1,13,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,20,anagram,interdependent,anagram,24986,,303324,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,381370,truck,CUTKR,truck,16,1,14,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,21,anagram,interdependent,anagram,12014,pilot,315340,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,369355,pilot,OLPTI,pilot,74,1,15,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,22,anagram,interdependent,anagram,15586,doubt,330927,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,353767,doubt,OBDTU,doubt,47,1,16,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,23,anagram,interdependent,anagram,14769,lunch,345698,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,338996,lunch,NHULC,lunch,23,1,17,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,24,anagram,interdependent,anagram,3851,fruit,349550,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,335144,fruit,IUFTR,fruit,75,1,18,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,25,anagram,interdependent,anagram,2615,world,352165,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,332529,world,DLWRO,world,2,1,19,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,26,anagram,interdependent,anagram,30793,,382960,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,301734,virus,RSUIV,virus,84,2,20,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,27,anagram,interdependent,anagram,25315,apron,408276,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,276418,apron,RNPAO,apron,149,2,21,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,28,anagram,interdependent,anagram,37377,,445655,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,239039,lyric,IRLCY,lyric,85,2,22,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,29,anagram,interdependent,anagram,14484,,460141,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,224554,truck,CUTKR,truck,16,2,23,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,30,anagram,interdependent,anagram,18807,,478949,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,205745,virus,RSUIV,virus,84,3,24,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,31,anagram,interdependent,anagram,27705,,506655,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,178039,lyric,IRLCY,lyric,85,3,25,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,32,anagram,interdependent,anagram,17728,truck,524385,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,160309,truck,CUTKR,truck,16,3,26,0,false,false,true,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,33,anagram,interdependent,anagram,51507,,575895,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,108800,virus,RSUIV,virus,84,4,27,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,34,anagram,interdependent,anagram,55712,,631609,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,53085,lyric,IRLCY,lyric,85,4,28,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,35,anagram,interdependent,anagram,2032,,633642,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,51052,virus,RSUIV,virus,84,5,29,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,36,anagram,interdependent,anagram,491,,634134,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,50560,lyric,IRLCY,lyric,85,5,30,0,false,true,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,37,anagram,interdependent,anagram,50561,,684698,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,timeout,0,virus,RSUIV,virus,84,6,31,0,true,false,,,,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,38,anagram_end,interdependent,html-button-response,3434,0,688135,"<div class=""task-instructions"" id=""anagram-end"" data-reason=""time"">
+        <p>Thank you. Please press Continue for the next part of the study.</p></div>",2.1.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,time,,,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,39,manipulation_check,interdependent,survey,13116,"{""mc_individually_motivated"":1,""mc_work_together"":1}",701295,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,1,1,,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,40,demographics,interdependent,survey,151790,"{""parent1_education"":""bachelors"",""parent2_education"":""bachelors"",""household_income"":3,""age"":19,""gender"":""Woman"",""sex"":""Female"",""race"":[""asian""],""hs_gpa"":3.7}",853827,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,,,false,19,3.7,,false,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,41,final_questions,interdependent,survey,11358,"{""outside_help"":""No""}",865201,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,,,false,,,,,,,,
+O5vrxLtA1zg7xd41Muta7OuZ8aq1-d19bd017,42,debrief,interdependent,html-button-response,2455,0,867657,,2.1.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,18,,,,false,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,0,consent,independent,html-button-response,2458,0,2470,"
+      <div class=""consent"">
+        <h2>Consent</h2>
+        <p>By answering the following questions, you are participating in a study being performed by
+        cognitive scientists in the Stanford Department of Psychology. If you have questions about
+        this research, please contact us at <a href=""mailto:stanfordpsych251@gmail.com"">stanfordpsych251@gmail.com</a>.
+        You must be at least 18 years old to participate. Your participation in this research is
+        voluntary. You may decline to answer any or all of the following questions. You may decline
+        further participation, at any time, without adverse consequences. Your anonymity is assured;
+        the researchers who have requested your participation will not receive any personal
+        information about you.</p>
+      </div>",2.1.0,stephens2012-pilot-a2,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,1,eligibility,independent,survey,2060,"{""freshman"":""Yes""}",4597,,4.0.0,stephens2012-pilot-a2,,Yes,true,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,2,overview,independent,instructions,4592,,9191,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":4592}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,3,letter,independent,html-button-response,48778,0,57974,,2.1.0,stephens2012-pilot-a2,,,,,independent,reveal,,,,48778,1,45000,,,,,,,,,,,,,,,,,,,,,,,,,"[0,3899,5547,6505,8346,9037,9531,10071,10621,11556,12112,12680]",12,12680,36098
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,4,cover_story,independent,instructions,5774,,63752,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":5774}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,5,anagram_instructions,independent,instructions,10793,,74548,,2.1.0,stephens2012-pilot-a2,,,,"[{""page_index"":0,""viewing_time"":10793}]",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,6,anagram,independent,anagram,28207,,102759,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,571791,honey,YNOHE,honey,30,1,0,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,7,anagram,independent,anagram,6399,juice,109161,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,565389,juice,ECUJI,juice,18,1,1,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,8,anagram,independent,anagram,21261,,130423,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,544126,album,LMUBA,album,120,1,2,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,9,anagram,independent,anagram,15957,,146383,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,528167,mouth,HMTUO,mouth,25,1,3,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,10,anagram,independent,anagram,8425,virus,154809,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,519740,virus,RSUIV,virus,84,1,4,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,11,anagram,independent,anagram,22244,,177056,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,497494,apron,RNPAO,apron,149,1,5,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,12,anagram,independent,anagram,13845,judge,190903,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,483646,judge,GJEDU,judge,44,1,6,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,13,anagram,independent,anagram,19597,,210502,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,464048,tulip,ITPLU,tulip,98,1,7,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,14,anagram,independent,anagram,16106,,226610,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,447940,lunch,NHULC,lunch,23,1,8,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,15,anagram,independent,anagram,36052,,262664,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,411886,glove,OGELV,glove,27,1,9,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,16,anagram,independent,anagram,4287,plant,266953,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,407596,plant,LTNPA,plant,13,1,10,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,17,anagram,independent,anagram,8596,doubt,275552,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,398998,doubt,OBDTU,doubt,47,1,11,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,18,anagram,independent,anagram,21740,,297294,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,377256,world,DLWRO,world,2,1,12,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,19,anagram,independent,anagram,22605,,319900,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,354650,fruit,IUFTR,fruit,75,1,13,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,20,anagram,independent,anagram,21451,,341354,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,333195,cabin,BNIAC,cabin,62,1,14,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,21,anagram,independent,anagram,15005,,356362,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,318188,pilot,OLPTI,pilot,74,1,15,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,22,anagram,independent,anagram,8955,,365319,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,309230,lyric,IRLCY,lyric,85,1,16,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,23,anagram,independent,anagram,12369,,377691,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,296859,truck,CUTKR,truck,16,1,17,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,24,anagram,independent,anagram,15095,,392788,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,281761,woman,NAOWM,woman,12,1,18,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,25,anagram,independent,anagram,5529,,398320,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,276230,knife,IENKF,knife,112,1,19,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,26,anagram,independent,anagram,8969,,407292,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,267258,honey,YNOHE,honey,30,2,20,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,27,anagram,independent,anagram,13986,,421279,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,253270,album,LMUBA,album,120,2,21,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,28,anagram,independent,anagram,18044,mouth,439326,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,235224,mouth,HMTUO,mouth,25,2,22,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,29,anagram,independent,anagram,37023,,476351,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,198198,apron,RNPAO,apron,149,2,23,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,30,anagram,independent,anagram,6645,tulip,482998,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,191551,tulip,ITPLU,tulip,98,2,24,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,31,anagram,independent,anagram,18671,,501672,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,172878,lunch,NHULC,lunch,23,2,25,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,32,anagram,independent,anagram,35106,govel,536780,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,137770,glove,OGELV,glove,27,2,26,0,false,false,false,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,33,anagram,independent,anagram,31117,d,567899,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,106651,world,DLWRO,world,2,2,27,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,34,anagram,independent,anagram,39965,,607866,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,66683,fruit,IUFTR,fruit,75,2,28,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,35,anagram,independent,anagram,18535,cabin,626404,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,48146,cabin,BNIAC,cabin,62,2,29,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,36,anagram,independent,anagram,3107,pilot,629513,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,45037,pilot,OLPTI,pilot,74,2,30,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,37,anagram,independent,anagram,17487,,647002,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,skip,27547,lyric,IRLCY,lyric,85,2,31,0,false,true,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,38,anagram,independent,anagram,18983,truck,665987,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,submit,8562,truck,CUTKR,truck,16,2,32,0,false,false,true,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,39,anagram,independent,anagram,8561,,674549,,1.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,timeout,0,woman,NAOWM,woman,12,2,33,0,true,false,,,,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,40,anagram_end,independent,html-button-response,1555,0,676107,"<div class=""task-instructions"" id=""anagram-end"" data-reason=""time"">
+        <p>Thank you. Please press Continue for the next part of the study.</p></div>",2.1.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,10,time,,,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,41,manipulation_check,independent,survey,14076,"{""mc_individually_motivated"":7,""mc_work_together"":7}",690233,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,10,,7,7,,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,42,demographics,independent,survey,43306,"{""parent1_education"":""bachelors"",""parent2_education"":""bachelors"",""household_income"":1,""gender"":""Man"",""sex"":""Male"",""race"":[""asian""],""age"":22,""hs_gpa"":3.5}",733579,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,10,,,,false,22,3.5,,false,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,43,final_questions,independent,survey,13468,"{""outside_help"":""No""}",747071,,4.0.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,10,,,,false,,,,,,,,
+qUuj3m96wwQ0LVdUu8RARDRiNII3-877cd577,44,debrief,independent,html-button-response,1970,0,749044,,2.1.0,stephens2012-pilot-a2,,,,,,,,,,,,,,,,,,,,,,,,,,,,10,,,,false,,,,,,,,

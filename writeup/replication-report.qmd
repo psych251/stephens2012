@@ -621,7 +621,9 @@ keep         <- phase1$keep
 #| label: funnel
 #| eval: !expr have_data
 steps <- names(phase1$passed)
-map2_dfr(phase1$passed, steps, ~ d[.x, ] |> count(condition, .drop = FALSE) |> mutate(Step = .y)) |>
+map2_dfr(phase1$passed, steps, ~ d[.x, ] |>
+           mutate(condition = fct_na_value_to_level(condition, "no letter (left before assignment)")) |>
+           count(condition, .drop = FALSE) |> mutate(Step = .y)) |>
   pivot_wider(names_from = condition, values_from = n, values_fill = 0) |>
   mutate(Total = rowSums(across(-Step)), Step = factor(Step, levels = steps)) |>
   arrange(Step) |>
