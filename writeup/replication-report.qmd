@@ -136,6 +136,7 @@ original_dod_se <- sqrt(sum(original$se^2))
 |------------------------|------------------------|------------------------|
 | *Claude (Opus 5.5)* | *Provided explanations to the code originally provided in this document (e.g., power analysis, key statistics) and suggested code for the tailoring it to my replication study* | *Manually verified each line of code, asked Claude to clarify lines that were confusing, made edits to the code* |
 
+
 I wrote all of the text in this report myself. AI tools were not used to
 write, rewrite or paraphrase it, and were not used to generate, alter,
 or impute any participant data. I take full responsibility for the
@@ -162,7 +163,7 @@ caption.
 
 # ---- Exclusion rules: EDIT to match your preregistration ---------------------------------
 # Always applied, in this order (they define who can be analysed at all): consented,
-# freshman (the inclusion criterion), reached the debrief, social class classifiable from
+# freshman (the inclusion criterion), reached the debrief, submitted at least one anagram answer, social class classifiable from
 # the parental-education answers, and both covariates reported (the ANCOVA needs them).
 # Optional rules: TRUE removes those participants; FALSE only reports the flag (see the
 # screening table under Exploratory analyses).
@@ -203,6 +204,10 @@ read_phase <- function(id) {
   }
   reached <- function(task_name) unique(trials$participant_id[trials$task == task_name])
   consented <- trials |> filter(task == "consent", as.logical(consented)) |> pull(participant_id)
+  # "Attempted" = submitted at least one answer (skips and time-outs alone do not count).
+  attempted <- if ("action" %in% names(trials)) {
+    trials |> filter(task == "anagram", action == "submit") |> pull(participant_id) |> unique()
+  } else character(0)
 
   demo <- trials |>
     filter(task == "demographics") |>
@@ -233,6 +238,7 @@ read_phase <- function(id) {
     "Consented"                        = d$participant_id %in% consented,
     "Freshman (inclusion criterion)"   = d$eligible %in% TRUE,
     "Completed the study"              = d$participant_id %in% reached("debrief"),
+    "Attempted at least one anagram"   = d$participant_id %in% attempted,
     "Social class classifiable"        = !is.na(d$first_gen),
     "Covariates reported (race, GPA)"  = !is.na(d$race_white) & !is.na(d$hs_gpa)
   )
@@ -388,74 +394,12 @@ The results of this study suggests that a small change in the
 university's cultural framing may foster appreciation of multiple
 cultural models of self and promote positive performance among first-generation college students.
 
-The study requires two distinct welcome letters to manipulate the
-university's cultural norms surrounding independence versus
-interdependence. This involves developing materials that are realistic
-to Stanford University's current branding and administration. One
-challenge I foresee is my ability to convey the
-interdependent/independent themes outlined in the manuscript's
-description of the university welcome letter. For instance, the
-independent themes listed were "(a) learning by exploring personal
-interests, (b) expressing ideas and opinions, (c) creating your own
-intellectual journey, and (d) participating in independent research"
-(Stephens et al., 2012). I plan to request a sample of these materials
-from the corresponding author and adapt accordingly. The study also
-requires the implementation of an anagram task to capture verbal
-reasoning ability. I think it is highly feasible to implement an online
-version through Firebase.
-
-I plan to recruit approximately 150 first-year students enrolled in
-Stanford University's PSYCH 1. A challenge in recruitment is having a
-balanced composition of first-generation and continuing-generation
-students— given that fewer than 20% of undergraduates are
-first-generation at Stanford University. I am open to the idea of recruiting
-students beyond PSYCH 1, via flyers, emails, and word-of-mouth.
-Interested students will complete an online consent form outlining the
-study risks and benefits. After consenting to the study, students will
-complete demographic questions (class standing, highest level of
-parents' education, age, biological sex, gender, high school GPA,
-race/ethnicity, household income). Afterwards, participants will be
-randomly assigned to either the independent or interdependent welcome
-letter condition. After participants read the letter, the following
-statement will be shown to the participants: “I’d like you to complete
-and evaluate an activity that has been used in the past with incoming
-students. The task’s purpose is to assess different learning styles."
-After reading this statement, participants will be asked to complete an
-anagram task. They will have 10 minutes to complete as many anagrams (20
-maximum). Following the anagram task, participants will be asked to rate
-"the extent to which their institution expects college students to “be
-individually motivated” and to “work together with other students"
-(Stephens et al., 2012). A debriefing statement will follow this
-question. The entire study will take approximately 20-30 minutes to
-complete.
-
-The key statistical test I hope to preregister is a 2 (social class) x 2
-(condition) between-subjects ANCOVA, with race and and high school GPA
-as covariates. I am particularly interested in the interaction between
-social class and condition; whether the social class performance gap
-depended on independent or interdependent message framing. A possible
-extension of this study is the inclusion of perceived task difficulty to
-replicate Study 4 via a mediated moderation analysis.
 
 ## Methods
 
 ### Power analysis
 
-::: {.callout-tip icon="false"}
-## Guidance
 
-Report the original effect size, the sample needed for 80%, 90% and 95%
-power to detect it, and the sample you chose and why. The table below is
-computed from the original study's numbers entered at the top of this
-file.
-
-Original effects are usually overestimates, so powering to the original
-effect tends to produce an underpowered replication. One widely used
-alternative is to collect 2.5 times the original sample, which gives 80%
-power to detect an effect the original study had only 33% power to
-detect (Simonsohn, 2015; Experimentology §10.4). Say which approach you
-used, and what the course's participant budget allowed.
-:::
 
 ```{r}
 #| label: power
@@ -485,9 +429,7 @@ knitr::kable(power_rows,
                imbalance(planned_first_gen_share), two_and_half))
 ```
 
-For comparison, 2.5 times the original sample would be
-`r two_and_half[1]` in the gain frame and `r two_and_half[2]` in the
-loss frame (`r sum(two_and_half)` in total).
+The original effect size is partial η² = .054, f = 0.24. The N for 80% power is 143 for equal groups and 224 for uneqeual groups (20% first-generation students). 
 
 ### Planned sample
 
@@ -500,7 +442,7 @@ demographics, and any preselection or screening. The stopping rule
 should be data-independent: "collect until N participants pass the
 exclusion criteria below" rather than "until the result is clear".
 :::
-My planned sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. I plan to recruit first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. 
+My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. The sampling frame is first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to either continue recruiting participants in the second part of this replication project, or modify the materials to recruit freshman students in U.S. universities via Prolific. 
 
 ### Materials
 
@@ -513,11 +455,10 @@ and point out the exceptions. Link to the live experiment above rather
 than pasting screenshots of every screen.
 :::
 
-Welcome letter stimuli were followed closely to be adapted to the current year in an online setting. The main differences include: updated Stanford President's name and photo, deletion of Stanford President's signature (was not able to find the current president's signature online), addition of text animation (main three phrases and paragraphs fades in as participant scrolls through the letter). 
+In the original study, participants read one of two (interdependent, independent) welcome letters that were printed on two pages. These welcome letters were adapted to be relevant to current year (2026) in an online format. This involved updating the Stanford President's name, background, photograph, and signature. Following the feedback of one of my Pilot A participants, I integrated interactive website elements (e.g., key text were presented one line at a time prompted with the "Next" button) to increase participant engagement.
 
-Anagram task content and answer key were not provided in supplemental materials. Currently using a placeholder task from Gilhooly 1978. Anagram task timing and instructions were followed closely. I requested original materials to the corresponding author. 
+The original study also included a hard copy anagram task. Since the task content and answer key were not provided in authors' supplemental materials, I based the adapted online anagram task on Gilhooly's (1978) list of anagrams. To mimic the hard copy format, I allowed participants to skip through words, with the opportunity to come back to them at a later time. Other aspects of the anagram task, such as the instructions that came before ("[We'd] like you to complete and evaluate an activity that has been used in the past with incoming students. The task’s purpose is to assess different learning styles"), duration (10 minutes), and number of anagrams (20) were aligned with how the original study's implementation. I requested original materials to the corresponding author on 10/16/2026. 
 
-Manipulation check and demographic items were inferred through the original article's text.  
 
 ### Procedure
 
@@ -528,6 +469,8 @@ As for Materials: quote the original where you can and point out the
 exceptions. Describe the sequence a participant experiences, from
 consent to debrief, and how long it takes.
 :::
+
+Interested first-year students enrolled in Psych 1 will sign-up for the study via the SONA platform, be directed to the online page with consent information, and indicate whether they agree to participate. If they agree to participate, the next screen asks whether they "are a freshman" to confirm eligibility. If they answer anything other than "Yes," they are thanked for their interest and asked to close the browser window. Participants who self-verified their first-year status will be shown one of the two welcome letters. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams (20 maximum) as possible. They are shown one anagram at a time and are allowed to skip. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to press continue. The next set of questions will cover the manipulation check and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and are thanked for participating. This study will approximately take 20 minutes to complete.
 
 ### Analysis plan
 
@@ -544,15 +487,11 @@ test your replication stands or falls on, and it must match your
 preregistration. You can pre-specify additional analyses here too.
 :::
 
-**Key analysis of interest.** The proportion of participants choosing
-the risky program is higher in the loss frame than in the gain frame,
-tested with a chi-square test of independence on the 2 × 2 table of
-frame by choice. The effect size is the difference in the proportion
-choosing the risky program (loss minus gain), with a 95% confidence
-interval.
+**Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA, controlling for race (White vs. non-White) and self-reported high school GPA. 
 
-**Exclusions.** Participants are excluded if they failed to meet the inclusion criteria, did not complete the
-study, or if they answered no anagrams at all.
+**Additional analyses.** One-way ANCOVAs within each level of the other factor, controlling for race (White/non-White) and self-reported high school GPA. 
+
+**Exclusions.** Participants will be excluded if they did not consent, are not freshman, did not attempt any anagrams, did not complete the study, or if their social class is not classifiable (i.e., answering "Don't know" for both parents' highest level of education). 
 
 ### Differences from the original study
 
@@ -569,12 +508,16 @@ and show the level of detail expected; replace them with yours.
 
 | Aspect | Original study | This replication | Expected to matter? |
 |------------------|------------------|------------------|------------------|
-| Sample | University students in Stanford and British Columbia classrooms | Adults recruited on Prolific | Possibly. Framing effects have been found in both student and general samples, but their size varies across populations. |
-| Setting | Paper questionnaire in class | Online, unsupervised, on the participant's own computer | Unlikely for a single vignette, though attention may be lower online. |
-| Wording | "an unusual Asian disease" | "an unusual disease" | Unlikely. The ethnonym is incidental to the manipulation and dated. |
+| Sample | First-year students in Stanford | First-year students in Stanford taking Psych 1 | Unlikely. However, limited pool of participants may not allow target sample size to be reached. Psych 1 students may have prior exposure to cultural mismatch theory. |
+| Year | 2010-2011 | 2026 | May potentially diminish effect of cultural mismatch condition given more support for first-generation college students. |
+| Setting | In-person, with experimenter | Online, unsupervised, on the participant's own computer | Unlikely, though attention may be lower online. |
+| President's name and information | "John L. Hennessy" and handwritten signature | "Jonathan Levin" and name in script typeface for signature | Unlikely. |
+| Format of welcome message | Two printed pages | One screen; "show next" reveals next chunk of information, one click at a time | Unlikely |
+| Anagram items | 20 anagrams, not published | 20 anagrams from Gilhooly (1978) | Possibly, given unknown difficulty level of original anagrams. |
+| Cover story | Spoken by experimenter | Shown on screen | Unlikely, but may reduce engagement. |
 | Design | Between subjects: each participant saw one frame | Between subjects, randomly assigned | No. |
-| Response | Circle a program on paper | Click a button | Unlikely. |
-| Other tasks | Problems presented alongside other questionnaire items | Followed by a short lexical-decision task used as an attention check | Unlikely: the check comes after the choice. |
+| Response | Answer on paper | Click buttons | Unlikely. |
+
 
 ### Methods addendum (post data collection)
 

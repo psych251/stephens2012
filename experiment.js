@@ -691,11 +691,12 @@ function classifyFirstGen(p1, p2) {
           title: "About you",
           elements: [
             {
-              type: "text", name: "age", title: "How old are you?", inputType: "number", min: 16, max: 99, isRequired: true,
-              minErrorText: "Please enter an age between 16 and 99.", maxErrorText: "Please enter an age between 16 and 99.",
+              // 18 or older, as the consent requires.
+              type: "text", name: "age", title: "How old are you?", inputType: "number", min: 18, max: 99, isRequired: true,
+              minErrorText: "Please enter an age between 18 and 99.", maxErrorText: "Please enter an age between 18 and 99.",
               validators: [
                 { type: "regex", regex: "^[0-9]+$", text: "Please enter your age as a whole number of years, e.g. 18." },
-                { type: "numeric", minValue: 16, maxValue: 99, text: "Please enter an age between 16 and 99." },
+                { type: "numeric", minValue: 18, maxValue: 99, text: "Please enter an age between 18 and 99." },
               ],
             },
             { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...required },

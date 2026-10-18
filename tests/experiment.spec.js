@@ -341,9 +341,9 @@ test.describe("experiment", () => {
     await choose(page, "parent2_education", "Don't know");
     await choose(page, "household_income", "$30,000 to $49,999");
 
-    // Age must be a whole number from 16 to 99; typing alone never moves the screen on.
+    // Age must be a whole number from 18 to 99; typing alone never moves the screen on.
     const age = page.locator('[data-name="age"] input');
-    for (const bad of ["15", "18.5", "120"]) {
+    for (const bad of ["17", "18.5", "120"]) {
       await age.fill(bad);
       await page.locator('input[value="Next"]').click();
       await expect(page.locator('[data-name="age"]').locator(".sd-question__erbox, .sd-error").first()).toBeVisible();
