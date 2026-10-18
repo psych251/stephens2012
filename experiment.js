@@ -126,13 +126,15 @@ const EDUCATION_CHOICES = [
 
 // First-generation = neither parent/guardian has a 4-year degree (Stephens et al., 2012, p. 1186).
 // Returns true / false, or null when the answers cannot classify the participant.
-// Unclassifiable: "Don't know" for a parent (that parent might have a 4-year degree), or an
-// answer missing from an older Pilot A session.
+// Rule (student's decision): classify on the parent(s) whose education is known. Continuing-gen
+// if any parent has a 4-year degree; first-gen if at least one parent's education is known and
+// below a 4-year degree (a "Don't know" or "Not applicable" for the other is ignored);
+// unclassifiable (null) if no parent's education is known. The report applies the same rule
+// to the raw answers.
 const NO_FOUR_YEAR = ["less_than_hs", "high_school", "some_college", "associates"];
 function classifyFirstGen(p1, p2) {
   if (FOUR_YEAR.includes(p1) || FOUR_YEAR.includes(p2)) return false;
-  const p2Clear = NO_FOUR_YEAR.includes(p2) || p2 === "not_applicable";
-  return NO_FOUR_YEAR.includes(p1) && p2Clear ? true : null;
+  return NO_FOUR_YEAR.includes(p1) || NO_FOUR_YEAR.includes(p2) ? true : null;
 }
 
 // ---------------------------------------------------------------------------

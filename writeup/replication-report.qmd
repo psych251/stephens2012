@@ -184,6 +184,18 @@ answer <- function(json, key) {
 }
 declined <- function(json, key) str_detect(coalesce(answer(json, key), ""), "decline")
 
+# Social class from the two parental-education answers (same rule as experiment.js):
+# continuing-gen if any parent has a 4-year degree; first-gen if at least one parent's
+# education is known and below a 4-year degree ("Don't know" / "Not applicable" for the other
+# parent is ignored); NA (unclassifiable) if no parent's education is known.
+four_year    <- c("bachelors", "graduate")
+no_four_year <- c("less_than_hs", "high_school", "some_college", "associates")
+classify_first_gen <- function(p1, p2) {
+  case_when(p1 %in% four_year | p2 %in% four_year       ~ FALSE,
+            p1 %in% no_four_year | p2 %in% no_four_year ~ TRUE,
+            .default = NA)
+}
+
 # Load one phase's exported data and apply the exclusion rules. Returns NULL if that phase
 # has not been exported yet, which is how every section below knows to skip itself.
 read_phase <- function(id) {
@@ -220,13 +232,18 @@ read_phase <- function(id) {
               gender = answer(response, "gender"),
               sex = answer(response, "sex"),
               race = answer(response, "race"),
-              household_income = suppressWarnings(as.numeric(answer(response, "household_income")))) |>
+              household_income = suppressWarnings(as.numeric(answer(response, "household_income"))),
+              parent1_education = answer(response, "parent1_education"),
+              parent2_education = answer(response, "parent2_education")) |>
     distinct(participant_id, .keep_all = TRUE)
 
   d <- participants |>
     left_join(demo, by = "participant_id") |>
     mutate(eligible        = coalesce(as.logical(eligible), class_year == first_year),
-           first_gen       = as.logical(first_gen),
+           # Recomputed from the raw answers so every session uses the same rule; the value
+           # saved by the browser is used only if the answers are missing.
+           first_gen       = coalesce(classify_first_gen(parent1_education, parent2_education),
+                                      as.logical(first_gen)),
            social_class    = factor(if_else(first_gen, "first-gen", "continuing-gen"),
                                     levels = c("first-gen", "continuing-gen")),
            condition       = factor(condition, levels = c("independent", "interdependent")),
