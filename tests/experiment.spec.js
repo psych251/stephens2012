@@ -77,7 +77,6 @@ async function readLetter(page) {
 
 async function runThroughExperiment(page, { answerAnagrams = true, finish = true, stopAtManipulationCheck = false } = {}) {
   await startStudy(page);
-  await nextPage(page);                 // overview
   await readLetter(page);
   await nextPage(page);                 // cover story
   await nextPage(page);                 // anagram instructions: "Start"
@@ -310,7 +309,6 @@ test.describe("experiment", () => {
     await page.goto(EMULATOR ? `/?emulator=1&${CLOCK}` : `/?${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await startStudy(page);
-    await nextPage(page);
     await readLetter(page);
     await nextPage(page);
     await nextPage(page);
@@ -357,7 +355,6 @@ test.describe("experiment", () => {
     await page.goto(EMULATOR ? "/?emulator=1&letter_seconds=4" : "/?letter_seconds=4");
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await startStudy(page);
-    await nextPage(page);
     const next = page.locator("#reveal-next");
     const cont = page.locator("#jspsych-html-button-response-btngroup button");
     const shownThemes = page.locator(".letter-themes li.shown");

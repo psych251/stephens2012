@@ -18,7 +18,7 @@
  *
  * Eligibility: freshmen only ("Are you a freshman?" right after consent; "No" is thanked
  *           and the study ends, recorded as eligible = false).
- * Timeline: consent -> eligibility -> overview -> [demographics if position "before"] ->
+ * Timeline: consent -> eligibility -> [demographics if position "before"] ->
  *   welcome letter (one page, themes and paragraphs revealed one click at a time) ->
  *   cover story + anagram instructions -> anagram task -> manipulation check ->
  *   [demographics if position "after"] -> final questions -> debrief.
@@ -282,23 +282,6 @@ function classifyFirstGen(p1, p2) {
       saver.updateParticipant({ freshman: answer, eligible: data.eligible });
       if (!data.eligible) jsPsych.abortExperiment();
     },
-  };
-
-  // -------------------------------------------------------------------------
-  // Overview (describes what participants do, not the hypothesis)
-  // -------------------------------------------------------------------------
-  const overview = {
-    type: jsPsychInstructions,
-    pages: [
-      `<h2>Welcome!</h2>
-       <p>In this study you will read a message, complete an activity, and answer
-       some questions. It takes about 20 minutes.</p>
-       <p>Please complete the study in one sitting, in a quiet place, on a laptop or desktop
-       computer, and keep this window open the whole time.</p>`,
-    ],
-    show_clickable_nav: true,
-    data: { task: "overview" },
-    on_finish: () => progress(0.05),
   };
 
   // -------------------------------------------------------------------------
@@ -803,7 +786,6 @@ function classifyFirstGen(p1, p2) {
   await jsPsych.run([
     consent,
     eligibility,
-    overview,
     ...(before ? [demographics] : []),
     letter,
     coverStory,
