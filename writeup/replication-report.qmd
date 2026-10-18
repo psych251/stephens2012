@@ -134,7 +134,7 @@ original_dod_se <- sqrt(sum(original$se^2))
 
 | Tool and model | What it was used for | How you checked the output |
 |------------------------|------------------------|------------------------|
-| *Claude (Opus 5.5)* | *Provided explanations to the code originally provided in this document (e.g., power analysis, key statistics) and suggested code for the tailoring it to my replication study* | *Manually verified each line of code, asked Claude to clarify lines that were confusing, made edits to the code* |
+| *Claude (Opus 5.5)* | *Provided explanations to the code originally provided in this document (e.g., power analysis, key statistics); wrote experiment and analysis code; developed experiment materials; reviewed comments* | *Manually verified each line of code and other output with original materials; asked Claude to clarify components that were confusing; Made subsequent edits and revisions* |
 
 
 I wrote all of the text in this report myself. AI tools were not used to
@@ -446,7 +446,7 @@ knitr::kable(power_rows,
                imbalance(planned_first_gen_share), two_and_half))
 ```
 
-The original effect size is partial η² = .054, f = 0.24. The N for 80% power is 143 for equal groups and 224 for uneqeual groups (20% first-generation students). 
+The original effect size is partial η² = .054, f = 0.24. The N for 80% power is 143 for equal groups and 224 for unequal groups (20% first-generation students). 
 
 ### Planned sample
 
@@ -504,11 +504,11 @@ test your replication stands or falls on, and it must match your
 preregistration. You can pre-specify additional analyses here too.
 :::
 
-**Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA, controlling for race (White vs. non-White) and self-reported high school GPA. 
+**Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA (Type III), controlling for race (White vs. non-White) and self-reported high school GPA. The effect sizes will be the difference of differences with 95% CI and partial η².
 
-**Additional analyses.** One-way ANCOVAs within each level of the other factor, controlling for race (White/non-White) and self-reported high school GPA. 
+**Additional analyses.** Four one-way ANCOVAs within each level of the other factor, controlling for race (White/non-White) and self-reported high school GPA: (1) interdependent letter subset testing social class factor, (2) independent letter subset testing social class factor, (3) first-generation student subset testing condition factor, (4) continuing-generation student subset testing condition factor. 
 
-**Exclusions.** Participants will be excluded if they did not consent, are not freshman, did not attempt any anagrams, did not complete the study, or if their social class is not classifiable (i.e., answering "Don't know" for both parents' highest level of education). 
+**Exclusions.** Participants will be excluded if they did not consent, are not freshman, did not attempt any anagrams, did not complete the study, or if their social class is not classifiable (i.e., answering "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answering "Don't know" to both parents' highest level of education). 
 
 ### Differences from the original study
 
@@ -532,7 +532,6 @@ and show the level of detail expected; replace them with yours.
 | Format of welcome message | Two printed pages | One screen; "show next" reveals next chunk of information, one click at a time | Unlikely |
 | Anagram items | 20 anagrams, not published | 20 anagrams from Gilhooly (1978) | Possibly, given unknown difficulty level of original anagrams. |
 | Cover story | Spoken by experimenter | Shown on screen | Unlikely, but may reduce engagement. |
-| Design | Between subjects: each participant saw one frame | Between subjects, randomly assigned | No. |
 | Response | Answer on paper | Click buttons | Unlikely. |
 
 
@@ -1109,8 +1108,8 @@ shared, say what and why.
 
 The experiment code, the anonymized data, and the code that produces
 every number in this report are available at
-<https://github.com/psych251/your-repo>. The experiment itself can be
-taken at <https://psych251.github.io/your-repo/>. The data contain no
+<https://github.com/psych251/stephens2012>. The experiment itself can be
+taken at <https://psych251.github.io/stephens2012/>. The data contain no
 names, email addresses, IP addresses, or Prolific IDs; the file linking
 participants to their Prolific IDs is kept privately for payment and is
 not shared.
