@@ -263,6 +263,30 @@ function classifyFirstGen(p1, p2) {
   // or all of the following questions"; with this setting the only way to decline is to stop
   // the study. To be confirmed with the course staff before Pilot B.
   const required = { isRequired: true };
+
+  // Self-report questions are shown one per screen. Choosing an answer to a single-choice
+  // question moves on automatically (the last one finishes the survey). Questions that need
+  // typing, a multi-select, or the "Self-describe"/"Other" text wait for Next instead, since
+  // there is no single moment when the answer is complete. (SurveyJS's own auto-advance also
+  // fires when a typed box loses focus, so a click on Next could skip a screen; this does not.)
+  // A page-level instruction is carried onto each question.
+  const oneQuestionPerScreen = (json) => ({
+    ...json,
+    pageNextText: "Next",
+    pages: json.pages.flatMap((page) => page.elements.map((el) => ({
+      elements: [page.description && !el.description ? { ...el, description: page.description } : el],
+    }))),
+  });
+  const autoAdvanceSingleChoice = (survey) => {
+    survey.onValueChanged.add((sender, options) => {
+      const q = options.question;
+      if (!q || q.getType() !== "radiogroup" || q.isOtherSelected) return;
+      setTimeout(() => {
+        if (!sender.currentPage || !sender.currentPage.questions.includes(q)) return;
+        if (sender.isLastPage) sender.completeLastPage(); else sender.nextPage();
+      }, 350); // a brief pause so the chosen answer is seen before the screen changes
+    });
+  };
   const eligibility = {
     type: jsPsychSurvey,
     survey_json: {
@@ -620,7 +644,7 @@ function classifyFirstGen(p1, p2) {
       showQuestionNumbers: "off",
       completeText: "Continue",
       pages: [{
-        description: "How much do you agree with each statement?",
+        description: "How much do you agree with this statement?",
         elements: [
           { type: "radiogroup", name: "mc_individually_motivated", title: "Stanford University expects college students to be individually motivated.", choices: agreeScale, ...required },
           { type: "radiogroup", name: "mc_work_together", title: "Stanford University expects college students to work together with other students.", choices: agreeScale, ...required },
@@ -781,6 +805,11 @@ function classifyFirstGen(p1, p2) {
     data: { task: "debrief" },
     on_finish: () => progress(1),
   };
+
+  for (const t of [eligibility, manipulationCheck, demographics, finalQuestions]) {
+    t.survey_json = oneQuestionPerScreen(t.survey_json);
+    t.survey_function = autoAdvanceSingleChoice;
+  }
 
   const before = EXPERIMENT.demographics_position === "before";
   await jsPsych.run([

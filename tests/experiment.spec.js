@@ -56,10 +56,21 @@ async function doAnagrams(page) {
   }
 }
 
+// Self-report questions are one per screen. A single-choice answer moves on by itself; typed
+// and multi-select answers need Next (or Continue on a survey's last screen).
+async function choose(page, question, text) {
+  await pick(page, question, text);
+  await expect(page.locator(`[data-name="${question}"]`)).toHaveCount(0);   // moved on
+}
+async function typeAnswer(page, question, value, button = "Next") {
+  await page.locator(`[data-name="${question}"] input`).fill(value);
+  await page.locator(`input[value="${button}"]`).click();
+  await expect(page.locator(`[data-name="${question}"]`)).toHaveCount(0);
+}
+
 async function startStudy(page, freshman = "Yes") {
   await page.getByRole("button", { name: "I agree to participate" }).click();
-  await pick(page, "freshman", freshman);
-  await page.locator('input[value="Continue"]').click();
+  await pick(page, "freshman", freshman);                 // moves on by itself
 }
 
 // Welcome letter: one page revealed step by step. "Show next" reveals each theme, then each
@@ -85,27 +96,24 @@ async function runThroughExperiment(page, { answerAnagrams = true, finish = true
   await page.getByRole("button", { name: "Continue" }).click();
   if (stopAtManipulationCheck) return;
 
-  // Manipulation check
-  await pick(page, "mc_individually_motivated", "Agree (6)");
-  await pick(page, "mc_work_together", "Somewhat agree (5)");
-  await page.locator('input[value="Continue"]').click();
+  // Manipulation check (one statement per screen)
+  await choose(page, "mc_individually_motivated", "Agree (6)");
+  await choose(page, "mc_work_together", "Somewhat agree (5)");
 
-  // Demographics (three pages)
-  await pick(page, "parent1_education", "High school diploma or GED");
-  await pick(page, "parent2_education", "Not applicable (no second parent/guardian)");
-  await pick(page, "household_income", "$30,000 to $49,999");
+  // Demographics (one question per screen)
+  await choose(page, "parent1_education", "High school diploma or GED");
+  await choose(page, "parent2_education", "Not applicable (no second parent/guardian)");
+  await choose(page, "household_income", "$30,000 to $49,999");
+  await typeAnswer(page, "age", "18");
+  await choose(page, "gender", "Woman");
+  await choose(page, "sex", "Female");
+  await pick(page, "race", "White");                      // multi-select: needs Next
   await page.locator('input[value="Next"]').click();
-  await page.locator('[data-name="age"] input').fill("18");
-  await pick(page, "gender", "Woman");
-  await pick(page, "sex", "Female");
-  await pick(page, "race", "White");
-  await page.locator('input[value="Next"]').click();
-  await page.locator('[data-name="hs_gpa"] input').fill("3.9");
-  await page.locator('input[value="Continue"]').click();
+  await expect(page.locator('[data-name="race"]')).toHaveCount(0);
+  await typeAnswer(page, "hs_gpa", "3.9", "Continue");
 
-  // Final screening questions
-  await pick(page, "outside_help", "No");
-  await page.locator('input[value="Continue"]').click();
+  // Final screening question
+  await choose(page, "outside_help", "No");
 
   // Debrief
   await expect(page.getByText("Two things in this study were not what they seemed")).toBeVisible();
@@ -273,39 +281,46 @@ test.describe("experiment", () => {
     expect(pdoc.freshman).toBe("No");
   });
 
-  test("required questions block Continue until answered", async ({ page }) => {
+  test("required questions: one per screen, no decline option, nothing skipped without an answer", async ({ page }) => {
     await page.goto(EMULATOR ? `/?emulator=1&${CLOCK}` : `/?${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await runThroughExperiment(page, { answerAnagrams: true, stopAtManipulationCheck: true });
     await expect(page.getByText("Prefer not to say")).toHaveCount(0);           // no decline option
-    await page.locator('input[value="Continue"]').click();
-    await expect(page.locator('[data-name="mc_work_together"]')).toBeVisible();   // still on the page
+    await expect(page.locator("[data-name]")).toHaveCount(1);                   // one question per screen
+    await page.locator('input[value="Next"]').click();
     await expect(page.getByText("Response required.").first()).toBeVisible();
-    await pick(page, "mc_individually_motivated", "Agree (6)");
-    await pick(page, "mc_work_together", "Agree (6)");
-    await page.locator('input[value="Continue"]').click();
+    await expect(page.locator('[data-name="mc_individually_motivated"]')).toBeVisible();   // still here
+    await choose(page, "mc_individually_motivated", "Agree (6)");
+    await choose(page, "mc_work_together", "Agree (6)");
+
+    // Demographics: required, one per screen, no "Prefer not to say".
     await expect(page.locator('[data-name="parent1_education"]')).toBeVisible();
-
-    // Every demographics page is required too, with no "Prefer not to say".
     await expect(page.getByText("Prefer not to say")).toHaveCount(0);
     await page.locator('input[value="Next"]').click();
     await expect(page.getByText("Response required.").first()).toBeVisible();
-    await pick(page, "parent1_education", "High school diploma or GED");
-    await pick(page, "parent2_education", "Don't know");
-    await pick(page, "household_income", "$30,000 to $49,999");
-    await page.locator('input[value="Next"]').click();
+    await choose(page, "parent1_education", "High school diploma or GED");
+    await choose(page, "parent2_education", "Don't know");
+    await choose(page, "household_income", "$30,000 to $49,999");
+    await typeAnswer(page, "age", "18");
 
-    // "Self-describe" (gender) and "Other" (race) open a text box when chosen.
-    await expect(page.getByText("Prefer not to say")).toHaveCount(0);
-    for (const [q, option] of [["gender", "Self-describe"], ["race", "Other"]]) {
-      const box = page.locator(`[data-name="${q}"]`).locator("textarea, input[type=text]");
-      await expect(box).toHaveCount(0);
-      await pick(page, q, option);
-      await expect(box.first()).toBeVisible();
-    }
+    // "Self-describe" opens a text box and waits for it instead of moving on.
+    const genderBox = page.locator('[data-name="gender"]').locator("textarea, input[type=text]");
+    await expect(genderBox).toHaveCount(0);
+    await pick(page, "gender", "Self-describe");
+    await expect(genderBox.first()).toBeVisible();
+    await page.waitForTimeout(800);
+    await expect(page.locator('[data-name="gender"]')).toBeVisible();            // did not advance
+    await genderBox.first().fill("Genderqueer");
+    await page.locator('input[value="Next"]').click();
+    await choose(page, "sex", "Female");
+
+    // Race "Other" opens a text box too (multi-select always waits for Next).
+    const raceBox = page.locator('[data-name="race"]').locator("textarea, input[type=text]");
+    await pick(page, "race", "Other");
+    await expect(raceBox.first()).toBeVisible();
   });
 
-  test("answer checks: anagram box takes letters only; age, GPA and Other text are validated", async ({ page }) => {
+  test("answer checks: anagram box takes letters only; age and GPA are validated", async ({ page }) => {
     await page.goto(EMULATOR ? `/?emulator=1&${CLOCK}` : `/?${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await startStudy(page);
@@ -320,25 +335,23 @@ test.describe("experiment", () => {
     await input.fill("");
     await doAnagrams(page);
     await page.getByRole("button", { name: "Continue" }).click();
-    await pick(page, "mc_individually_motivated", "Agree (6)");
-    await pick(page, "mc_work_together", "Agree (6)");
-    await page.locator('input[value="Continue"]').click();
-    await pick(page, "parent1_education", "High school diploma or GED");
-    await pick(page, "parent2_education", "Don't know");
-    await pick(page, "household_income", "$30,000 to $49,999");
-    await page.locator('input[value="Next"]').click();
+    await choose(page, "mc_individually_motivated", "Agree (6)");
+    await choose(page, "mc_work_together", "Agree (6)");
+    await choose(page, "parent1_education", "High school diploma or GED");
+    await choose(page, "parent2_education", "Don't know");
+    await choose(page, "household_income", "$30,000 to $49,999");
 
-    // Age must be a whole number from 16 to 99.
-    await pick(page, "gender", "Woman");
-    await pick(page, "sex", "Female");
-    await pick(page, "race", "White");
+    // Age must be a whole number from 16 to 99; typing alone never moves the screen on.
     const age = page.locator('[data-name="age"] input');
     for (const bad of ["15", "18.5", "120"]) {
       await age.fill(bad);
       await page.locator('input[value="Next"]').click();
       await expect(page.locator('[data-name="age"]').locator(".sd-question__erbox, .sd-error").first()).toBeVisible();
     }
-    await age.fill("18");
+    await typeAnswer(page, "age", "18");
+    await choose(page, "gender", "Woman");
+    await choose(page, "sex", "Female");
+    await pick(page, "race", "White");
     await page.locator('input[value="Next"]').click();
 
     // GPA: unweighted only, so it must be between 0 and 4.0.
@@ -346,8 +359,7 @@ test.describe("experiment", () => {
     await page.locator('[data-name="hs_gpa"] input').fill("4.3");
     await page.locator('input[value="Continue"]').click();
     await expect(page.getByText("from 0 to 4.0")).toBeVisible();
-    await page.locator('[data-name="hs_gpa"] input').fill("3.9");
-    await page.locator('input[value="Continue"]').click();
+    await typeAnswer(page, "hs_gpa", "3.9", "Continue");
     await expect(page.locator('[data-name="outside_help"]')).toBeVisible();   // moved on
   });
 
