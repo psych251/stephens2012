@@ -281,11 +281,11 @@ test.describe("experiment", () => {
     expect(pdoc.freshman).toBe("No");
   });
 
-  test("required questions: one per screen, no decline option, nothing skipped without an answer", async ({ page }) => {
+  test("required questions: one per screen, Prefer not to say only on income, gender and sex", async ({ page }) => {
     await page.goto(EMULATOR ? `/?emulator=1&${CLOCK}` : `/?${CLOCK}`);
     await page.waitForFunction(() => window.__saver && window.__saver.docId);
     await runThroughExperiment(page, { answerAnagrams: true, stopAtManipulationCheck: true });
-    await expect(page.getByText("Prefer not to say")).toHaveCount(0);           // no decline option
+    await expect(page.getByText("Prefer not to say")).toHaveCount(0);           // not on the manipulation check
     await expect(page.locator("[data-name]")).toHaveCount(1);                   // one question per screen
     await page.locator('input[value="Next"]').click();
     await expect(page.getByText("Response required.").first()).toBeVisible();
@@ -293,15 +293,17 @@ test.describe("experiment", () => {
     await choose(page, "mc_individually_motivated", "Agree (6)");
     await choose(page, "mc_work_together", "Agree (6)");
 
-    // Demographics: required, one per screen, no "Prefer not to say".
+    // Demographics: required, one per screen; "Prefer not to say" only on income, gender and sex.
     await expect(page.locator('[data-name="parent1_education"]')).toBeVisible();
     await expect(page.getByText("Prefer not to say")).toHaveCount(0);
     await page.locator('input[value="Next"]').click();
     await expect(page.getByText("Response required.").first()).toBeVisible();
     await choose(page, "parent1_education", "High school diploma or GED");
     await choose(page, "parent2_education", "Don't know");
-    await choose(page, "household_income", "$30,000 to $49,999");
+    await choose(page, "household_income", "Prefer not to say");               // counts as an answer
+    await expect(page.getByText("Prefer not to say")).toHaveCount(0);           // not on age
     await typeAnswer(page, "age", "18");
+    await expect(page.locator('[data-name="gender"]').getByText("Prefer not to say")).toBeVisible();
 
     // "Self-describe" opens a text box and waits for it instead of moving on.
     const genderBox = page.locator('[data-name="gender"]').locator("textarea, input[type=text]");
@@ -312,7 +314,8 @@ test.describe("experiment", () => {
     await expect(page.locator('[data-name="gender"]')).toBeVisible();            // did not advance
     await genderBox.first().fill("Genderqueer");
     await page.locator('input[value="Next"]').click();
-    await choose(page, "sex", "Female");
+    await choose(page, "sex", "Prefer not to say");
+    await expect(page.locator('[data-name="race"]').getByText("Prefer not to say")).toHaveCount(0);
 
     // Race "Other" opens a text box too (multi-select always waits for Next).
     const raceBox = page.locator('[data-name="race"]').locator("textarea, input[type=text]");

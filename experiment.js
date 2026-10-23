@@ -260,11 +260,14 @@ function classifyFirstGen(p1, p2) {
   // Eligibility: freshmen (first-year students) only. Anyone answering "No" is thanked and the
   // study ends; the visit is still recorded with eligible = false so screen-outs can be counted.
   // -------------------------------------------------------------------------
-  // Every question is required, with no "Prefer not to say" option (the student's decision after
-  // wording review). Note: the course consent text says participants "may decline to answer any
+  // Every question is required. Only income, gender and sex offer "Prefer not to say" (the
+  // student's decision after wording review). Note: the course consent text says participants "may decline to answer any
   // or all of the following questions"; with this setting the only way to decline is to stop
   // the study. To be confirmed with the course staff before Pilot B.
   const required = { isRequired: true };
+  // Required, with a "Prefer not to say" option (student's decision: income, gender and sex).
+  // SurveyJS stores this answer as "none"; the report treats it as missing.
+  const requiredPreferNot = { isRequired: true, showNoneItem: true, noneText: "Prefer not to say" };
 
   // Self-report questions are shown one per screen. Choosing an answer to a single-choice
   // question moves on automatically (the last one finishes the survey). Questions that need
@@ -685,7 +688,7 @@ function classifyFirstGen(p1, p2) {
                 { value: 5, text: "$50,000 to $74,999" }, { value: 6, text: "$75,000 to $99,999" },
                 { value: 7, text: "$100,000 to $200,000" }, { value: 8, text: "More than $200,000" },
               ],
-              ...required,
+              ...requiredPreferNot,
             },
           ],
         },
@@ -701,8 +704,8 @@ function classifyFirstGen(p1, p2) {
                 { type: "numeric", minValue: 18, maxValue: 99, text: "Please enter an age between 18 and 99." },
               ],
             },
-            { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...required },
-            { type: "radiogroup", name: "sex", title: "What sex were you assigned at birth?", choices: ["Female", "Male", "Intersex"], ...required },
+            { type: "radiogroup", name: "gender", title: "What is your gender?", choices: ["Woman", "Man", "Non-binary"], showOtherItem: true, otherText: "Self-describe", ...requiredPreferNot },
+            { type: "radiogroup", name: "sex", title: "What sex were you assigned at birth?", choices: ["Female", "Male", "Intersex"], ...requiredPreferNot },
             {
               type: "checkbox", name: "race", title: "What is your race or ethnicity? Select all that apply.",
               choices: [
