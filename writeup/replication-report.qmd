@@ -54,7 +54,9 @@ library(jsonlite)
 
 # Must match EXPERIMENT.id in experiment.js, and the --experiment you passed to the export.
 # Phase 2 runs under its own id, so its data never mix with Phase 1's.
-experiment_id        <- "stephens2012-final"
+# Pilot B for the pre-data-collection milestone; switch to "stephens2012-final" (the id the
+# live experiment now saves to) once the report is approved and registered.
+experiment_id        <- "stephens2012-pilot-b"
 experiment_id_phase2 <- "stephens2012-phase2"
 ```
 
@@ -143,19 +145,6 @@ or impute any participant data. I take full responsibility for the
 content of this report, including any errors introduced by AI tools.
 
 # Key statistics
-
-::: {.callout-tip icon="false"}
-## Guidance
-
-One row per study for the key comparison: the original, your Phase 1
-replication, and your Phase 2 extension. The table fills itself in from
-the data as each phase is exported, using the analysis code below (open
-"Show the analysis code"), which is shared by both phases so they are
-analysed identically. Edit that code once, here, to match your design
-and preregistered exclusion rule. On the scientific-extension track, the
-Phase 2 row reports the new comparison: adapt its code and say so in the
-caption.
-:::
 
 ```{r}
 #| label: analysis-functions
@@ -326,6 +315,17 @@ simple_effects <- function(keep) {
 
 # Side-by-side figure: adjusted mean anagrams solved (+/- 1 SE, the original Figure 2's error
 # bars) by social class and letter, one panel per study, same axes and colours as the original.
+# Until the ANCOVA can run (every cell needs at least 2 participants), the replication panel
+# shows unadjusted cell means instead, +/- 1 SE where a cell has 2 or more people, with n.
+raw_means <- function(keep) {
+  if (is.null(keep) || nrow(keep) == 0) return(NULL)
+  keep |>
+    group_by(social_class, condition, .drop = FALSE) |>
+    summarise(n = n(), mean = if (n > 0) mean(anagrams_solved) else NA_real_,
+              se = if (n > 1) sd(anagrams_solved) / sqrt(n) else NA_real_, .groups = "drop") |>
+    mutate(mean = ifelse(n > 0, mean, NA_real_))
+}
+
 comparison_plot <- function(...) {
   studies <- list(...)
   studies <- studies[!map_lgl(studies, is.null)]
@@ -335,11 +335,15 @@ comparison_plot <- function(...) {
                                  labels = c("First-generation", "Continuing-generation")),
            condition = factor(condition, levels = c("independent", "interdependent"),
                               labels = c("Independent\nmessage", "Interdependent\nmessage")))
-  dodge <- position_dodge(width = 0.8)
+  dodge <- position_dodge(width = 0.8, preserve = "single")  # an empty cell leaves a gap
   ggplot(df, aes(x = condition, y = mean, fill = social_class)) +
     geom_col(position = dodge, width = 0.75) +
     geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = dodge, width = 0.2) +
-    geom_text(aes(y = 0.5, label = sprintf("%.1f", mean)), position = dodge, vjust = 0, size = 3) +
+    geom_text(aes(y = 0.5, label = if ("n" %in% names(df))
+                    ifelse(is.na(n), sprintf("%.1f", mean),
+                           ifelse(is.na(mean), sprintf("n = %d", n), sprintf("%.1f\nn = %d", mean, n)))
+                  else sprintf("%.1f", mean)),
+              position = dodge, vjust = 0, size = 3) +
     facet_wrap(~ Study, nrow = 1) +
     scale_y_continuous(breaks = seq(0, 20, 4)) +
     coord_cartesian(ylim = c(0, 20)) +
@@ -450,27 +454,9 @@ The original effect size is partial η² = .054, f = 0.24. The N for 80% power i
 
 ### Planned sample
 
-::: {.callout-tip icon="false"}
-## Guidance
-
-Planned sample size and stopping rule, sampling frame (for example, "US
-residents on Prolific, fluent in English, 18 or older"), known
-demographics, and any preselection or screening. The stopping rule
-should be data-independent: "collect until N participants pass the
-exclusion criteria below" rather than "until the result is clear".
-:::
 My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. The sampling frame is first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to either continue recruiting participants in the second part of this replication project, or modify the materials to recruit freshman students in U.S. universities via Prolific. 
 
 ### Materials
-
-::: {.callout-tip icon="false"}
-## Guidance
-
-All materials. You can quote the original article directly: put the text
-in quotation marks and note that it was followed precisely, or quote it
-and point out the exceptions. Link to the live experiment above rather
-than pasting screenshots of every screen.
-:::
 
 In the original study, participants read one of two (interdependent, independent) welcome letters that were printed on two pages. These welcome letters were adapted to be relevant to current year (2026) in an online format. This involved updating the Stanford President's name, background, photograph, and signature. Following the feedback of one of my Pilot A participants, I integrated interactive website elements (e.g., key text were presented one line at a time prompted with the "Next" button) to increase participant engagement.
 
@@ -479,30 +465,9 @@ The original study also included a hard copy anagram task. Since the task conten
 
 ### Procedure
 
-::: {.callout-tip icon="false"}
-## Guidance
-
-As for Materials: quote the original where you can and point out the
-exceptions. Describe the sequence a participant experiences, from
-consent to debrief, and how long it takes.
-:::
-
 Interested first-year students enrolled in Psych 1 will sign-up for the study via the SONA platform, be directed to the online page with consent information, and indicate whether they agree to participate. If they agree to participate, the next screen asks whether they "are a freshman" to confirm eligibility. If they answer anything other than "Yes," they are thanked for their interest and asked to close the browser window. Participants who self-verified their first-year status will be shown one of the two welcome letters. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams (20 maximum) as possible. They are shown one anagram at a time and are allowed to skip. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to press continue. The next set of questions will cover the manipulation check and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and are thanked for participating. This study will approximately take 20 minutes to complete.
 
 ### Analysis plan
-
-::: {.callout-tip icon="false"}
-## Guidance
-
-The analysis strategy, as close to the original as possible: data
-cleaning rules, exclusion rules, covariates, and the model or test.
-Original papers often do not spell this out; say where you had to make a
-choice and what you chose.
-
-**State the key analysis of interest explicitly.** That is the single
-test your replication stands or falls on, and it must match your
-preregistration. You can pre-specify additional analyses here too.
-:::
 
 **Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA (Type III), controlling for race (White vs. non-White) and self-reported high school GPA. The effect sizes will be the difference of differences with 95% CI and partial η².
 
@@ -511,17 +476,6 @@ preregistration. You can pre-specify additional analyses here too.
 **Exclusions.** Participants will be excluded if they did not consent, are not freshman, did not attempt any anagrams, did not complete the study, or if their social class is not classifiable (i.e., answering "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answering "Don't know" to both parents' highest level of education). 
 
 ### Differences from the original study
-
-::: {.callout-tip icon="false"}
-## Guidance
-
-Every known difference in sample, setting, procedure, materials, and
-analysis, one per row. Minimizing differences is the goal, but some
-always remain. For each one, say whether it is expected to matter, based
-on claims in the original article or later research on when the effect
-does and does not appear. The rows below are the demo's real differences
-and show the level of detail expected; replace them with yours.
-:::
 
 | Aspect | Original study | This replication | Expected to matter? |
 |------------------|------------------|------------------|------------------|
@@ -775,10 +729,14 @@ reported no variability, say so rather than leaving it out silently.
 ```{r}
 #| label: fig-comparison
 #| eval: !expr have_data
-#| fig-cap: "Anagrams solved by social class and welcome letter. Original: adjusted means from Stephens et al. (2012), Figure 2, with error bars of ±1 SE read off the figure. Phase 1: adjusted means from the ANCOVA (covariates at their sample means), ±1 SE. The Phase 1 panel appears once every cell has at least 2 analysed participants."
+#| fig-cap: "Anagrams solved by social class and welcome letter. Original: adjusted means from Stephens et al. (2012), Figure 2, with error bars of ±1 SE read off the figure. Replication: adjusted means from the ANCOVA (covariates at their sample means), ±1 SE; until every cell has at least 2 analysed participants, unadjusted means instead, labelled with n (±1 SE where n ≥ 2)."
 #| fig-width: 8
 #| fig-height: 4
-comparison_plot(Original = original, `Phase 1: replication` = if (!is.null(res1)) res1$means)
+if (!is.null(res1)) {
+  comparison_plot(Original = original, `Phase 1: replication` = res1$means)
+} else {
+  comparison_plot(Original = original, `Phase 1 (unadjusted; too few for the ANCOVA)` = raw_means(keep))
+}
 ```
 
 ### Exploratory analyses

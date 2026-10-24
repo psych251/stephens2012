@@ -633,6 +633,9 @@ function classifyFirstGen(p1, p2) {
         ? data.response.toLowerCase().replace(/\s+/g, "") === item.solution
         : null;
       if (data.action === "skip") queue.push(item);
+      // A time-out leaves the item unanswered: keep it in the queue so the end screen and
+      // `anagram_finished_early` correctly say time ran out (even if it was the last item).
+      if (data.action === "timeout") queue.unshift(item);
       progress(0.2 + 0.58 * Math.min(1, (Date.now() - taskStartedAt) / ANAGRAM_MS));
     },
   };
