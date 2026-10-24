@@ -13,6 +13,12 @@ first letter, it keeps none of the answer's letter pairs, and it is not itself a
 
 Run: python3 scripts/make-anagrams.py > materials/anagrams-backup.csv
      python3 scripts/make-anagrams.py --harder > materials/anagrams-harder.csv
+     python3 scripts/make-anagrams.py --moderate > materials/anagrams-moderate.csv
+
+--moderate: the current set with its three easiest always-solved words swapped for hard ones
+(PLANT -> ORBIT, TRUCK -> TEMPO, JUICE -> OPERA), raising mean BR from 56 to 70 while keeping
+items at every difficulty level. Kept words keep their scrambles; the new words use the same
+scrambles as in the --harder set.
 
 --harder: a harder candidate set after the two pilots (6 completers solved 77% of the current
 items, vs roughly 35-45% in the original). It keeps the 8 current words that pilot participants
@@ -44,6 +50,7 @@ HARDER_KEPT = ["world", "glove", "honey", "virus", "lyric", "knife", "album", "a
 HARDER_NEW = ["ankle", "demon", "orbit", "input", "venom", "hyena", "tempo", "rhyme",
               "opera", "visor", "uncle", "entry"]
 HARDER_SPARES = ["limbo", "pylon", "drawl", "viper", "craze"]
+MODERATE_SWAPS = {"plant": "orbit", "truck": "tempo", "juice": "opera"}
 
 words = set()
 for path in ["/usr/share/dict/web2", "/usr/share/dict/web2a"]:
@@ -79,7 +86,22 @@ def build(groups, rng):
 
 
 rows = build((("main", MAIN), ("spare", SPARES)), random.Random(2012))  # current set, unchanged
-if "--harder" in sys.argv:
+if "--moderate" in sys.argv:
+    harder_new = {r["solution"]: r["anagram"] for r in
+                  build((("main", HARDER_NEW), ("spare", HARDER_SPARES)), random.Random(2026))}
+    out_rows = []
+    for r in rows:
+        if r["set"] != "main":
+            continue
+        w = MODERATE_SWAPS.get(r["solution"], r["solution"])
+        out_rows.append(dict(set="main", solution=w,
+                             anagram=r["anagram"] if w == r["solution"] else harder_new[w],
+                             gilhooly_br=BR[w],
+                             other_solutions_in_dictionary=";".join(sorted(by_key["".join(sorted(w))] - {w})) or "none",
+                             source="kept" if w == r["solution"] else f"new (replaces {r['solution']})"))
+    rows = sorted(out_rows, key=lambda r: r["gilhooly_br"]) + \
+           [dict(r, source="spare") for r in rows if r["set"] == "spare" and r["solution"] not in MODERATE_SWAPS.values()]
+elif "--harder" in sys.argv:
     current = {r["solution"]: r["anagram"] for r in rows}
     new = build((("main", HARDER_NEW), ("spare", HARDER_SPARES)), random.Random(2026))
     kept = [dict(set="main", solution=w, anagram=current[w], gilhooly_br=BR[w],
