@@ -59,6 +59,7 @@ library(jsonlite)
 # live experiment now saves to) once the report is approved and registered.
 experiment_id        <- "stephens2012-pilot-b"
 experiment_id_phase2 <- "stephens2012-phase2"
+pilot_id             <- "stephens2012-pilot-b"  # reported under Methods; stays fixed after the switch
 ```
 
 ```{r}
@@ -440,8 +441,6 @@ cultural models of self and promote positive performance among first-generation 
 
 ### Power analysis
 
-
-
 ```{r}
 #| label: power
 n_cells      <- 4
@@ -474,18 +473,17 @@ The original effect size is partial η² = .054, f = 0.24. The N for 80% power i
 
 ### Planned sample
 
-My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. The sampling frame is first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to either continue recruiting participants in the second part of this replication project, or modify the materials to recruit freshman students in U.S. universities via Prolific. 
+My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. The sampling frame is first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to either continue recruiting participants in the second part of this replication project from the same participant pool. I cannot collect data from Prolific because certain elements in the welcome letter require institution-specific information (e.g., name of university, current President information).
 
 ### Materials
 
-In the original study, participants read one of two (interdependent, independent) welcome letters that were printed on two pages. These welcome letters were adapted to be relevant to current year (2026) in an online format. This involved updating the Stanford President's name, background, photograph, and signature. Following the feedback of one of my Pilot A participants, I integrated interactive website elements (e.g., key text were presented one line at a time prompted with the "Next" button) to increase participant engagement.
+In the original study, participants read one of two (interdependent, independent) welcome letters that were printed on two pages. These welcome letters were adapted to be relevant to current year (2026) in an online format. This involved updating the Stanford President's name, background, photograph, and signature. Following the feedback of one of my Pilot A participants, I integrated interactive website elements (e.g., key text were presented one line at a time prompted with the "Next" button) to increase participant engagement. After Pilot B, I restyled the progress bar to show a percentage, disabled question auto-advance ("Next" required on every question), and recorded the time participants spent per question.
 
-The original study also included a hard copy anagram task. Since the task content and answer key were not provided in authors' supplemental materials, I based the adapted online anagram task on Gilhooly's (1978) list of anagrams. To mimic the hard copy format, I allowed participants to skip through words, with the opportunity to come back to them at a later time. Other aspects of the anagram task, such as the instructions that came before ("[We'd] like you to complete and evaluate an activity that has been used in the past with incoming students. The task’s purpose is to assess different learning styles"), duration (10 minutes), and number of anagrams (20) were aligned with how the original study's implementation. I requested original materials to the corresponding author on 10/16/2026. 
-
+The original study also included a hard copy anagram task. Since the task content and answer key were not provided in authors' supplemental materials, I based the adapted online anagram task on Gilhooly's (1978) list of anagrams. To mimic the hard copy format, I allowed participants to skip through words, with the opportunity to come back to them at a later time. Other aspects of the anagram task, such as the instructions that came before ("[We'd] like you to complete and evaluate an activity that has been used in the past with incoming students. The task’s purpose is to assess different learning styles"), duration (10 minutes), and number of anagrams (20) were aligned with how the original study's implementation. I requested original materials to the corresponding author on 10/16/2026. Unfortunately, the original author never responded back. Since Pilot B participants solved on 17, 18, and 11 out of 20 anagrams, which was greater than original study's solve rate of approximately 8 out of 20 anagrams (based on the average of the four cell means), I increased the difficulty of anagrams by swapping 6 words that 6 out of 6 participants (across Pilots A and B) solved with ones that are more difficult based on Gilhooly's (1978) BR score ("a measure predictive of anagram difficulty"). I increased the average BR score of the anagram task from 56 to 80.
 
 ### Procedure
 
-Interested first-year students enrolled in Psych 1 will sign-up for the study via the SONA platform, be directed to the online page with consent information, and indicate whether they agree to participate. If they agree to participate, the next screen asks whether they "are a freshman" to confirm eligibility. If they answer anything other than "Yes," they are thanked for their interest and asked to close the browser window. Participants who self-verified their first-year status will be shown one of the two welcome letters. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams (20 maximum) as possible. They are shown one anagram at a time and are allowed to skip. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to press continue. The next set of questions will cover the manipulation check and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and are thanked for participating. This study will approximately take 20 minutes to complete.
+Interested first-year students enrolled in Psych 1 will sign-up for the study via the SONA platform, be directed to the online page with consent information, and indicate whether they agree to participate. If they agree to participate, the next screen asks whether they "are a freshman" to confirm eligibility. If they answer anything other than "Yes," they are thanked for their interest and asked to close the browser window. Participants who self-verified their first-year status will be shown one of the two welcome letters. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams (20 maximum) as possible. They are shown one anagram at a time and are allowed to skip. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to press continue. The next set of questions will cover the manipulation check and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and are thanked for participating. This study will approximately take 15 minutes to complete.
 
 ### Analysis plan
 
@@ -508,6 +506,46 @@ Interested first-year students enrolled in Psych 1 will sign-up for the study vi
 | Cover story | Spoken by experimenter | Shown on screen | Unlikely, but may reduce engagement. |
 | Response | Answer on paper | Click buttons | Unlikely. |
 
+
+### Pilot B results
+
+```{r}
+#| label: pilot-b
+#| echo: false
+#| results: asis
+# Pilot B (SONA, before the anagram set was made harder), always read from its own export so
+# these tables do not change when experiment_id switches to the final data. Same exclusion
+# rules as the main analysis (read_phase, under Key statistics).
+pilot <- read_phase(pilot_id)
+if (!is.null(pilot)) {
+  pd <- pilot$d |>
+    mutate(minutes = as.numeric(difftime(as.POSIXct(ended_at, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
+                                         as.POSIXct(started_at, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
+                                         units = "mins")))
+  done <- pilot$passed[["Completed the study"]]
+  funnel_pilot <- tibble(Step = c("Opened the study", "Turned away (phone or tablet)", names(pilot$passed)[-1]),
+         N = c(nrow(pd), sum(!as.logical(pd$device_supported) %in% TRUE),
+               map_int(pilot$passed[-1], sum))) |>
+    knitr::kable(caption = sprintf("Pilot B: participants remaining after each step (steps apply in order). Median time to complete: %.1f minutes.",
+                                   median(pd$minutes[done], na.rm = TRUE)))
+  completers_pilot <- pd[done, ] |>
+    transmute(Letter = str_to_sentence(as.character(condition)),
+              `Social class` = recode(as.character(social_class), `first-gen` = "First-generation",
+                                      `continuing-gen` = "Continuing-generation", .missing = "Unclassifiable"),
+              `Anagrams solved (of 20)` = anagrams_solved,
+              `Anagrams skipped` = as.numeric(anagram_skips),
+              `Seconds on letter` = round(as.numeric(letter_time_ms) / 1000),
+              Minutes = round(minutes, 1)) |>
+    arrange(Letter, `Social class`) |>
+    knitr::kable(caption = sprintf("Pilot B completers (n = %d), on the pilot anagram set (mean Gilhooly BR 56; replaced afterwards by the final set, mean BR 80). Mean solved: %.1f of 20 (%.0f%%); the original's cell means imply about 8 of 20.",
+                                   sum(done), mean(pd$anagrams_solved[done], na.rm = TRUE),
+                                   5 * mean(pd$anagrams_solved[done], na.rm = TRUE)))
+  print(funnel_pilot)
+  print(completers_pilot)
+} else {
+  message("No Pilot B export found under data/raw/", pilot_id, ".")
+}
+```
 
 ### Methods addendum (post data collection)
 
