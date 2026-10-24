@@ -10,8 +10,10 @@
  * the signature is the president's name set in a script typeface (stimuli/fonts/), not a
  * reproduction of his handwritten signature.
  *
- * Anagrams: the backup set in materials/anagrams-backup.csv (main items only), built by
- * scripts/make-anagrams.py from Gilhooly (1978). If you change that CSV, update this list.
+ * Anagrams: the moderate set in materials/anagrams-moderate.csv (main items only: 4 easy,
+ * 8 medium, 8 hard by Gilhooly's BR; mean 73), built by scripts/make-anagrams.py --moderate
+ * from Gilhooly (1978) after Pilots A and B. Pilots used materials/anagrams-backup.csv.
+ * If you change the CSV, update this list.
  */
 window.STIMULI = (function () {
   // One page, laid out like the original two-page letter: header (with the president's photo
@@ -98,11 +100,11 @@ window.STIMULI = (function () {
 
   // solution, anagram, Gilhooly (1978) bigram rank (lower = easier)
   const anagrams = [
-    ["world", "DLWRO", 2], ["woman", "NAOWM", 12], ["plant", "LTNPA", 13], ["truck", "CUTKR", 16],
-    ["juice", "ECUJI", 18], ["lunch", "NHULC", 23], ["mouth", "HMTUO", 25], ["glove", "OGELV", 27],
+    ["world", "DLWRO", 2], ["woman", "NAOWM", 12], ["lunch", "NHULC", 23], ["glove", "OGELV", 27],
     ["honey", "YNOHE", 30], ["judge", "GJEDU", 44], ["doubt", "OBDTU", 47], ["cabin", "BNIAC", 62],
     ["pilot", "OLPTI", 74], ["fruit", "IUFTR", 75], ["virus", "RSUIV", 84], ["lyric", "IRLCY", 85],
-    ["tulip", "ITPLU", 98], ["knife", "IENKF", 112], ["album", "LMUBA", 120], ["apron", "RNPAO", 149],
+    ["uncle", "LCNEU", 91], ["opera", "REPAO", 98], ["tulip", "ITPLU", 98], ["tempo", "EOPTM", 110],
+    ["knife", "IENKF", 112], ["album", "LMUBA", 120], ["orbit", "RTIOB", 124], ["apron", "RNPAO", 149],
   ].map(([solution, anagram, br]) => ({ item_id: solution, solution, anagram, gilhooly_br: br }));
 
   const letterHtml = (condition, showPhotos, presidentPhoto) => {
