@@ -12,6 +12,12 @@ no letter stays in its original position, the scramble does not start with the a
 first letter, it keeps none of the answer's letter pairs, and it is not itself a word.
 
 Run: python3 scripts/make-anagrams.py > materials/anagrams-backup.csv
+     python3 scripts/make-anagrams.py --harder > materials/anagrams-harder.csv
+
+--harder: a harder candidate set after the two pilots (6 completers solved 77% of the current
+items, vs roughly 35-45% in the original). It keeps the 8 current words that pilot participants
+found hard (solved by 4 or fewer of 6), with the same scrambles, and replaces the other 12 with
+high-BR Gilhooly words. MEDAL was left out: "lamed" (past tense of lame) is a second answer.
 """
 import csv
 import itertools
@@ -26,10 +32,18 @@ BR = {  # Gilhooly (1978), Appendix
     "knife": 112, "album": 120, "apron": 149,
     # spares
     "crumb": 28, "thumb": 33, "rhyme": 105, "venom": 114, "orbit": 124,
+    # harder set (new words and its spares)
+    "ankle": 129, "demon": 128, "input": 120, "hyena": 111, "tempo": 110, "opera": 98,
+    "visor": 97, "uncle": 91, "entry": 91, "limbo": 96, "pylon": 104, "drawl": 87, "viper": 84,
+    "craze": 82,
 }
 MAIN = ["world", "woman", "plant", "truck", "juice", "lunch", "mouth", "glove", "honey", "judge",
         "doubt", "cabin", "pilot", "fruit", "virus", "lyric", "tulip", "knife", "album", "apron"]
 SPARES = ["crumb", "thumb", "rhyme", "venom", "orbit"]
+HARDER_KEPT = ["world", "glove", "honey", "virus", "lyric", "knife", "album", "apron"]
+HARDER_NEW = ["ankle", "demon", "orbit", "input", "venom", "hyena", "tempo", "rhyme",
+              "opera", "visor", "uncle", "entry"]
+HARDER_SPARES = ["limbo", "pylon", "drawl", "viper", "craze"]
 
 words = set()
 for path in ["/usr/share/dict/web2", "/usr/share/dict/web2a"]:
@@ -54,13 +68,29 @@ def ok(scr, sol):
             and scr not in words and scr[:-1] not in words)
 
 
-rng = random.Random(2012)
-rows = []
-for kind, lst in (("main", MAIN), ("spare", SPARES)):
-    for sol in lst:
-        good = sorted({"".join(p) for p in itertools.permutations(sol) if ok("".join(p), sol)})
-        rows.append(dict(set=kind, solution=sol, anagram=rng.choice(good).upper(), gilhooly_br=BR[sol],
-                         other_solutions_in_dictionary=";".join(sorted(by_key["".join(sorted(sol))] - {sol})) or "none"))
+def build(groups, rng):
+    rows = []
+    for kind, lst in groups:
+        for sol in lst:
+            good = sorted({"".join(p) for p in itertools.permutations(sol) if ok("".join(p), sol)})
+            rows.append(dict(set=kind, solution=sol, anagram=rng.choice(good).upper(), gilhooly_br=BR[sol],
+                             other_solutions_in_dictionary=";".join(sorted(by_key["".join(sorted(sol))] - {sol})) or "none"))
+    return rows
+
+
+rows = build((("main", MAIN), ("spare", SPARES)), random.Random(2012))  # current set, unchanged
+if "--harder" in sys.argv:
+    current = {r["solution"]: r["anagram"] for r in rows}
+    new = build((("main", HARDER_NEW), ("spare", HARDER_SPARES)), random.Random(2026))
+    kept = [dict(set="main", solution=w, anagram=current[w], gilhooly_br=BR[w],
+                 other_solutions_in_dictionary=";".join(sorted(by_key["".join(sorted(w))] - {w})) or "none")
+            for w in HARDER_KEPT]
+    for r in kept:
+        r["source"] = "kept (hard in pilots)"
+    for r in new:
+        r["source"] = "new" if r["set"] == "main" else "spare"
+    rows = sorted(kept + [r for r in new if r["set"] == "main"], key=lambda r: r["gilhooly_br"]) + \
+           [r for r in new if r["set"] == "spare"]
 out = csv.DictWriter(sys.stdout, fieldnames=list(rows[0]))
 out.writeheader()
 out.writerows(rows)
