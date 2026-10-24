@@ -15,9 +15,10 @@ Run: python3 scripts/make-anagrams.py > materials/anagrams-backup.csv
      python3 scripts/make-anagrams.py --harder > materials/anagrams-harder.csv
      python3 scripts/make-anagrams.py --moderate > materials/anagrams-moderate.csv
 
---moderate: the current set with four easy words that every pilot participant solved swapped
-for hard ones (PLANT -> ORBIT, TRUCK -> TEMPO, JUICE -> OPERA, MOUTH -> UNCLE): 4 easy (BR < 30),
-8 medium (30-90) and 8 hard (> 90) items, mean BR 73 (current set: 56). Kept words keep their scrambles; the new words use the same
+--moderate: the current set with six words that pilot participants solved easily swapped for
+hard ones (PLANT -> ORBIT, TRUCK -> TEMPO, JUICE -> OPERA, MOUTH -> UNCLE, WOMAN -> ENTRY,
+JUDGE -> VISOR): 3 easy (BR < 30), 7 medium (30-90) and 10 hard (> 90) items, mean BR 80
+(current set: 56). Kept words keep their scrambles; the new words use the same
 scrambles as in the --harder set.
 
 --harder: a harder candidate set after the two pilots (6 completers solved 77% of the current
@@ -50,7 +51,8 @@ HARDER_KEPT = ["world", "glove", "honey", "virus", "lyric", "knife", "album", "a
 HARDER_NEW = ["ankle", "demon", "orbit", "input", "venom", "hyena", "tempo", "rhyme",
               "opera", "visor", "uncle", "entry"]
 HARDER_SPARES = ["limbo", "pylon", "drawl", "viper", "craze"]
-MODERATE_SWAPS = {"plant": "orbit", "truck": "tempo", "juice": "opera", "mouth": "uncle"}
+MODERATE_SWAPS = {"plant": "orbit", "truck": "tempo", "juice": "opera", "mouth": "uncle",
+                  "woman": "entry", "judge": "visor"}
 
 words = set()
 for path in ["/usr/share/dict/web2", "/usr/share/dict/web2a"]:

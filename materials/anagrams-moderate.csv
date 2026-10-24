@@ -1,17 +1,17 @@
 set,solution,anagram,gilhooly_br,other_solutions_in_dictionary,source
 main,world,DLWRO,2,none,kept
-main,woman,NAOWM,12,none,kept
 main,lunch,NHULC,23,none,kept
 main,glove,OGELV,27,none,kept
 main,honey,YNOHE,30,none,kept
-main,judge,GJEDU,44,none,kept
 main,doubt,OBDTU,47,none,kept
 main,cabin,BNIAC,62,none,kept
 main,pilot,OLPTI,74,none,kept
 main,fruit,IUFTR,75,none,kept
 main,virus,RSUIV,84,none,kept
 main,lyric,IRLCY,85,cyril,kept
+main,entry,RTYNE,91,none,new (replaces woman)
 main,uncle,LCNEU,91,none,new (replaces mouth)
+main,visor,RSIVO,97,none,new (replaces judge)
 main,opera,REPAO,98,none,new (replaces juice)
 main,tulip,ITPLU,98,none,kept
 main,tempo,EOPTM,110,none,new (replaces truck)

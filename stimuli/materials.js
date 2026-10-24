@@ -10,8 +10,8 @@
  * the signature is the president's name set in a script typeface (stimuli/fonts/), not a
  * reproduction of his handwritten signature.
  *
- * Anagrams: the moderate set in materials/anagrams-moderate.csv (main items only: 4 easy,
- * 8 medium, 8 hard by Gilhooly's BR; mean 73), built by scripts/make-anagrams.py --moderate
+ * Anagrams: the moderate set in materials/anagrams-moderate.csv (main items only: 3 easy,
+ * 7 medium, 10 hard by Gilhooly's BR; mean 80), built by scripts/make-anagrams.py --moderate
  * from Gilhooly (1978) after Pilots A and B. Pilots used materials/anagrams-backup.csv.
  * If you change the CSV, update this list.
  */
@@ -100,10 +100,10 @@ window.STIMULI = (function () {
 
   // solution, anagram, Gilhooly (1978) bigram rank (lower = easier)
   const anagrams = [
-    ["world", "DLWRO", 2], ["woman", "NAOWM", 12], ["lunch", "NHULC", 23], ["glove", "OGELV", 27],
-    ["honey", "YNOHE", 30], ["judge", "GJEDU", 44], ["doubt", "OBDTU", 47], ["cabin", "BNIAC", 62],
-    ["pilot", "OLPTI", 74], ["fruit", "IUFTR", 75], ["virus", "RSUIV", 84], ["lyric", "IRLCY", 85],
-    ["uncle", "LCNEU", 91], ["opera", "REPAO", 98], ["tulip", "ITPLU", 98], ["tempo", "EOPTM", 110],
+    ["world", "DLWRO", 2], ["lunch", "NHULC", 23], ["glove", "OGELV", 27], ["honey", "YNOHE", 30],
+    ["doubt", "OBDTU", 47], ["cabin", "BNIAC", 62], ["pilot", "OLPTI", 74], ["fruit", "IUFTR", 75],
+    ["virus", "RSUIV", 84], ["lyric", "IRLCY", 85], ["entry", "RTYNE", 91], ["uncle", "LCNEU", 91],
+    ["visor", "RSIVO", 97], ["opera", "REPAO", 98], ["tulip", "ITPLU", 98], ["tempo", "EOPTM", 110],
     ["knife", "IENKF", 112], ["album", "LMUBA", 120], ["orbit", "RTIOB", 124], ["apron", "RNPAO", 149],
   ].map(([solution, anagram, br]) => ({ item_id: solution, solution, anagram, gilhooly_br: br }));
 
