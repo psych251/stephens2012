@@ -1,7 +1,7 @@
 ---
 title: "Replication of Study 3 of Stephens et al. (2012, *Journal of Personality and Social Psychology*)"
 author: "Gabrielle Halim (halimg@stanford.edu)"
-date: Saturday, October 3, 2026
+date: Saturday, October 24, 2026
 date-format: long
 format:
   html:
@@ -138,7 +138,7 @@ original_dod_se <- sqrt(sum(original$se^2))
 
 | Tool and model | What it was used for | How you checked the output |
 |------------------------|------------------------|------------------------|
-| *Claude (Opus 5.5)* | *Provided explanations to the code originally provided in this document (e.g., power analysis, key statistics); wrote experiment and analysis code; developed experiment materials; reviewed comments* | *Manually verified each line of code and other output with original materials; asked Claude to clarify components that were confusing; Made subsequent edits and revisions* |
+| *Claude (Opus 5.5)* | *Provided explanations to the code originally provided in this document (e.g., power analysis, key statistics); wrote experiment and analysis code; developed experiment materials; reviewed comments; Figure and Table styling* | *Manually verified each line of code and other output with original materials; asked Claude to clarify components that were confusing; Made subsequent edits and revisions* |
 
 
 I wrote all of the text in this report myself. AI tools were not used to
@@ -473,25 +473,31 @@ The original effect size is partial η² = .054, f = 0.24. The N for 80% power i
 
 ### Planned sample
 
-My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. The sampling frame is first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to either continue recruiting participants in the second part of this replication project from the same participant pool. I cannot collect data from Prolific because certain elements in the welcome letter require institution-specific information (e.g., name of university, current President information).
+My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. The sampling frame is first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to continue recruiting participants in the second part of this replication project from the same participant pool until 11/02/2026. I will analyze the data that I have. I cannot collect data from Prolific because certain elements in the welcome letter require institution-specific information (e.g., name of university, current President information).
 
 ### Materials
 
-In the original study, participants read one of two (interdependent, independent) welcome letters that were printed on two pages. These welcome letters were adapted to be relevant to current year (2026) in an online format. This involved updating the Stanford President's name, background, photograph, and signature. Following the feedback of one of my Pilot A participants, I integrated interactive website elements (e.g., key text were presented one line at a time prompted with the "Next" button) to increase participant engagement. After Pilot B, I restyled the progress bar to show a percentage, disabled question auto-advance ("Next" required on every question), and recorded the time participants spent per question.
+#### Welcome letter
+In the original study, participants read one of two (interdependent, independent) welcome letters that were printed on two pages. These welcome letters were adapted to be relevant to current year (2026) in an online format. This involved updating the Stanford President's name, background, photograph, and signature. 
 
-The original study also included a hard copy anagram task. Since the task content and answer key were not provided in authors' supplemental materials, I based the adapted online anagram task on Gilhooly's (1978) list of anagrams. To mimic the hard copy format, I allowed participants to skip through words, with the opportunity to come back to them at a later time. Other aspects of the anagram task, such as the instructions that came before ("[We'd] like you to complete and evaluate an activity that has been used in the past with incoming students. The task’s purpose is to assess different learning styles"), duration (10 minutes), and number of anagrams (20) were aligned with how the original study's implementation. I requested original materials to the corresponding author on 10/16/2026. Unfortunately, the original author never responded back. Since Pilot B participants solved on 17, 18, and 11 out of 20 anagrams, which was greater than original study's solve rate of approximately 8 out of 20 anagrams (based on the average of the four cell means), I increased the difficulty of anagrams by swapping 6 words that 6 out of 6 participants (across Pilots A and B) solved with ones that are more difficult based on Gilhooly's (1978) BR score ("a measure predictive of anagram difficulty"). I increased the average BR score of the anagram task from 56 to 80.
+Following the feedback of one of my Pilot A participants, I integrated interactive website elements (e.g., key text were presented one line at a time prompted with the "Show Next" button) to increase participant engagement. Following Pilot B, I restyled the progress bar to show a percentage, disabled question auto-advance ("Next" required on every question), and recorded the time participants spent per question.
+
+#### Anagrams
+The original study also included a hard copy anagram task. Since the task content and answer key were not provided in authors' supplemental materials, I used Gilhooly's (1978) list of five-letter single-solution anagrams. To mimic the hard copy format, I allowed participants to skip through words, with the opportunity to come back to them at a later time. Other aspects of the anagram task, such as the instructions that came before ("[We'd] like you to complete and evaluate an activity that has been used in the past with incoming students. The task’s purpose is to assess different learning styles"), duration (10 minutes), and number of anagrams (20) were aligned with the original study's implementation. I requested original materials to the corresponding author on 10/16/2026. The author has not responded (as of 10/24/2026). 
+
+Since Pilot B participants solved 17, 18, and 11 out of the 20 anagrams, which was greater than original study's solve rate of approximately 8 out of 20 (based on the average of the four cell means), I increased the difficulty of anagrams by swapping six words that all six participants (across Pilots A and B) solved correctly with words in Gilhooly's (1978) list with a greater BR score (associated with anagram difficulty). I ensured that several easier anagrams were retained to prevent floor effects. As a result, I increased the average BR score of the anagram task from 56 (Pilot A and B) to 80 (Phase 1).
 
 ### Procedure
 
-Interested first-year students enrolled in Psych 1 will sign-up for the study via the SONA platform, be directed to the online page with consent information, and indicate whether they agree to participate. If they agree to participate, the next screen asks whether they "are a freshman" to confirm eligibility. If they answer anything other than "Yes," they are thanked for their interest and asked to close the browser window. Participants who self-verified their first-year status will be shown one of the two welcome letters. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams (20 maximum) as possible. They are shown one anagram at a time and are allowed to skip. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to press continue. The next set of questions will cover the manipulation check and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and are thanked for participating. This study will approximately take 15 minutes to complete.
+Interested first-year students enrolled in Psych 1 will sign-up for the study via the SONA platform and be directed to the online study website. If students are on a phone or tablet, they will be told to switch to a desktop or laptop. Once they are on a desktop or laptop, they will indicate whether they agree to participate. If they agree to participate, the next screen will ask whether they "Are a freshman" to confirm eligibility. If they answer anything other than "Yes," they will be thanked for their interest and asked to close the browser window. Participants who self-verify their first-year status will be randomly assigned one of the two welcome letters (interdependent, independent). Participants will be prompted to click "Show next" after a chunk of the letter is shown, with a 45-second minimum duration on the welcome letter page before participants can proceed to the next page. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams as possible. They will be shown a maximum of 20 anagrams; one anagram at a time in a random order; and are allowed to skip. The anagram task will show a 10-minute countdown timer. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to click "Continue." The next set of questions will cover the manipulation checks and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and thanked for participating. This study will approximately take 15 minutes to complete.
 
 ### Analysis plan
 
-**Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA (Type III), controlling for race (White vs. non-White) and self-reported high school GPA. The effect sizes will be the difference of differences with 95% CI and partial η².
+**Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA (Type III), controlling for race (White vs. non-White) and self-reported unweighted high school GPA. The effect sizes will be the difference of differences with 95% CI and partial η².
 
-**Additional analyses.** Four one-way ANCOVAs within each level of the other factor, controlling for race (White/non-White) and self-reported high school GPA: (1) interdependent letter subset testing social class factor, (2) independent letter subset testing social class factor, (3) first-generation student subset testing condition factor, (4) continuing-generation student subset testing condition factor. 
+**Additional analyses.** Four one-way ANCOVAs within each level of the other factor, controlling for race (White/non-White) and self-reported high school GPA: (1) interdependent letter subset testing social class factor, (2) independent letter subset testing social class factor, (3) first-generation student subset testing condition factor, (4) continuing-generation student subset testing condition factor. Independent samples t-tests on the two manipulation check items.
 
-**Exclusions.** Participants will be excluded if they did not consent, are not freshman, did not attempt any anagrams, did not complete the study, or if their social class is not classifiable (i.e., answering "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answering "Don't know" to both parents' highest level of education). 
+**Exclusions.** Participants will be excluded if they did not consent; they are not freshman; they did not attempt any anagrams; they did not complete the study; they did not report their race/ethnicity; they did not report high school GPA; or their social class is not classifiable (i.e., answering "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answering "Don't know" to both parents' highest level of education).
 
 ### Differences from the original study
 
@@ -499,12 +505,12 @@ Interested first-year students enrolled in Psych 1 will sign-up for the study vi
 |------------------|------------------|------------------|------------------|
 | Sample | First-year students in Stanford | First-year students in Stanford taking Psych 1 | Unlikely. However, limited pool of participants may not allow target sample size to be reached. Psych 1 students may have prior exposure to cultural mismatch theory. |
 | Year | 2010-2011 | 2026 | May potentially diminish effect of cultural mismatch condition given more support for first-generation college students. |
-| Setting | In-person, with experimenter | Online, unsupervised, on the participant's own computer | Unlikely, though attention may be lower online. |
+| Setting | In-person, with experimenter | Online, unsupervised, on the participant's own computer | Possibly; attention may be lower online and outside help may be used to complete task. |
 | President's name and information | "John L. Hennessy" and handwritten signature | "Jonathan Levin" and name in script typeface for signature | Unlikely. |
-| Format of welcome message | Two printed pages | One screen; "show next" reveals next chunk of information, one click at a time | Unlikely |
+| Format of welcome message | Two printed pages | One screen; "Show next" reveals next chunk of information, one click at a time | Possibly, attention may be lower online. |
 | Anagram items | 20 anagrams, not published | 20 anagrams from Gilhooly (1978) | Possibly, given unknown difficulty level of original anagrams. |
+| Anagram responses | Writing on paper | Typing on screen | Unlikely, but may reduce engagement |
 | Cover story | Spoken by experimenter | Shown on screen | Unlikely, but may reduce engagement. |
-| Response | Answer on paper | Click buttons | Unlikely. |
 
 
 ### Pilot B results
@@ -546,16 +552,9 @@ if (!is.null(pilot)) {
   message("No Pilot B export found under data/raw/", pilot_id, ".")
 }
 ```
+Three participants provided consent and completed Pilot B (median completion time of 13.3 minutes). The number of completed surveys matched the number of participants who signed up for the study through SONA. They provided all the key information for analyses and there was no missing data.
 
 ### Methods addendum (post data collection)
-
-::: {.callout-tip icon="false"}
-## Guidance
-
-Leave this section out of the version you preregister. After data
-collection, report the actual sample and any deviation from the plan
-above.
-:::
 
 #### Actual sample
 
@@ -645,25 +644,9 @@ if (nrow(keep) > 0) {
 
 #### Deviations from the preregistered plan
 
-::: {.callout-tip icon="false"}
-## Guidance
-
-Any deviation from the preregistered plan above, or "None". Changes made
-after seeing data belong here even if they seem minor, together with the
-reason.
-:::
-
 ## Results
 
 ### Data preparation
-
-::: {.callout-tip icon="false"}
-## Guidance
-
-Data preparation follows the analysis plan. Loading and exclusions are
-done by the shared analysis code under Key statistics (open "Show the
-analysis code"). Describe anything you did to the data beyond that.
-:::
 
 ### Confirmatory analysis
 
@@ -699,18 +682,6 @@ if (!is.null(fu) && nrow(fu) > 0) {
 
 ### Replication assessment
 
-::: {.callout-tip icon="false"}
-## Guidance
-
-Judge the replication on effect sizes, not only on whether the key test
-is significant. Compare the replication estimate and its interval with
-the original: does the interval exclude zero, and does it include the
-original estimate? A significant result much smaller than the original,
-or a non-significant result whose interval still includes the original
-effect, are both informative and should be reported as such
-(Experimentology §3.2).
-:::
-
 ```{r}
 #| label: comparison
 #| eval: !expr have_data
@@ -745,45 +716,6 @@ if (!is.null(res1)) {
 }
 ```
 
-::: {.callout-tip icon="false"}
-## Guidance: show the original next to your replication
-
-**Every report should have a figure that puts the original finding and
-your replication side by side.** It is the single most informative thing
-in a replication report: a reader can see at a glance whether the effect
-came back, and how its size compares. Make it however you can, in
-roughly this order of preference:
-
-1.  **Replot both from numbers.** Enter the original's summary
-    statistics (means or proportions, with SDs, SEs or CIs, and Ns) in
-    the original-study chunk at the top of this file, and plot them on
-    the same axes as yours. That is what the demo figure below does.
-
-2.  **Replot the original from its data**, if the authors shared it or
-    it is in an open repository, using exactly the same plotting code as
-    for your own data.
-
-3.  **Show the original figure as an image** next to yours if neither is
-    possible. Save a screenshot of it, for example as
-    `writeup/images/original-figure.png`, and lay the two out in
-    columns:
-
-    ```` markdown
-    ::: {layout-ncol=2}
-    ![Original: Tversky & Kahneman (1981), Figure 1](images/original-figure.png)
-
-    ```{{r}}
-    # your replication plot here
-    ```
-    :::
-    ````
-
-Whichever you choose, use the same measure, scale, condition order and
-error-bar meaning for both panels, label which is which, and cite the
-source of the original values or figure in the caption. If the original
-reported no variability, say so rather than leaving it out silently.
-:::
-
 ```{r}
 #| label: fig-comparison
 #| eval: !expr have_data
@@ -812,14 +744,6 @@ cat("*Note.* Original values are the adjusted means from Stephens et al. (2012, 
 ```
 
 ### Exploratory analyses
-
-::: {.callout-tip icon="false"}
-## Guidance
-
-Any follow-up analyses (optional). Label them clearly as exploratory:
-they were not planned, so they generate hypotheses rather than test
-them.
-:::
 
 ```{r}
 #| label: manipulation-check
@@ -1150,6 +1074,6 @@ The experiment code, the anonymized data, and the code that produces
 every number in this report are available at
 <https://github.com/psych251/stephens2012>. The experiment itself can be
 taken at <https://psych251.github.io/stephens2012/>. The data contain no
-names, email addresses, IP addresses, or Prolific IDs; the file linking
-participants to their Prolific IDs is kept privately for payment and is
+names, email addresses, IP addresses, or SONA IDs; the file linking
+participants to their SONA IDs is kept privately for credit and is
 not shared.
