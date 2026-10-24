@@ -12,6 +12,7 @@ format:
     code-fold: true
     code-summary: "Show code"
     theme: cosmo
+    fig-cap-location: top   # APA 7: figure number and title above the figure
 execute:
   warning: false
   message: true
@@ -326,6 +327,26 @@ raw_means <- function(keep) {
     mutate(mean = ifelse(n > 0, mean, NA_real_))
 }
 
+# APA 7 figure style: white background, no gridlines, black axis lines and ticks, sans-serif
+# text, grayscale bars with black outlines, title-case axis labels, legend without a title.
+apa_theme <- function(base_size = 12) {
+  theme_classic(base_size = base_size, base_family = "sans") +
+    theme(axis.text = element_text(colour = "black"),
+          axis.ticks = element_line(colour = "black"),
+          axis.line = element_line(colour = "black", linewidth = 0.4),
+          axis.title.y = element_text(margin = margin(r = 8)),
+          axis.title.x = element_text(margin = margin(t = 8)),
+          legend.position = "top", legend.title = element_blank(),
+          legend.key.size = unit(0.9, "lines"),
+          strip.background = element_blank(),
+          strip.text = element_text(size = base_size, face = "plain"),
+          panel.spacing = unit(1.5, "lines"),
+          plot.margin = margin(6, 12, 6, 6))
+}
+
+# Side-by-side figure: mean anagrams solved (+/- 1 SE, the original Figure 2's error bars) by
+# social class and letter, one panel per study, same axes. Where a study's rows carry `n`
+# (the unadjusted fallback), each bar is labelled with its n.
 comparison_plot <- function(...) {
   studies <- list(...)
   studies <- studies[!map_lgl(studies, is.null)]
@@ -334,23 +355,22 @@ comparison_plot <- function(...) {
            social_class = factor(social_class, levels = c("first-gen", "continuing-gen"),
                                  labels = c("First-generation", "Continuing-generation")),
            condition = factor(condition, levels = c("independent", "interdependent"),
-                              labels = c("Independent\nmessage", "Interdependent\nmessage")))
+                              labels = c("Independent", "Interdependent")))
+  if (!"n" %in% names(df)) df$n <- NA_integer_
   dodge <- position_dodge(width = 0.8, preserve = "single")  # an empty cell leaves a gap
   ggplot(df, aes(x = condition, y = mean, fill = social_class)) +
-    geom_col(position = dodge, width = 0.75) +
-    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = dodge, width = 0.2) +
-    geom_text(aes(y = 0.5, label = if ("n" %in% names(df))
-                    ifelse(is.na(n), sprintf("%.1f", mean),
-                           ifelse(is.na(mean), sprintf("n = %d", n), sprintf("%.1f\nn = %d", mean, n)))
-                  else sprintf("%.1f", mean)),
-              position = dodge, vjust = 0, size = 3) +
+    geom_col(position = dodge, width = 0.75, colour = "black", linewidth = 0.3) +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = dodge,
+                  width = 0.15, linewidth = 0.4) +
+    geom_text(aes(y = 0.4, label = ifelse(is.na(n), "", sprintf("n = %d", n)), colour = social_class),
+              position = dodge, vjust = 0, size = 3, show.legend = FALSE) +
+    scale_colour_manual(values = c("First-generation" = "black", "Continuing-generation" = "white")) +
     facet_wrap(~ Study, nrow = 1) +
-    scale_y_continuous(breaks = seq(0, 20, 4)) +
+    scale_y_continuous(breaks = seq(0, 20, 4), expand = expansion(mult = c(0, 0.02))) +
     coord_cartesian(ylim = c(0, 20)) +
-    scale_fill_manual(values = c("First-generation" = "grey80", "Continuing-generation" = "grey50")) +
-    labs(x = NULL, y = "Anagrams solved (of 20)", fill = NULL) +
-    theme_minimal(base_size = 12) +
-    theme(legend.position = "top")
+    scale_fill_manual(values = c("First-generation" = "#D9D9D9", "Continuing-generation" = "#5A5A5A")) +
+    labs(x = "Welcome Letter", y = "Number of Anagrams Solved") +
+    apa_theme()
 }
 
 phase1 <- read_phase(experiment_id)
@@ -729,14 +749,28 @@ reported no variability, say so rather than leaving it out silently.
 ```{r}
 #| label: fig-comparison
 #| eval: !expr have_data
-#| fig-cap: "Anagrams solved by social class and welcome letter. Original: adjusted means from Stephens et al. (2012), Figure 2, with error bars of ±1 SE read off the figure. Replication: adjusted means from the ANCOVA (covariates at their sample means), ±1 SE; until every cell has at least 2 analysed participants, unadjusted means instead, labelled with n (±1 SE where n ≥ 2)."
+#| fig-cap: "*Mean Number of Anagrams Solved by Social Class and Welcome Letter in the Original Study and the Replication*"
 #| fig-width: 8
-#| fig-height: 4
+#| fig-height: 4.2
 if (!is.null(res1)) {
   comparison_plot(Original = original, `Phase 1: replication` = res1$means)
 } else {
   comparison_plot(Original = original, `Phase 1 (unadjusted; too few for the ANCOVA)` = raw_means(keep))
 }
+```
+
+```{r}
+#| label: fig-comparison-note
+#| eval: !expr have_data
+#| echo: false
+#| results: asis
+cat("*Note.* Original values are the adjusted means from Stephens et al. (2012, Figure 2); ",
+    "error bars are ±1 standard error, read off that figure. ",
+    if (!is.null(res1)) {
+      "Replication values are means adjusted for race and high school GPA (covariates at their sample means); error bars are ±1 standard error."
+    } else {
+      "Replication values are unadjusted means, because at least one condition has fewer than 2 analysed participants, so the ANCOVA cannot be estimated yet; n is shown for each bar, and error bars (±1 standard error) appear only where n ≥ 2."
+    }, "\n", sep = "")
 ```
 
 ### Exploratory analyses
@@ -1034,12 +1068,22 @@ if (!is.null(res2)) {
 ```{r}
 #| label: fig-phase2
 #| eval: !expr have_phase2
-#| fig-cap: "Anagrams solved by social class and welcome letter: original study (Figure 2, ±1 SE read off the figure), Phase 1 replication, and Phase 2 extension (ANCOVA-adjusted means, ±1 SE)."
+#| fig-cap: "*Mean Number of Anagrams Solved by Social Class and Welcome Letter in the Original Study, the Replication, and the Extension*"
 #| fig-width: 10
-#| fig-height: 4
+#| fig-height: 4.2
 comparison_plot(Original = original,
                 `Phase 1: replication` = if (!is.null(res1)) res1$means,
                 `Phase 2: extension` = if (!is.null(res2)) res2$means)
+```
+
+```{r}
+#| label: fig-phase2-note
+#| eval: !expr have_phase2
+#| echo: false
+#| results: asis
+cat("*Note.* Original values are the adjusted means from Stephens et al. (2012, Figure 2), ",
+    "with ±1 standard error read off that figure. Replication and extension values are means ",
+    "adjusted for race and high school GPA; error bars are ±1 standard error.\n", sep = "")
 ```
 
 ## Discussion
