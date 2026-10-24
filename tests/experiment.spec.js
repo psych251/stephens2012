@@ -14,7 +14,7 @@ const { test, expect, devices } = require("@playwright/test");
 
 const EMULATOR = process.env.EMULATOR === "1" || !!process.env.FIRESTORE_EMULATOR_HOST;
 const PROJECT = "demo-psych251";
-const EXPERIMENT_ID = "stephens2012-pilot-b";
+const EXPERIMENT_ID = "stephens2012-final";
 const FS = `http://localhost:8080/v1/projects/${PROJECT}/databases/(default)/documents`;
 // Shorter clocks for tests (honoured only in emulator runs and on localhost): the letter's
 // Continue button unlocks after 1 s, and the robot finishes all 20 anagrams long before 120 s.

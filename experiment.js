@@ -33,8 +33,9 @@ const EXPERIMENT = {
   // Firestore path: experiments/<id>/participants/... Change it for each phase so pilot data
   // and real data never mix (e.g. "stephens2012-pilot-b", "stephens2012-final").
   // "stephens2012-pilot-a" holds test sessions from building and checking the study;
-  // "stephens2012-pilot-a2" is Pilot A (non-naive); Pilot B (naive, SONA) saves here.
-  id: "stephens2012-pilot-b",
+  // "stephens2012-pilot-a2" is Pilot A (non-naive); "stephens2012-pilot-b" is Pilot B (naive,
+  // SONA). Final data collection saves here.
+  id: "stephens2012-final",
 
   // Trials per Firestore write. 1 = save every trial the moment it finishes (dropouts leave
   // partial data). A participant makes roughly 20-60 anagram attempts, well inside the quota.
