@@ -56,10 +56,16 @@ async function doAnagrams(page) {
   }
 }
 
-// Self-report questions are one per screen. A single-choice answer moves on by itself; typed
-// and multi-select answers need Next (or Continue on a survey's last screen).
+// Self-report questions are one per screen, and every answer needs Next (or Continue on a
+// survey's last screen); nothing moves on by itself.
+async function clickNext(page) {
+  await page.locator('input[value="Next"]:visible, input[value="Continue"]:visible').first().click();
+}
 async function choose(page, question, text) {
   await pick(page, question, text);
+  await page.waitForTimeout(150);
+  await expect(page.locator(`[data-name="${question}"]`)).toBeVisible();     // no auto-advance
+  await clickNext(page);
   await expect(page.locator(`[data-name="${question}"]`)).toHaveCount(0);   // moved on
 }
 async function typeAnswer(page, question, value, button = "Next") {
@@ -70,7 +76,8 @@ async function typeAnswer(page, question, value, button = "Next") {
 
 async function startStudy(page, freshman = "Yes") {
   await page.getByRole("button", { name: "I agree to participate" }).click();
-  await pick(page, "freshman", freshman);                 // moves on by itself
+  await pick(page, "freshman", freshman);
+  await clickNext(page);
 }
 
 // Welcome letter: one page revealed step by step. "Show next" reveals each theme, then each
@@ -240,6 +247,9 @@ test.describe("experiment", () => {
     expect(demo.response.household_income).toBe(4);
     expect(demo.response.race).toEqual(["white"]);
     expect(demo.first_gen).toBe(true);
+    expect(Object.keys(mc.question_times_ms).sort()).toEqual(["mc_individually_motivated", "mc_work_together"]);
+    expect(Object.values(mc.question_times_ms).every((ms) => ms > 0)).toBe(true);
+    expect(demo.question_times_ms.age).toBeGreaterThan(0);
 
     // Demographics come after the task (EXPERIMENT.demographics_position = "after").
     const order = trials.map((t) => t.task);

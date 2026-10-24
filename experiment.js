@@ -170,6 +170,7 @@ function classifyFirstGen(p1, p2) {
 
   const jsPsych = initJsPsych({
     show_progress_bar: true,
+    message_progress_bar: "Your progress",
     auto_update_progress_bar: false, // the anagram task has a variable number of trials
     on_data_update: (trial) => saver.onTrial(trial),
     on_finish: async () => {
@@ -210,7 +211,19 @@ function classifyFirstGen(p1, p2) {
           : "");
     },
   });
-  const progress = (p) => jsPsych.progressBar && (jsPsych.progressBar.progress = p);
+  // Progress bar: styled in src/experiment.css; shows a percentage beside the bar.
+  const progress = (p) => {
+    if (!jsPsych.progressBar) return;
+    jsPsych.progressBar.progress = p;
+    let pct = document.getElementById("progress-percent");
+    const bar = document.getElementById("jspsych-progressbar-container");
+    if (!pct && bar) {
+      pct = document.createElement("span");
+      pct.id = "progress-percent";
+      bar.appendChild(pct);
+    }
+    if (pct) pct.textContent = `${Math.round(p * 100)}% complete`;
+  };
 
   // Record the participant id and URL parameters on every trial row.
   jsPsych.data.addProperties({
@@ -247,6 +260,7 @@ function classifyFirstGen(p1, p2) {
       </div>`,
     choices: ["I agree to participate", "I do not agree"],
     data: { task: "consent" },
+    on_load: () => progress(0),   // shows the progress bar's "0% complete" label from the start
     on_finish: (data) => {
       data.consented = data.response === 0;
       if (!data.consented) {
@@ -269,12 +283,9 @@ function classifyFirstGen(p1, p2) {
   // SurveyJS stores this answer as "none"; the report treats it as missing.
   const requiredPreferNot = { isRequired: true, showNoneItem: true, noneText: "Prefer not to say" };
 
-  // Self-report questions are shown one per screen. Choosing an answer to a single-choice
-  // question moves on automatically (the last one finishes the survey). Questions that need
-  // typing, a multi-select, or the "Self-describe"/"Other" text wait for Next instead, since
-  // there is no single moment when the answer is complete. (SurveyJS's own auto-advance also
-  // fires when a typed box loses focus, so a click on Next could skip a screen; this does not.)
-  // A page-level instruction is carried onto each question.
+  // Self-report questions are shown one per screen, and every one needs a click on Next (or
+  // Continue on a survey's last screen): no auto-advance, so each answer gets a moment's
+  // check before moving on. A page-level instruction is carried onto each question.
   const oneQuestionPerScreen = (json) => ({
     ...json,
     pageNextText: "Next",
@@ -282,15 +293,31 @@ function classifyFirstGen(p1, p2) {
       elements: [page.description && !el.description ? { ...el, description: page.description } : el],
     }))),
   });
-  const autoAdvanceSingleChoice = (survey) => {
-    survey.onValueChanged.add((sender, options) => {
-      const q = options.question;
-      if (!q || q.getType() !== "radiogroup" || q.isOtherSelected) return;
-      setTimeout(() => {
-        if (!sender.currentPage || !sender.currentPage.questions.includes(q)) return;
-        if (sender.isLastPage) sender.completeLastPage(); else sender.nextPage();
-      }, 350); // a brief pause so the chosen answer is seen before the screen changes
-    });
+  // For each survey: time spent on each question (ms, summed over visits if they go back),
+  // saved as `question_times_ms` on the survey's trial row; and the progress bar moves one step
+  // per question across the survey's share of the study, [from, to].
+  const trackSurvey = (trial, from, to) => {
+    const times = {};
+    trial.survey_function = (survey) => {
+      let shownAt = performance.now();
+      const n = Math.max(1, survey.visiblePages.length);
+      const record = (page) => {
+        const q = page && page.questions[0];
+        if (q) times[q.name] = (times[q.name] || 0) + Math.round(performance.now() - shownAt);
+        shownAt = performance.now();
+      };
+      progress(from);
+      survey.onCurrentPageChanged.add((sender, options) => {
+        record(options.oldCurrentPage);
+        progress(from + (to - from) * (sender.currentPageNo / n));
+      });
+      survey.onComplete.add((sender) => { record(sender.currentPage); progress(to); });
+    };
+    const original = trial.on_finish;
+    trial.on_finish = (data) => {
+      data.question_times_ms = { ...times };
+      if (original) original(data);
+    };
   };
   const eligibility = {
     type: jsPsychSurvey,
@@ -566,6 +593,7 @@ function classifyFirstGen(p1, p2) {
     if (anagramTaskRunning) { focusLosses++; trialFocusLosses++; }
   });
 
+  let anagramProgressTick = null;
   function startAnagramTask() {
     const items = STIMULI.anagrams.slice();
     queue = EXPERIMENT.randomize_anagram_order ? jsPsych.randomization.shuffle(items) : items;
@@ -573,6 +601,10 @@ function classifyFirstGen(p1, p2) {
     deadline = taskStartedAt + ANAGRAM_MS;
     anagramTaskRunning = true;
     saver.updateParticipant({ anagram_order: queue.map((it) => it.item_id), anagram_ms: ANAGRAM_MS });
+    // The progress bar advances with the clock (20% -> 78%), not only between anagrams.
+    anagramProgressTick = setInterval(() => {
+      progress(0.2 + 0.58 * Math.min(1, (Date.now() - taskStartedAt) / ANAGRAM_MS));
+    }, 2000);
   }
 
   const anagramTrial = {
@@ -600,7 +632,7 @@ function classifyFirstGen(p1, p2) {
         ? data.response.toLowerCase().replace(/\s+/g, "") === item.solution
         : null;
       if (data.action === "skip") queue.push(item);
-      progress(0.2 + 0.55 * Math.min(1, (Date.now() - taskStartedAt) / ANAGRAM_MS));
+      progress(0.2 + 0.58 * Math.min(1, (Date.now() - taskStartedAt) / ANAGRAM_MS));
     },
   };
   const anagramTask = {
@@ -619,6 +651,7 @@ function classifyFirstGen(p1, p2) {
     data: { task: "anagram_end" },
     on_start: () => {
       anagramTaskRunning = false;
+      clearInterval(anagramProgressTick);
       const rows = jsPsych.data.get().filter({ task: "anagram" }).values();
       const submitted = rows.filter((r) => r.action === "submit");
       const summary = {
@@ -633,7 +666,7 @@ function classifyFirstGen(p1, p2) {
       jsPsych.data.addProperties({ anagrams_solved: summary.anagrams_solved });
       saver.updateParticipant(summary);
     },
-    on_finish: (data) => { data.reason = queue.length > 0 ? "time" : "finished"; progress(0.8); },
+    on_finish: (data) => { data.reason = queue.length > 0 ? "time" : "finished"; progress(0.78); },
   };
 
   // -------------------------------------------------------------------------
@@ -662,7 +695,6 @@ function classifyFirstGen(p1, p2) {
       const num = (v) => (typeof v === "number" ? v : null);
       data.mc_individually_motivated = num(r.mc_individually_motivated);
       data.mc_work_together = num(r.mc_work_together);
-      progress(0.85);
     },
   };
 
@@ -749,7 +781,6 @@ function classifyFirstGen(p1, p2) {
         first_gen: data.first_gen,
         race_white_only: data.race_white_only,
       });
-      progress(0.92);
     },
   };
 
@@ -775,7 +806,6 @@ function classifyFirstGen(p1, p2) {
     on_finish: (data) => {
       const r = data.response || {};
       saver.updateParticipant({ outside_help: r.outside_help ?? null });
-      progress(0.97);
     },
   };
 
@@ -814,8 +844,12 @@ function classifyFirstGen(p1, p2) {
 
   for (const t of [eligibility, manipulationCheck, demographics, finalQuestions]) {
     t.survey_json = oneQuestionPerScreen(t.survey_json);
-    t.survey_function = autoAdvanceSingleChoice;
   }
+  // Progress-bar share of each survey (letter ends at 0.2; the anagram task runs 0.2 to 0.78).
+  trackSurvey(eligibility, 0, 0.03);
+  trackSurvey(manipulationCheck, 0.78, 0.84);
+  trackSurvey(demographics, 0.84, 0.95);
+  trackSurvey(finalQuestions, 0.95, 0.98);
 
   const before = EXPERIMENT.demographics_position === "before";
   await jsPsych.run([
