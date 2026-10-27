@@ -436,6 +436,10 @@ The results of this study suggests that a small change in the
 university's cultural framing may foster appreciation of multiple
 cultural models of self and promote positive performance among first-generation college students.
 
+Hypothesis 1: Representing university culture with independent norms would create a cultural mismatch for first-generation college students that would undermine their performance and lead to a performance gap between first-generation and continuing-generation students. 
+
+Hypothesis 2: Representing university culture with interdependent norms would create a cultural match for first-generation college students that would boost their performance and reduce the performance gap between first-generation and continuing-generation students. 
+
 
 ## Methods
 
@@ -534,16 +538,25 @@ if (!is.null(pilot)) {
                map_int(pilot$passed[-1], sum))) |>
     knitr::kable(caption = sprintf("Pilot B: participants remaining after each step (steps apply in order). Median time to complete: %.1f minutes.",
                                    median(pd$minutes[done], na.rm = TRUE)))
+  # Manipulation check ratings (1-7), one row per participant.
+  mc_pilot <- pilot$trials |>
+    filter(task == "manipulation_check") |>
+    transmute(participant_id,
+              mc_ind = as.numeric(mc_individually_motivated), mc_tog = as.numeric(mc_work_together)) |>
+    distinct(participant_id, .keep_all = TRUE)
   completers_pilot <- pd[done, ] |>
+    left_join(mc_pilot, by = "participant_id") |>
     transmute(Letter = str_to_sentence(as.character(condition)),
               `Social class` = recode(as.character(social_class), `first-gen` = "First-generation",
                                       `continuing-gen` = "Continuing-generation", .missing = "Unclassifiable"),
               `Anagrams solved (of 20)` = anagrams_solved,
               `Anagrams skipped` = as.numeric(anagram_skips),
               `Seconds on letter` = round(as.numeric(letter_time_ms) / 1000),
-              Minutes = round(minutes, 1)) |>
+              Minutes = round(minutes, 1),
+              `Expects individual motivation (1–7)` = mc_ind,
+              `Expects working together (1–7)` = mc_tog) |>
     arrange(Letter, `Social class`) |>
-    knitr::kable(caption = sprintf("Pilot B completers (n = %d), on the pilot anagram set (mean Gilhooly BR 56; replaced afterwards by the final set, mean BR 80). Mean solved: %.1f of 20 (%.0f%%); the original's cell means imply about 8 of 20.",
+    knitr::kable(caption = sprintf("Pilot B completers (n = %d), on the pilot anagram set (mean Gilhooly BR 56; replaced afterwards by the final set, mean BR 80). Mean solved: %.1f of 20 (%.0f%%); the original's cell means imply about 8 of 20. The last two columns are the manipulation check: agreement that Stanford expects students to be individually motivated and to work together (original means, independent vs. interdependent letter: 6.6 vs. 6.1 and 5.6 vs. 6.1).",
                                    sum(done), mean(pd$anagrams_solved[done], na.rm = TRUE),
                                    5 * mean(pd$anagrams_solved[done], na.rm = TRUE)))
   print(funnel_pilot)
