@@ -124,8 +124,8 @@ original_dod_se <- sqrt(sum(original$se^2))
     performance of first-generation college students. *Journal of
     Personality and Social Psychology*, 102(6), 1178–1197.
     <https://doi.org/10.1037/a0027143>
--   **Preregistration:** [OSF registration](https://osf.io/XXXXX)
-    *(registered YYYY-MM-DD, before final data collection)*
+-   **Preregistration:** [OSF registration](https://osf.io/dvuw8)
+    *(registered 2026-10-30, before final data collection)*
 -   **Live experiment:** <https://psych251.github.io/stephens2012/>
     (take the study exactly as participants did)
 -   **Repository:** <https://github.com/psych251/stephens2012>
