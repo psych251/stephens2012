@@ -55,9 +55,8 @@ library(jsonlite)
 
 # Must match EXPERIMENT.id in experiment.js, and the --experiment you passed to the export.
 # Phase 2 runs under its own id, so its data never mix with Phase 1's.
-# Pilot B for the pre-data-collection milestone; switch to "stephens2012-final" (the id the
-# live experiment now saves to) once the report is approved and registered.
-experiment_id        <- "stephens2012-pilot-b"
+# Final data collection (registered as tag prereg-phase1, which ran on Pilot B).
+experiment_id        <- "stephens2012-final"
 experiment_id_phase2 <- "stephens2012-phase2"
 pilot_id             <- "stephens2012-pilot-b"  # reported under Methods; stays fixed after the switch
 ```
