@@ -238,7 +238,11 @@ read_phase <- function(id) {
            social_class    = factor(if_else(first_gen, "first-gen", "continuing-gen"),
                                     levels = c("first-gen", "continuing-gen")),
            condition       = factor(condition, levels = c("independent", "interdependent")),
-           race_white      = as.numeric(as.logical(race_white_only)),
+           # Race covariate: 1 if the participant selected White (alone or with other groups),
+           # 0 otherwise. Recomputed from the raw selections; the browser's `race_white_only`
+           # (White as the only selection) is used only if the answer is missing.
+           race_white      = as.numeric(coalesce(str_detect(race, "(^|;)white(;|$)"),
+                                                 as.logical(race_white_only))),
            anagrams_solved = as.numeric(anagrams_solved))
 
   rules <- list(
@@ -440,6 +444,7 @@ Hypothesis 1: Representing university culture with independent norms would creat
 
 Hypothesis 2: Representing university culture with interdependent norms would create a cultural match for first-generation college students that would boost their performance and reduce the performance gap between first-generation and continuing-generation students. 
 
+The study uses a mixed design (one factor is experimental and one factor is quasi-experimental), 2 (randomly assigned welcome letter condition: interdependent vs. independent) x 2 (social class: first-generation vs. continuing-generation) between-subjects design. 
 
 ## Methods
 
@@ -477,7 +482,7 @@ The original effect size is partial η² = .054, f = 0.24. The N for 80% power i
 
 ### Planned sample
 
-My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. The sampling frame is first-year (freshman) Stanford students who are 18 or older and enrolled in the Psych 1 course. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to continue recruiting participants in the second part of this replication project from the same participant pool until 11/02/2026. I will analyze the data that I have. I cannot collect data from Prolific because certain elements in the welcome letter require institution-specific information (e.g., name of university, current President information).
+My sampling frame is first-year (freshman) Stanford students who are 18 or older, enrolled in the Psych 1 course, and recruited through the SONA participant pool. My ideal sample size is 224, based on 80% power of the original study's effect size and adjusted for potentially unequal groups. This is roughly equivalent to the alternative calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect (N = 220). I plan to stop collecting data once 224 participants who meet the study criteria complete the study. Given that the Fall 2026 course enrollment is approximately 248, I anticipate that it would be highly unlikely for me to reach my ideal sample size. Therefore, I plan to continue recruiting participants in the second part of this replication project from the same participant pool until 11/02/2026. I will analyze the data that I have. I cannot collect data from Prolific because certain elements in the welcome letter require institution-specific information (e.g., name of university, current President information).
 
 ### Materials
 
@@ -497,9 +502,16 @@ Interested first-year students enrolled in Psych 1 will sign-up for the study vi
 
 ### Analysis plan
 
-**Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA (Type III), controlling for race (White vs. non-White) and self-reported unweighted high school GPA. The effect sizes will be the difference of differences with 95% CI and partial η².
+**Key analysis of interest.** The number of anagrams solved will depend on the interaction between social class (first-generation vs. continuing-generation) and condition (interdependent vs. independent) tested with a 2 X 2 ANCOVA (Type III), controlling for race (White vs. non-White) and self-reported unweighted high school GPA. The effect sizes will be the difference of differences with 95% CI and partial η². 
+To assess Hypothesis 1, whether the independent condition leads to a performance gap between first-generation and continuing-generation students, I will use a one-way ANCOVA, controlling for race (White/non-White) and self-reported high school GPA, examining the independent letter subset testing social class factor. 
 
-**Additional analyses.** Four one-way ANCOVAs within each level of the other factor, controlling for race (White/non-White) and self-reported high school GPA: (1) interdependent letter subset testing social class factor, (2) independent letter subset testing social class factor, (3) first-generation student subset testing condition factor, (4) continuing-generation student subset testing condition factor. Independent samples t-tests on the two manipulation check items.
+To test Hypothesis 2, whether the interdependent condition leads to no performance gap between first-generation and continuing-generation students, I will use a one-way ANCOVA, controlling for race (White/non-White) and self-reported high school GPA, examining the interdependent letter subset testing social class factor. 
+
+**Additional analyses.** Two additional one-way ANCOVAs within each level of the other factor, controlling for race (White/non-White) and self-reported high school GPA will be conducted: first-generation student subset testing condition factor and continuing-generation student subset testing condition factor. Finally, I will conduct independent samples t-tests comparing the interdependent vs. independent letter conditions on the two manipulation check items.
+
+**Indices.** Participants are first-generation college students if they endorsed that both of their parents' highest level of education was "Less than high school," "High school diploma or GED," "Some college, no degree," or "Associate's degree (2-year);" or if they endorsed that one of their parents' highest level of education was "Less than high school," "High school diploma or GED," "Some college, no degree," or "Associate's degree (2-year)" and they answered "Don't know" or "Not Applicable" for their other parent. Participants are continuing-generation college students if  they endorsed at least one of their parents' highest level of education was "Bachelor's degree (4-year)" or "Graduate or professional degree (e.g., MA, PhD, MD, JD)." Participants' social class is unclassifiable if they answered "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answered "Don't know" to both parents' highest level of education.
+
+Participants are white if they selected "White" to the question "What is your race or ethnicity? Select all that apply." Participants are non-White if they did not select "White."
 
 **Exclusions.** Participants will be excluded if they did not consent; they are not freshman; they did not attempt any anagrams; they did not complete the study; they did not report their race/ethnicity; they did not report high school GPA; or their social class is not classifiable (i.e., answering "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answering "Don't know" to both parents' highest level of education).
 
@@ -634,7 +646,7 @@ if (nrow(keep) > 0) {
     summarise(N = n(),
               `Mean age` = round(mean(age, na.rm = TRUE), 1),
               `% women` = round(100 * mean(gender %in% "Woman")),
-              `% White only` = round(100 * mean(race_white, na.rm = TRUE)),
+              `% White` = round(100 * mean(race_white, na.rm = TRUE)),
               `Mean HS GPA` = round(mean(hs_gpa, na.rm = TRUE), 2),
               `Mean income (1–8)` = round(mean(household_income, na.rm = TRUE), 1),
               .groups = "drop") |>
@@ -675,7 +687,7 @@ if (!is.null(res1)) {
     as.data.frame() |>
     rownames_to_column("Term") |>
     mutate(Term = recode(Term, `(Intercept)` = "Intercept", class_c = "Social class",
-                         cond_c = "Letter condition", race_white = "Race (White only vs not)",
+                         cond_c = "Letter condition", race_white = "Race (White vs not)",
                          hs_gpa = "High school GPA", `class_c:cond_c` = "Social class × Letter")) |>
     knitr::kable(digits = 3, caption = "Type III ANCOVA on anagrams solved. The Social class × Letter row is the key test.")
 } else {
