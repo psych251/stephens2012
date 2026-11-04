@@ -138,6 +138,7 @@ original_dod_se <- sqrt(sum(original$se^2))
 | Tool and model | What it was used for | How you checked the output |
 |------------------------|------------------------|------------------------|
 | *Claude (Opus 5.5)* | *Provided explanations to the code originally provided in this document (e.g., power analysis, key statistics); wrote experiment and analysis code; developed experiment materials; reviewed comments; Figure and Table styling* | *Manually verified each line of code and other output with original materials; asked Claude to clarify components that were confusing; Made subsequent edits and revisions* |
+| *Claude (Opus 5.5)* | *Exported the final data and counted completers and exclusions; compared anagram solve rates with the pilots; matched SONA sign-up times to sessions for granting credit; identified the post-stop-date session and the two sessions from one computer* | *(fill in)* |
 
 
 I wrote all of the text in this report myself. AI tools were not used to
@@ -270,12 +271,13 @@ covariates_with_variance <- function(dd) {
 # software for an ANCOVA reported this way). Both factors are coded -1/2 and +1/2, so the
 # interaction coefficient is the difference of differences on the anagram scale:
 #   (first-gen minus continuing-gen, interdependent) - (first-gen minus continuing-gen, independent)
-# Returns NULL until every cell has at least 2 participants. A covariate with no variation
+# Returns NULL until every cell has at least 1 participant (a cell with only 1 is fitted
+# exactly, so its mean has no error of its own; the report flags this). A covariate with no variation
 # (possible in a tiny pilot) is left out, and `covariates` records which were used.
 fit_ancova <- function(keep) {
   if (is.null(keep) || nrow(keep) == 0) return(NULL)
   cells <- count(keep, social_class, condition, .drop = FALSE)
-  if (nrow(cells) < 4 || any(cells$n < 2)) return(NULL)
+  if (nrow(cells) < 4 || any(cells$n < 1)) return(NULL)
   dd <- keep |> mutate(class_c = if_else(social_class == "first-gen", 0.5, -0.5),
                        cond_c  = if_else(condition == "interdependent", 0.5, -0.5))
   covs <- covariates_with_variance(dd)
@@ -289,7 +291,7 @@ fit_ancova <- function(keep) {
            cond_c  = if_else(condition == "interdependent", 0.5, -0.5),
            race_white = mean(dd$race_white), hs_gpa = mean(dd$hs_gpa))
   pr <- predict(m, newdata = grid, se.fit = TRUE)  # adjusted (estimated marginal) means
-  list(model = m, anova = a, covariates = covs, N = nrow(dd), cells = cells,
+  list(model = m, anova = a, covariates = covs, N = nrow(dd), cells = cells, min_cell_n = min(cells$n),
        F = a[term, "F value"], df1 = 1, df2 = a["Residuals", "Df"], p = a[term, "Pr(>F)"],
        eta_p2 = a[term, "F value"] / (a[term, "F value"] + a["Residuals", "Df"]),
        estimate = unname(coef(m)[term]),
@@ -690,8 +692,25 @@ if (!is.null(res1)) {
                          hs_gpa = "High school GPA", `class_c:cond_c` = "Social class × Letter")) |>
     knitr::kable(digits = 3, caption = "Type III ANCOVA on anagrams solved. The Social class × Letter row is the key test.")
 } else {
-  message("ANCOVA not run yet: it needs at least 2 analysed participants in each of the four ",
+  message("ANCOVA not run yet: it needs at least 1 analysed participant in each of the four ",
           "social class × letter cells (currently ", nrow(keep), " analysed in total).")
+}
+```
+
+```{r}
+#| label: confirmatory-caution
+#| eval: !expr have_data
+#| echo: false
+#| results: asis
+# The ANCOVA runs once every cell has 1 participant; flag cells that have only 1.
+if (!is.null(res1) && res1$min_cell_n < 2) {
+  small <- filter(res1$cells, n < 2)
+  cat(sprintf(paste0(
+    "::: {.callout-warning}\n## Single-participant cells\n",
+    "%d of the four cells have a single participant (%s). That person's score alone determines ",
+    "the cell mean, so the interaction and the follow-up tests involving that cell rest on one ",
+    "individual, and their *p* values and confidence intervals should not be taken at face value.\n:::\n"),
+    nrow(small), paste(small$social_class, small$condition, sep = " / ", collapse = "; ")))
 }
 ```
 
@@ -719,7 +738,7 @@ if (!is.null(res1)) {
                       sprintf("[%.1f, %.1f]", res1$ci_low, res1$ci_high))) |>
     knitr::kable(digits = 3, caption = "Effect size: the Social Class × Condition interaction as a difference of differences in anagrams solved, and as partial η².")
 } else {
-  message("Replication effect size not computed yet: the ANCOVA needs at least 2 analysed participants per cell.")
+  message("Replication effect size not computed yet: the ANCOVA needs at least 1 analysed participant per cell.")
 }
 ```
 
@@ -761,9 +780,10 @@ if (!is.null(res1)) {
 cat("*Note.* Original values are the adjusted means from Stephens et al. (2012, Figure 2); ",
     "error bars are ±1 standard error, read off that figure. ",
     if (!is.null(res1)) {
-      "Replication values are means adjusted for race and high school GPA (covariates at their sample means); error bars are ±1 standard error."
+      paste0("Replication values are means adjusted for race and high school GPA (covariates at their sample means); error bars are ±1 standard error.",
+             if (res1$min_cell_n < 2) " At least one replication cell has a single participant, so that bar is one person's score adjusted for the covariates, and its error bar comes from the variation pooled across the other cells, not from variation within that cell." else "")
     } else {
-      "Replication values are unadjusted means, because at least one condition has fewer than 2 analysed participants, so the ANCOVA cannot be estimated yet; n is shown for each bar, and error bars (±1 standard error) appear only where n ≥ 2."
+      "Replication values are unadjusted means, because at least one condition has no analysed participants, so the ANCOVA cannot be estimated yet; n is shown for each bar, and error bars (±1 standard error) appear only where n ≥ 2."
     }, "\n", sep = "")
 ```
 
