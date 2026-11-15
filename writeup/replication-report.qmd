@@ -141,7 +141,7 @@ original_dod_se <- sqrt(sum(original$se^2))
 |------------------------|------------------------|------------------------|
 | *Claude (Opus 5.5)* | *Provided explanations to the code originally provided in this document (e.g., power analysis, key statistics); wrote experiment and analysis code; developed experiment materials; reviewed comments; Figure and Table styling* | *Manually verified each line of code and other output with original materials; asked Claude to clarify components that were confusing; Made subsequent edits and revisions* |
 | *Claude (Opus 5.5)* | *Exported the final data and counted completers and exclusions; compared anagram solve rates with the pilots; matched SONA sign-up times to sessions for granting credit; identified the post-stop-date session and the two sessions from one computer* | *Manually verified with original exported dataset; asked Claude to clarify unclear components* |
-| *Claude (Opus 5.5)* | *Rebuilt the Phase 2 anagram set and task settings; Wrote experiment and analysis code* | *Manually verified each word replaced; Made subsequent edits and revisions* |
+| *Claude (Opus 5.5)* | *Rebuilt the Phase 2 anagram set and task settings; Wrote experiment and analysis code; Adversarial review* | *Manually verified each word replaced; Made subsequent edits and revisions* |
 
 I wrote all of the text in this report myself. AI tools were not used to
 write, rewrite or paraphrase it, and were not used to generate, alter,
@@ -440,6 +440,15 @@ have_data   <- !is.null(phase1)
 have_phase2 <- !is.null(phase2)
 res1 <- if (have_data) fit_ancova(phase1$keep)
 res2 <- if (have_phase2) fit_ancova(phase2$keep)
+
+# Phase 1 numbers quoted in the text (inline code), so the prose always matches the data.
+# "–" until the ANCOVA can run.
+apa_p <- function(x, digits) sub("^0", "", sprintf(paste0("%.", digits, "f"), x))
+p1_txt <- if (!is.null(res1)) list(
+  N = res1$N, n_fg = res1$cells |> filter(social_class == "first-gen") |> pull(n) |> sum(),
+  n_cg = res1$cells |> filter(social_class == "continuing-gen") |> pull(n) |> sum(),
+  F = sprintf("F(%d, %d) = %.2f", res1$df1, res1$df2, res1$F), p = apa_p(res1$p, 2), eta = apa_p(res1$eta_p2, 3)
+) else list(N = "–", n_fg = "–", n_cg = "–", F = "F = –", p = "–", eta = "–")
 ```
 
 ```{r}
@@ -567,7 +576,7 @@ To test Hypothesis 2, whether the interdependent condition leads to no performan
 
 **Indices.** Participants are first-generation college students if they endorsed that both of their parents' highest level of education was "Less than high school," "High school diploma or GED," "Some college, no degree," or "Associate's degree (2-year);" or if they endorsed that one of their parents' highest level of education was "Less than high school," "High school diploma or GED," "Some college, no degree," or "Associate's degree (2-year)" and they answered "Don't know" or "Not Applicable" for their other parent. Participants are continuing-generation college students if  they endorsed at least one of their parents' highest level of education was "Bachelor's degree (4-year)" or "Graduate or professional degree (e.g., MA, PhD, MD, JD)." Participants' social class is unclassifiable if they answered "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answered "Don't know" to both parents' highest level of education.
 
-Participants are white if they selected "White" to the question "What is your race or ethnicity? Select all that apply." Participants are non-White if they did not select "White."
+Participants are white if they selected "White" to the question "What is your race or ethnicity? Select all that apply." Participants are non-White if they did not select "White." 
 
 **Exclusions.** Participants will be excluded if they did not consent; they are not freshman; they did not attempt any anagrams; they did not complete the study; they did not report their race/ethnicity; they did not report high school GPA; or their social class is not classifiable (i.e., answering "Don't know" for one parent's highest level of education and "Not Applicable" for the other parent's or answering "Don't know" to both parents' highest level of education).
 
@@ -731,7 +740,7 @@ Instead of data collection stopping at 11/02/26, data collection will continue v
 
 ### Data preparation
 
-As shown in the previous section, all participants who completed the study passed every exclusion rule. 
+One participant was excluded because their race/ethnicity could not be determined.
 
 ### Confirmatory analysis
 
@@ -940,7 +949,7 @@ if (nrow(errors) > 0) {
 
 ### Summary of replication attempt
 
-As of 11/07/26, only 19 first-year students (three first-generation, 16 continuing-generation) have completed my study, which is below my target sample size of 224. All participants met the study criteria and were included in the analyses. The key analysis, a 2 x 2 ANCOVA, with race and high school GPA as covariates, was not significant, F(1, 13) = 0.06, p = .81, partial η² = .005. The small effect size and lack of significance on the key test tells me that these findings failed to replicate the original findings. However, given the small sample, and the small unbalanced cells (e.g., first-generation x interdependent condition n = 1), these results may not be reliable. 
+As of 11/07/26, only `r p1_txt$N` first-year students (`r p1_txt$n_fg` first-generation, `r p1_txt$n_cg` continuing-generation) have completed my study, which is below my target sample size of 224. Eighteen participants met the study criteria and were included in the analyses. The key analysis, a 2 x 2 ANCOVA, with race and high school GPA as covariates, was not significant, `r p1_txt$F`, p = `r p1_txt$p`, partial η² = `r p1_txt$eta`. The small effect size and lack of significance on the key test tells me that these findings failed to replicate the original findings. However, given the small sample, and the small unbalanced cells (e.g., first-generation x interdependent condition n = 1), these results may not be reliable. 
 
 ### Commentary
 
@@ -958,13 +967,14 @@ Several plausible reasons Phase 1 did not reproduce original result include: (1)
 
 | # | Category | Phase 1 | Phase 2 | Why |
 |---------------|---------------|---------------|---------------|---------------|
-| 1 | Sample | 19 analysed participants from the Psych 1 study pool | 220 analysed participants from Prolific | Prolific has a larger pool of eligible first-year undergraduate students (resides in the U.S., is enrolled in a four-year college, is at least 18 years old, and is fluent in English), allowing my study to reach the target sample size and to recruit balanced groups. |
-| 2 | Materials | The welcome letter depicts a message from Stanford University's current president. | The welcome letter will not depict a message from any specific university president and opens with "Imagine you have just been admitted to a university and receive this welcome letter." | Relevance to Prolific participant pool |
-| 3 | Anagram Task | 10 minutes; mean BR score of 80 | 5 minutes; mean BR score of 102  | To reduce ceiling effects |
-| 4 | Questions | "Your answer will not affect your credit"  | "Your answer will not affect your payment" | Relevance to Prolific participant pool |
-| 5 | Checks | The manipulation checks were worded as follows: "Stanford University expects college students to be individually motivated" and "Stanford University expects college students to work together with other students" | The manipulation checks will be worded as follows: "The university that sent this letter expects students to be individually motivated." and "The university that sent this letter expects students to work together with other students." | Relevance to Prolific participant pool |
-| 6 | Debrief | The letter “was not written or approved by President Levin or the Office of the President, and it does not represent Stanford’s official views”, and one letter “described Stanford in terms of independence” | The letter “was not written by any university’s president and does not describe a real university”, and one letter “described the university in terms of independence” | Relevance to Prolific participant pool |
-| 7 | Compensation | SONA Credit | $8 per hour | Relevance to Prolific participant pool |
+| 1 | Sample | `r p1_txt$N` analysed participants from the Psych 1 study pool | 200 analysed participants (100 continuing-generation, 100 first-generation) from Prolific | Prolific has a larger pool of eligible first-year undergraduate students (resides in the U.S., is enrolled in a four-year college, is at least 18 years old, and is fluent in English), allowing my study to reach the target sample size and to recruit balanced groups. |
+| 2 | Sampling logistics | One SONA study | Two Prolific studies split by a parent-education filter | To ensure balanced cells between first-generation and continuing-generation students |
+| 3 | Materials | The welcome letter depicts a message from Stanford University's current president. | The welcome letter will not depict a message from any specific university president and opens with "Imagine you have just been admitted to a university and receive this welcome letter." | Relevance to Prolific participant pool |
+| 4 | Anagram Task | 10 minutes; mean BR score of 80 | 5 minutes; mean BR score of 102  | To reduce ceiling effects |
+| 5 | Questions | "Your answer will not affect your credit"  | "Your answer will not affect your payment" | Relevance to Prolific participant pool |
+| 6 | Checks | The manipulation checks were worded as follows: "Stanford University expects college students to be individually motivated" and "Stanford University expects college students to work together with other students" | The manipulation checks will be worded as follows: "The university that sent this letter expects students to be individually motivated." and "The university that sent this letter expects students to work together with other students." | Relevance to Prolific participant pool |
+| 7 | Debrief | The letter “was not written or approved by President Levin or the Office of the President, and it does not represent Stanford’s official views”, and one letter “described Stanford in terms of independence” | The letter “was not written by any university’s president and does not describe a real university”, and one letter “described the university in terms of independence” | Relevance to Prolific participant pool |
+| 8 | Compensation | SONA Credit | $8 per hour | Relevance to Prolific participant pool |
 
 Everything not listed above is identical to Phase 1.
 
@@ -973,7 +983,7 @@ Everything not listed above is identical to Phase 1.
 
 ```{r}
 #| label: phase2-power
-phase2_n_total <- two_and_half  # planned analysed participants in Phase 2: 2.5 x the original N (220)
+phase2_n_total <- 200  # planned analysed participants in Phase 2 (100 per social class; Planned sample), below 2.5 x the original N (220) for cost
 # Share of first-generation students in the Phase 2 sample: balanced groups recruited on Prolific
 # (Changes from Phase 1, row 1), so half.
 phase2_first_gen_share <- 0.5
@@ -1014,15 +1024,15 @@ tibble(
   knitr::kable(caption = sprintf("Power of the Phase 2 key test at N = %d, two-sided α = .05.", phase2_n_total))
 ```
 
-I plan to recruit 220 participants via Prolific, based on the calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect. Since Phase 2 involves increasing the difficulty of the anagrams, as well as recruiting more participants, the estimates are expected to be more similar to the original study and the precision will be greater than Phase 1. 
+I plan to recruit 200 participants via Prolific, based on a middle ground between financial constraints and the calculation of 2.5 times the original sample size to detect an effect the original study had only 33% power to detect. Since Phase 2 involves increasing the difficulty of the anagrams, as well as recruiting more participants, the estimates are expected to be more similar to the original study and the precision will be greater than Phase 1. 
 
 ## Planned sample
 
-My sampling frame is first-year undergraduate students enrolled in a four-year college who reside in the U.S., are 18 or older, and are fluent in English.  
+My sampling frame is first-year undergraduate students (100 first-generation, 100 continuing-generation) enrolled in a four-year college who reside in the U.S., are 18 or older, and are fluent in English.  
 
 ### Procedure
 
-Interested participants will sign-up for the study via Prolific and be directed to the online study website. If participants are on a phone or tablet, they will be told to switch to a desktop or laptop. Once they are on a desktop or laptop, they will indicate whether they agree to participate. If they agree to participate, the next screen will ask whether they "Are a freshman" to confirm eligibility. If they answer anything other than "Yes," they will be thanked for their interest and asked to close the browser window. Participants who self-verify their first-year status will be randomly assigned one of the two welcome letters (interdependent, independent). Participants will be prompted to click "Show next" after a chunk of the letter is shown, with a 45-second minimum duration on the welcome letter page before participants can proceed to the next page. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams as possible. They will be shown a maximum of 20 anagrams; one anagram at a time in a random order; and are allowed to skip. The anagram task will show a 10-minute countdown timer. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to click "Continue." The next set of questions will cover the manipulation checks and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and thanked for participating. This study will approximately take 15 minutes to complete.
+Interested participants will sign-up for the study via Prolific and be directed to the online study website. If participants are on a phone or tablet, they will be told to switch to a desktop or laptop. Once they are on a desktop or laptop, they will indicate whether they agree to participate. If they agree to participate, the next screen will ask whether they "Are a freshman" to confirm eligibility. If they answer anything other than "Yes," they will be thanked for their interest and asked to close the browser window. Participants who self-verify their first-year status will be randomly assigned one of the two welcome letters (interdependent, independent). Participants will be prompted to click "Show next" after a chunk of the letter is shown, with a 45-second minimum duration on the welcome letter page before participants can proceed to the next page. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 5 minutes to complete as many anagrams as possible. They will be shown a maximum of 20 anagrams; one anagram at a time in a random order; and are allowed to skip. The anagram task will show a 5-minute countdown timer. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to click "Continue." The next set of questions will cover the manipulation checks and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and thanked for participating. This study will approximately take 8 minutes to complete. Participants will be compensated at $8/hour.
 
 ## Analysis plan
 
