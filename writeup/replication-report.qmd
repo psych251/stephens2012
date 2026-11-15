@@ -126,7 +126,9 @@ original_dod_se <- sqrt(sum(original$se^2))
     <https://doi.org/10.1037/a0027143>
 -   **Preregistration:** [OSF registration](https://osf.io/dvuw8)
     *(registered 2026-10-30, before final data collection)*
--   **Live experiment:** <https://psych251.github.io/stephens2012/>
+-   **Phase 1 Live experiment:** <https://psych251.github.io/stephens2012/>
+    (take the study exactly as participants did)
+-   **Phase 2 Live experiment:** <https://psych251.github.io/stephens2012/phase2/>
     (take the study exactly as participants did)
 -   **Repository:** <https://github.com/psych251/stephens2012>
     (experiment code, data, and this report)
@@ -223,6 +225,11 @@ read_phase <- function(id) {
               gender = answer(response, "gender"),
               sex = answer(response, "sex"),
               race = answer(response, "race"),
+              # The race question has no "Prefer not to say" option; a participant who picks
+              # "Other" and types that (or "decline") has not reported their race, so is
+              # excluded under the preregistered rule (Covariates reported), not coded non-White.
+              race_declined = race %in% "other" &
+                str_detect(str_to_lower(coalesce(answer(response, "race-Comment"), "")), "prefer not|decline"),
               household_income = suppressWarnings(as.numeric(answer(response, "household_income"))),
               parent1_education = answer(response, "parent1_education"),
               parent2_education = answer(response, "parent2_education")) |>
@@ -241,8 +248,9 @@ read_phase <- function(id) {
            # Race covariate: 1 if the participant selected White (alone or with other groups),
            # 0 otherwise. Recomputed from the raw selections; the browser's `race_white_only`
            # (White as the only selection) is used only if the answer is missing.
-           race_white      = as.numeric(coalesce(str_detect(race, "(^|;)white(;|$)"),
-                                                 as.logical(race_white_only))),
+           race_white      = if_else(race_declined %in% TRUE, NA_real_,
+                                     as.numeric(coalesce(str_detect(race, "(^|;)white(;|$)"),
+                                                         as.logical(race_white_only)))),
            anagrams_solved = as.numeric(anagrams_solved))
 
   rules <- list(
@@ -274,13 +282,14 @@ covariates_with_variance <- function(dd) {
 # Returns NULL until every cell has at least 1 participant (a cell with only 1 is fitted
 # exactly, so its mean has no error of its own; the report flags this). A covariate with no variation
 # (possible in a tiny pilot) is left out, and `covariates` records which were used.
-fit_ancova <- function(keep) {
+# `adjust = FALSE` fits the same 2 x 2 model with no covariates (exploratory robustness only).
+fit_ancova <- function(keep, adjust = TRUE) {
   if (is.null(keep) || nrow(keep) == 0) return(NULL)
   cells <- count(keep, social_class, condition, .drop = FALSE)
   if (nrow(cells) < 4 || any(cells$n < 1)) return(NULL)
   dd <- keep |> mutate(class_c = if_else(social_class == "first-gen", 0.5, -0.5),
                        cond_c  = if_else(condition == "interdependent", 0.5, -0.5))
-  covs <- covariates_with_variance(dd)
+  covs <- if (adjust) covariates_with_variance(dd) else character(0)
   m <- lm(reformulate(c("class_c * cond_c", covs), response = "anagrams_solved"), data = dd)
   if (df.residual(m) < 1) return(NULL)
   a <- car::Anova(m, type = 3)
@@ -343,12 +352,15 @@ ancova_kable <- function(res, caption) {
 
 # Follow-up tests reported in the original (p. 1190): the social class gap within each
 # letter, and the letter effect within each social class, each an ANCOVA with the covariates.
+# A test that cannot be estimated (too few people, or only one group in the subset) is kept as a
+# row saying so, so the table always lists the original's four tests.
 simple_effects <- function(keep) {
   run <- function(sub, term, label) {
     sub <- droplevels(sub)
-    if (nrow(sub) < 4 || n_distinct(sub[[term]]) < 2) return(NULL)
+    skip <- tibble(Test = label, `F` = NA_real_, df = sprintf("not estimable (n = %d)", nrow(sub)), p = NA_real_)
+    if (nrow(sub) < 4 || n_distinct(sub[[term]]) < 2) return(skip)
     m <- lm(reformulate(c(term, covariates_with_variance(sub)), response = "anagrams_solved"), data = sub)
-    if (df.residual(m) < 1) return(NULL)
+    if (df.residual(m) < 1) return(skip)
     a <- car::Anova(m, type = 3)
     tibble(Test = label, `F` = a[term, "F value"], df = sprintf("(1, %d)", a["Residuals", "Df"]),
            p = a[term, "Pr(>F)"])
@@ -358,7 +370,9 @@ simple_effects <- function(keep) {
                                       paste0("Social class gap, ", .x, " letter"))),
     map(levels(keep$social_class), ~ run(filter(keep, social_class == .x), "condition",
                                          paste0("Letter effect, ", .x, " students")))
-  )
+  ) |>
+    mutate(`F` = ifelse(is.na(`F`), "–", sprintf("%.3f", `F`)),
+           p   = ifelse(is.na(p), "–", sprintf("%.3f", p)))
 }
 
 # Side-by-side figure: adjusted mean anagrams solved (+/- 1 SE, the original Figure 2's error
@@ -843,6 +857,30 @@ if (!is.null(tab_mc) && nrow(tab_mc) > 0) {
 ```
 
 ```{r}
+#| label: robustness
+#| eval: !expr have_data
+# Exploratory robustness of the key estimate (not preregistered; the confirmatory result is the
+# first row). (a) Without the covariates: with one participant in a cell, the interaction is that
+# person's covariate-adjusted score, so adjustment can change its sign. (b) One session per
+# browser: a browser (anonymous uid) that completed the study more than once keeps only its
+# first analysed session, since a later run has already seen the letter and the anagrams.
+first_per_browser <- keep |> arrange(started_at) |> distinct(uid, .keep_all = TRUE)
+robust <- list(
+  "Confirmatory (as preregistered)"   = res1,
+  "No covariates (unadjusted)"        = fit_ancova(keep, adjust = FALSE),
+  "First session per browser only"    = fit_ancova(first_per_browser)
+)
+robust <- compact(robust)
+if (length(robust) > 0) {
+  imap_dfr(robust, ~ tibble(Analysis = .y, N = .x$N,
+                            `Difference of differences [95% CI]` = sprintf("%.1f [%.1f, %.1f]", .x$estimate, .x$ci_low, .x$ci_high),
+                            `F` = sprintf("F(1, %d) = %.2f", .x$df2, .x$F), p = sprintf("%.3f", .x$p))) |>
+    knitr::kable(caption = sprintf("Exploratory: robustness of the key estimate (anagrams). %d browser(s) contributed more than one analysed session.",
+                                   sum(count(keep, uid)$n > 1)))
+}
+```
+
+```{r}
 #| label: item-difficulty
 #| eval: !expr have_data
 # Exploratory: how hard each anagram was. Uses everyone who completed the study (not only the
@@ -921,10 +959,12 @@ Several plausible reasons Phase 1 did not reproduce original result include: (1)
 | # | Category | Phase 1 | Phase 2 | Why |
 |---------------|---------------|---------------|---------------|---------------|
 | 1 | Sample | 19 analysed participants from the Psych 1 study pool | 220 analysed participants from Prolific | Prolific has a larger pool of eligible first-year undergraduate students (resides in the U.S., is enrolled in a four-year college, is at least 18 years old, and is fluent in English), allowing my study to reach the target sample size and to recruit balanced groups. |
-| 2 | Consent and Debrief | Refers to SONA Credit.  | Refers to payment. | Relevance to Prolific participant pool |
-| 3 | Materials | The welcome letter depicts a message from Stanford University's current president. | The welcome letter will not depict a message from any specific university president and opens with "Imagine you have just been admitted to a university and receive this welcome letter." | Relevance to Prolific participant pool |
-| 4 | Anagram Task | 10 minutes; mean BR score of 80 | 5 minutes; mean BR score of 102  | To reduce ceiling effects |
+| 2 | Materials | The welcome letter depicts a message from Stanford University's current president. | The welcome letter will not depict a message from any specific university president and opens with "Imagine you have just been admitted to a university and receive this welcome letter." | Relevance to Prolific participant pool |
+| 3 | Anagram Task | 10 minutes; mean BR score of 80 | 5 minutes; mean BR score of 102  | To reduce ceiling effects |
+| 4 | Questions | "Your answer will not affect your credit"  | "Your answer will not affect your payment" | Relevance to Prolific participant pool |
 | 5 | Checks | The manipulation checks were worded as follows: "Stanford University expects college students to be individually motivated" and "Stanford University expects college students to work together with other students" | The manipulation checks will be worded as follows: "The university that sent this letter expects students to be individually motivated." and "The university that sent this letter expects students to work together with other students." | Relevance to Prolific participant pool |
+| 6 | Debrief | The letter “was not written or approved by President Levin or the Office of the President, and it does not represent Stanford’s official views”, and one letter “described Stanford in terms of independence” | The letter “was not written by any university’s president and does not describe a real university”, and one letter “described the university in terms of independence” | Relevance to Prolific participant pool |
+| 7 | Compensation | SONA Credit | $8 per hour | Relevance to Prolific participant pool |
 
 Everything not listed above is identical to Phase 1.
 
@@ -979,6 +1019,10 @@ I plan to recruit 220 participants via Prolific, based on the calculation of 2.5
 ## Planned sample
 
 My sampling frame is first-year undergraduate students enrolled in a four-year college who reside in the U.S., are 18 or older, and are fluent in English.  
+
+### Procedure
+
+Interested participants will sign-up for the study via Prolific and be directed to the online study website. If participants are on a phone or tablet, they will be told to switch to a desktop or laptop. Once they are on a desktop or laptop, they will indicate whether they agree to participate. If they agree to participate, the next screen will ask whether they "Are a freshman" to confirm eligibility. If they answer anything other than "Yes," they will be thanked for their interest and asked to close the browser window. Participants who self-verify their first-year status will be randomly assigned one of the two welcome letters (interdependent, independent). Participants will be prompted to click "Show next" after a chunk of the letter is shown, with a 45-second minimum duration on the welcome letter page before participants can proceed to the next page. Afterwards, they will read about the next task's purpose and instructions for completing the anagrams. Participants will be given 10 minutes to complete as many anagrams as possible. They will be shown a maximum of 20 anagrams; one anagram at a time in a random order; and are allowed to skip. The anagram task will show a 10-minute countdown timer. Once the time is up, or if every anagram was answered before time ran out, they are thanked and asked to click "Continue." The next set of questions will cover the manipulation checks and their demographic information. The final question will ask whether participants used any outside help on the anagrams. Following this screen, participants will be shown the debriefing message and thanked for participating. This study will approximately take 15 minutes to complete.
 
 ## Analysis plan
 

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Phase 2 (Prolific). Same files as the Phase 1 page one folder up: <base> makes every
+       relative path below resolve from the site root. experiment.js sees /phase2/ in the
+       address and applies the Phase 2 settings. -->
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stanford study</title>
+  <!-- Empty icon: without this the browser requests /favicon.ico and logs a red 404 on the
+       first load of every session, which competes with real errors in a student's console. -->
+  <link rel="icon" href="data:,">
+
+  <!-- jsPsych core + plugins. Vendored copies (pinned versions, see lib/VERSIONS.json). -->
+  <script src="lib/jspsych.js"></script>
+  <script src="lib/plugin-html-keyboard-response.js"></script>
+  <script src="lib/plugin-html-button-response.js"></script>
+  <script src="lib/plugin-instructions.js"></script>
+  <script src="lib/plugin-survey.js"></script>
+  <script src="lib/plugin-survey-likert.js"></script>
+  <script src="lib/plugin-survey-text.js"></script>
+  <script src="src/plugin-anagram.js"></script>
+  <script src="src/plugin-flipbook.js"></script>
+  <script src="stimuli/materials.js"></script>
+  <link rel="stylesheet" href="lib/jspsych.css">
+  <link rel="stylesheet" href="lib/plugin-survey.css">
+
+  <!-- Firebase (bundled) + your project's config + the data saver -->
+  <script src="lib/firebase-bundle.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="src/save.js"></script>
+
+  <link rel="preload" href="stimuli/fonts/mrs-saint-delafield.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="src/experiment.css">
+</head>
+<body>
+  <!-- jsPsych renders into the body. The experiment starts from experiment.js. -->
+  <script src="experiment.js"></script>
+</body>
+</html>

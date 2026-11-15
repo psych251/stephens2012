@@ -13,7 +13,12 @@
  * Anagrams: the moderate set in materials/anagrams-moderate.csv (main items only: 3 easy,
  * 7 medium, 10 hard by Gilhooly's BR; mean 80), built by scripts/make-anagrams.py --moderate
  * from Gilhooly (1978) after Pilots A and B. Pilots used materials/anagrams-backup.csv.
- * If you change the CSV, update this list.
+ * Phase 2 (`anagramsPhase2`, used at /phase2/): the harder set in materials/anagrams-phase2.csv
+ * (mean BR 102), built by scripts/make-anagrams.py --phase2: the 11 Phase 1 words solved least
+ * often, same scrambles, plus 9 high-BR words.
+ * Phase 2 letter (`usePhase2Letter`): the same letter with no specific university or president
+ * (report: Changes from Phase 1, row 2).
+ * If you change a CSV, update its list.
  */
 window.STIMULI = (function () {
   // One page, laid out like the original two-page letter: header (with the president's photo
@@ -23,19 +28,20 @@ window.STIMULI = (function () {
   // says which part of a photo to keep when it is cropped to fit, e.g. faces near the top.
   function onePage(themes, paragraphs, photos, showPhotos, presidentPhoto) {
     const box = (label, cls) => `<div class="photo-placeholder ${cls}"><span>${label}</span></div>`;
-    return `
+    const P2 = phase2Letter;
+    return `${P2 ? `<p class="letter-framing" style="font-size:1.1em;margin:0 auto 18px;max-width:46em;text-align:left">${PHASE2_FRAMING}</p>` : ""}
       <div class="letter">
         <div class="letter-header">
           <div class="letter-header-text">
-            <div class="letter-from">From Stanford's President</div>
-            <div class="letter-title">Welcome to Stanford University</div>
+            <div class="letter-from">${P2 ? "From the President" : "From Stanford's President"}</div>
+            <div class="letter-title">${P2 ? "Welcome to the University" : "Welcome to Stanford University"}</div>
           </div>
-          ${presidentPhoto
+          ${P2 ? "" : presidentPhoto
             ? `<img class="photo-head" src="${presidentPhoto}" alt="">`
             : box("Photo: President Levin", "photo-head")}
         </div>
         <div class="letter-body">
-          <p class="letter-lead">At Stanford you have the opportunity to…</p>
+          <p class="letter-lead">${P2 ? "At our university you have the opportunity to…" : "At Stanford you have the opportunity to…"}</p>
           <ul class="letter-themes">
             ${themes.map((t) => `<li>${t}</li>`).join("")}
           </ul>
@@ -43,7 +49,7 @@ window.STIMULI = (function () {
             `<img class="photo-strip-item" src="${ph.src}" alt="" style="object-position: ${ph.focus || "center"}">`).join("")}</div>` : ""}
           <div class="letter-text">
             ${paragraphs.map((p) => `<p>${p}</p>`).join("")}
-            <p class="letter-sign"><span class="letter-signature" aria-hidden="true">Jonathan Levin</span><br>Jonathan Levin<br>President</p>
+            <p class="letter-sign">${P2 ? "The President" : `<span class="letter-signature" aria-hidden="true">Jonathan Levin</span><br>Jonathan Levin<br>President`}</p>
           </div>
         </div>
       </div>`;
@@ -107,9 +113,41 @@ window.STIMULI = (function () {
     ["knife", "IENKF", 112], ["album", "LMUBA", 120], ["orbit", "RTIOB", 124], ["apron", "RNPAO", 149],
   ].map(([solution, anagram, br]) => ({ item_id: solution, solution, anagram, gilhooly_br: br }));
 
+  // Phase 2 (report: Changes from Phase 1), from materials/anagrams-phase2.csv.
+  const anagramsPhase2 = [
+    ["glove", "OGELV", 27], ["pilot", "OLPTI", 74], ["virus", "RSUIV", 84], ["lyric", "IRLCY", 85],
+    ["drawl", "RWDLA", 87], ["entry", "RTYNE", 91], ["uncle", "LCNEU", 91], ["limbo", "OMILB", 96],
+    ["opera", "REPAO", 98], ["pylon", "OLYNP", 104], ["rhyme", "EYHRM", 105], ["tempo", "EOPTM", 110],
+    ["hyena", "YNHAE", 111], ["venom", "ONEMV", 114], ["album", "LMUBA", 120], ["input", "TUIPN", 120],
+    ["orbit", "RTIOB", 124], ["demon", "MNOED", 128], ["ankle", "EKNAL", 129], ["apron", "RNPAO", 149],
+  ].map(([solution, anagram, br]) => ({ item_id: solution, solution, anagram, gilhooly_br: br }));
+
+  // ---- Phase 2 letter (report: Changes from Phase 1, row 2) ----
+  // The same letter with no specific university or president: every Stanford reference below is
+  // replaced with a neutral one, the president's name, photo and signature are removed, and the
+  // letter opens with the framing sentence. Nothing else in the wording changes. Switched on by
+  // usePhase2Letter() (experiment.js, Phase 2 block only); Phase 1 is untouched.
+  const PHASE2_FRAMING = "Imagine you have just been admitted to a university and receive this welcome letter.";
+  const PHASE2_REPLACEMENTS = [
+    ["As Stanford's 13th president and a faculty member for more than 25 years, I encourage", "As president of this university, I encourage"],
+    ["Stanford University is the right place", "this university is the right place"],
+    ["Stanford is the right place", "this university is the right place"],
+    ["together with the Stanford community", "together with our university community"],
+    ["the larger Stanford community", "the larger university community"],
+    ["Stanford has an accomplished faculty", "Our university has an accomplished faculty"],
+    ["Stanford presents", "Our university presents"],
+    ["Stanford offers", "the university offers"],
+    ["Stanford is an intellectually vibrant place", "Our university is an intellectually vibrant place"],
+    ["Stanford has a tradition", "Our university has a tradition"],
+  ];
+  let phase2Letter = false;
+  const neutral = (text) => PHASE2_REPLACEMENTS.reduce((t, [a, b]) => t.split(a).join(b), text);
+  const usePhase2Letter = () => { phase2Letter = true; };
+
   const letterHtml = (condition, showPhotos, presidentPhoto) => {
     const L = letters[condition];
-    return onePage(L.themes, L.paragraphs, L.photos, showPhotos, presidentPhoto);
+    const paragraphs = phase2Letter ? L.paragraphs.map(neutral) : L.paragraphs;
+    return onePage(L.themes, paragraphs, L.photos, showPhotos, presidentPhoto);
   };
 
   // Two pages, as in the original materials: page 1 is the header, the four themes and the
@@ -127,5 +165,5 @@ window.STIMULI = (function () {
     return [cover.innerHTML, text.innerHTML];
   };
 
-  return { letters, letterHtml, letterPages, anagrams };
+  return { letters, letterHtml, letterPages, anagrams, anagramsPhase2, usePhase2Letter, PHASE2_FRAMING };
 })();

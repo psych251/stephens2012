@@ -14,6 +14,7 @@ first letter, it keeps none of the answer's letter pairs, and it is not itself a
 Run: python3 scripts/make-anagrams.py > materials/anagrams-backup.csv
      python3 scripts/make-anagrams.py --harder > materials/anagrams-harder.csv
      python3 scripts/make-anagrams.py --moderate > materials/anagrams-moderate.csv
+     python3 scripts/make-anagrams.py --phase2 > materials/anagrams-phase2.csv
 
 --moderate: the current set with six words that pilot participants solved easily swapped for
 hard ones (PLANT -> ORBIT, TRUCK -> TEMPO, JUICE -> OPERA, MOUTH -> UNCLE, WOMAN -> ENTRY,
@@ -25,6 +26,13 @@ scrambles as in the --harder set.
 items, vs roughly 35-45% in the original). It keeps the 8 current words that pilot participants
 found hard (solved by 4 or fewer of 6), with the same scrambles, and replaces the other 12 with
 high-BR Gilhooly words. MEDAL was left out: "lamed" (past tense of lame) is a second answer.
+
+--phase2: a much harder set for Phase 2 (used with a 5-minute limit). Phase 1's 19 completers
+solved 63% of the moderate set's items (per person shown), vs roughly 35-45% in the original.
+It keeps the 11 moderate-set words Phase 1 participants solved least often (35-67%), with the
+same scrambles, and replaces the 9 they solved most often (HONEY, WORLD, DOUBT, CABIN, VISOR,
+TULIP, LUNCH, FRUIT, KNIFE) with the 9 high-BR words of the --harder set not yet used, with the
+same scrambles as in that set. Mean BR 102 (moderate set: 80).
 """
 import csv
 import itertools
@@ -51,6 +59,9 @@ HARDER_KEPT = ["world", "glove", "honey", "virus", "lyric", "knife", "album", "a
 HARDER_NEW = ["ankle", "demon", "orbit", "input", "venom", "hyena", "tempo", "rhyme",
               "opera", "visor", "uncle", "entry"]
 HARDER_SPARES = ["limbo", "pylon", "drawl", "viper", "craze"]
+PHASE2_KEPT = ["entry", "lyric", "apron", "tempo", "album", "opera", "uncle", "orbit", "virus",
+               "pilot", "glove"]
+PHASE2_NEW = ["rhyme", "hyena", "demon", "ankle", "input", "venom", "limbo", "pylon", "drawl"]
 MODERATE_SWAPS = {"plant": "orbit", "truck": "tempo", "juice": "opera", "mouth": "uncle",
                   "woman": "entry", "judge": "visor"}
 
@@ -103,6 +114,16 @@ if "--moderate" in sys.argv:
                              source="kept" if w == r["solution"] else f"new (replaces {r['solution']})"))
     rows = sorted(out_rows, key=lambda r: r["gilhooly_br"]) + \
            [dict(r, source="spare") for r in rows if r["set"] == "spare" and r["solution"] not in MODERATE_SWAPS.values()]
+elif "--phase2" in sys.argv:
+    harder_new = {r["solution"]: r["anagram"] for r in
+                  build((("main", HARDER_NEW), ("spare", HARDER_SPARES)), random.Random(2026))}
+    current = {r["solution"]: r["anagram"] for r in rows if r["set"] == "main"}
+    moderate = {w: current.get(w) or harder_new[w] for w in PHASE2_KEPT}  # Phase 1 scrambles
+    rows = sorted([dict(set="main", solution=w,
+                        anagram=moderate[w] if w in moderate else harder_new[w], gilhooly_br=BR[w],
+                        other_solutions_in_dictionary=";".join(sorted(by_key["".join(sorted(w))] - {w})) or "none",
+                        source="kept (hard in Phase 1)" if w in moderate else "new")
+                   for w in PHASE2_KEPT + PHASE2_NEW], key=lambda r: r["gilhooly_br"])
 elif "--harder" in sys.argv:
     current = {r["solution"]: r["anagram"] for r in rows}
     new = build((("main", HARDER_NEW), ("spare", HARDER_SPARES)), random.Random(2026))

@@ -189,6 +189,8 @@ test.describe("experiment", () => {
     expect(pdoc.completed).toBe(true);
     expect(["independent", "interdependent"]).toContain(pdoc.condition);
     expect(pdoc.prolific_pid).toBe("robot123");
+    expect(pdoc.prolific_study_id).toBe("s1");
+    expect(pdoc.prolific_session_id).toBe("sess1");
     expect(pdoc.anagrams_solved).toBe(19);
     expect(pdoc.anagrams_submitted).toBe(20);
     expect(pdoc.anagrams_unanswered).toBe(0);
@@ -276,6 +278,64 @@ test.describe("experiment", () => {
     expect(ana[0].timed_out).toBe(true);
     expect(ana[0].correct).toBe(null);
     expect(trials.find((t) => t.task === "anagram_end").reason).toBe("time");
+  });
+
+  test("the Phase 1 page (site root) keeps the Phase 1 settings", async ({ page }) => {
+    await page.goto(EMULATOR ? "/?emulator=1" : "/");
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    expect(await page.evaluate(() => [PHASE, EXPERIMENT.id, ANAGRAM_MS / 60000])).toEqual([1, EXPERIMENT_ID, 10]);
+    const items = await page.evaluate(() => STIMULI.anagrams.map((a) => a.item_id));
+    expect(items.slice(0, 4)).toEqual(["world", "lunch", "glove", "honey"]);  // the moderate set
+    // Phase 1 wording is unchanged: the Stanford letter and manipulation-check items.
+    const p1 = await page.evaluate(() => ({ html: STIMULI.letterHtml("independent", true, EXPERIMENT.president_photo), w: WORDING }));
+    expect(p1.html).toContain("Welcome to Stanford University");
+    expect(p1.html).toContain("Jonathan Levin");
+    expect(p1.html).not.toContain("Imagine you have just been admitted");
+    expect(p1.w.mc_individually_motivated).toBe("Stanford University expects college students to be individually motivated.");
+  });
+
+  test("the Phase 2 page (/phase2/) saves under its own id, with the harder set and a 5-minute clock", async ({ page }) => {
+    const consoleErrors = [];
+    page.on("pageerror", (e) => consoleErrors.push(String(e)));
+    await page.goto(EMULATOR ? "/phase2/?emulator=1&letter_seconds=1&PROLIFIC_PID=p2robot&STUDY_ID=p2study&SESSION_ID=p2sess" : "/phase2/?letter_seconds=1");
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    expect(await page.evaluate(() => [PHASE, EXPERIMENT.id, ANAGRAM_MS / 60000])).toEqual([2, "stephens2012-phase2", 5]);
+    const phase2Items = await page.evaluate(() => STIMULI.anagramsPhase2.map((a) => a.item_id));
+    expect(await page.evaluate(() => STIMULI.anagrams.map((a) => a.item_id))).toEqual(phase2Items);
+    // Changes rows 2 and 5: no specific university or president, the framing sentence, and the
+    // reworded manipulation check.
+    const texts = await page.evaluate(() => ({
+      letters: ["independent", "interdependent"].map((c) => STIMULI.letterHtml(c, true, EXPERIMENT.president_photo)),
+      wording: WORDING,
+    }));
+    for (const html of texts.letters) {
+      expect(html).not.toMatch(/Stanford|Levin|13th/);
+      expect(html).not.toContain("photo-head");
+      expect(html).toContain("Imagine you have just been admitted to a university and receive this welcome letter.");
+    }
+    expect(texts.wording.mc_individually_motivated).toBe("The university that sent this letter expects students to be individually motivated.");
+    expect(texts.wording.mc_work_together).toBe("The university that sent this letter expects students to work together with other students.");
+    await runThroughExperiment(page);
+    expect(consoleErrors, "uncaught page errors").toEqual([]);
+    if (!EMULATOR) return;
+    const uid = await page.evaluate(() => window.__saver.docId);
+    const p = await fsGet(`experiments/stephens2012-phase2/participants/${uid}`);
+    expect(p.status).toBe(200);
+    const p2doc = decodeFields(p.body.fields);
+    expect(p2doc.completed).toBe(true);
+    // Prolific's URL parameters are recorded on the Phase 2 participant document.
+    expect([p2doc.prolific_pid, p2doc.prolific_study_id, p2doc.prolific_session_id]).toEqual(["p2robot", "p2study", "p2sess"]);
+    expect((await fsGet(`experiments/${EXPERIMENT_ID}/participants/${uid}`)).status).toBe(404);
+    const chunks = await fsGet(`experiments/stephens2012-phase2/participants/${uid}/trials?pageSize=500`);
+    const trials = (chunks.body.documents || []).map((d) => decodeFields(d.fields)).flatMap((d) => d.trials);
+    const shown = new Set(trials.filter((t) => t.task === "anagram").map((t) => t.item_id));
+    expect([...shown].sort()).toEqual([...phase2Items].sort());
+  });
+
+  test("Phase 2 pilot runs (/phase2/?pilot=1) save under the pilot id", async ({ page }) => {
+    await page.goto(EMULATOR ? "/phase2/?emulator=1&pilot=1" : "/phase2/?pilot=1");
+    await page.waitForFunction(() => window.__saver && window.__saver.docId);
+    expect(await page.evaluate(() => [PHASE, EXPERIMENT.id])).toEqual([2, "stephens2012-phase2-pilot"]);
   });
 
   test("students who are not freshmen are thanked and screened out before the letter", async ({ page }) => {

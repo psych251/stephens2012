@@ -81,6 +81,39 @@ const EXPERIMENT = {
   show_student_photos: true,
 };
 
+// ---- Two studies from one site ---------------------------------------------------------------
+// Phase 1 (the replication, Psych 1 via SONA) runs at the site root with the settings above,
+// unchanged. Phase 2 (the extension, Prolific) runs at /phase2/: phase2/index.html loads these
+// same files, and only the overrides below differ. Every Phase 2 override must be a row of the
+// report's "Changes from Phase 1" table.
+const PHASE = /\/phase2\/(index\.html)?$/.test(window.location.pathname) ? 2 : 1;
+if (PHASE === 2) {
+  Object.assign(EXPERIMENT, {
+    id: "stephens2012-phase2",  // must match experiment_id_phase2 in the report
+    anagram_minutes: 5,          // Changes table row 3: 5 minutes instead of 10
+    // prolific_completion_code: "",  // set from your Prolific study before launching
+  });
+  // Pilot runs (/phase2/?pilot=1, for the non-naive pilot testers) save under their own id, so
+  // pilot sessions never mix with Phase 2 data. Participants never get this link.
+  if (new URLSearchParams(window.location.search).get("pilot") === "1") EXPERIMENT.id = "stephens2012-phase2-pilot";
+  STIMULI.anagrams = STIMULI.anagramsPhase2;  // Changes table row 3: harder anagram set
+  STIMULI.usePhase2Letter();                   // Changes table row 2: no specific university or president
+}
+// Wording that differs by phase (Changes table rows 2, 4, 5 and 6). Phase 1 keeps its exact text.
+const WORDING = PHASE === 2 ? {
+  mc_individually_motivated: "The university that sent this letter expects students to be individually motivated.",
+  mc_work_together: "The university that sent this letter expects students to work together with other students.",
+  reward: "payment",
+  debrief_letter_subject: "the university",
+  debrief_letter_author: "It was not written by any university's president and does not describe a real university.",
+} : {
+  mc_individually_motivated: "Stanford University expects college students to be individually motivated.",
+  mc_work_together: "Stanford University expects college students to work together with other students.",
+  reward: "credit",
+  debrief_letter_subject: "Stanford",
+  debrief_letter_author: "It was not written or approved by President Levin or the Office of the President,\n        and it does not represent Stanford's official views.",
+};
+
 // True on anything with a mouse, trackpad, or stylus, including laptops with touchscreens.
 // False on phones and tablets without a pointing device, which are also the devices with no
 // physical keyboard. See docs/student-guide.md "Devices".
@@ -688,8 +721,8 @@ function classifyFirstGen(p1, p2) {
       pages: [{
         description: "How much do you agree with this statement?",
         elements: [
-          { type: "radiogroup", name: "mc_individually_motivated", title: "Stanford University expects college students to be individually motivated.", choices: agreeScale, ...required },
-          { type: "radiogroup", name: "mc_work_together", title: "Stanford University expects college students to work together with other students.", choices: agreeScale, ...required },
+          { type: "radiogroup", name: "mc_individually_motivated", title: WORDING.mc_individually_motivated, choices: agreeScale, ...required },
+          { type: "radiogroup", name: "mc_work_together", title: WORDING.mc_work_together, choices: agreeScale, ...required },
         ],
       }],
     },
@@ -800,7 +833,7 @@ function classifyFirstGen(p1, p2) {
         elements: [
           {
             type: "radiogroup", name: "outside_help",
-            title: "Did you use any outside help on the anagrams (for example, a website, an app, or another person)? Your answer will not affect your credit.",
+            title: "Did you use any outside help on the anagrams (for example, a website, an app, or another person)? Your answer will not affect your " + WORDING.reward + ".",
             choices: ["No", "Yes"], ...required,
           },
         ],
@@ -823,14 +856,13 @@ function classifyFirstGen(p1, p2) {
         <h2>Thank you</h2>
         <p>This study replicates an experiment on how the way a university describes itself
         relates to students' performance. Different participants read different messages:
-        one described Stanford in terms of independence (e.g., exploring your own
+        one described ${WORDING.debrief_letter_subject} in terms of independence (e.g., exploring your own
         interests), the other in terms of interdependence (e.g., being part of a community).
         We are testing whether the message affects performance on the anagram task, and whether
         that effect differs for students whose parents did or did not attend a 4-year college.</p>
         <p><strong>Two things in this study were not what they seemed.</strong> First, the welcome
         message was written by the researchers, adapted from the materials of the original
-        study. It was not written or approved by President Levin or the Office of the President,
-        and it does not represent Stanford's official views. Second, the anagram task was described
+        study. ${WORDING.debrief_letter_author} Second, the anagram task was described
         as assessing learning styles. In fact, it measured how many anagrams you solved. We did not
         tell you this beforehand because knowing the purpose could have changed how people
         performed. Your individual score is not used to judge you and is not shared with anyone.</p>
