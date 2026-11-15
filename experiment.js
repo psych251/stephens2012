@@ -91,7 +91,7 @@ if (PHASE === 2) {
   Object.assign(EXPERIMENT, {
     id: "stephens2012-phase2",  // must match experiment_id_phase2 in the report
     anagram_minutes: 5,          // Changes table row 3: 5 minutes instead of 10
-    // prolific_completion_code: "",  // set from your Prolific study before launching
+    prolific_completion_code: "C4H3E21T",  // the same code in both Prolific studies (first-gen and continuing-gen)
   });
   // Pilot runs (/phase2/?pilot=1, for the non-naive pilot testers) save under their own id, so
   // pilot sessions never mix with Phase 2 data. Participants never get this link.
