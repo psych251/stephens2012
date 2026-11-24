@@ -126,6 +126,8 @@ original_dod_se <- sqrt(sum(original$se^2))
     <https://doi.org/10.1037/a0027143>
 -   **Preregistration:** [OSF registration](https://osf.io/dvuw8)
     *(registered 2026-10-30, before final data collection)*
+-   **Phase 2 preregistration:** [OSF registration](https://osf.io/qem5x)
+    (<https://doi.org/10.17605/OSF.IO/QEM5X>; registered version is tag `prereg-phase2`)
 -   **Phase 1 Live experiment:** <https://psych251.github.io/stephens2012/>
     (take the study exactly as participants did)
 -   **Phase 2 Live experiment:** <https://psych251.github.io/stephens2012/phase2/>
